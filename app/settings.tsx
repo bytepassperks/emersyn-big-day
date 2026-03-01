@@ -1,187 +1,115 @@
+/**
+ * Settings - Game settings and parent controls
+ */
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Switch, Alert } from 'react-native';
+import { View, Text, StyleSheet, Switch, TouchableOpacity, Alert, ScrollView } from 'react-native';
+import { router } from 'expo-router';
 import { useGameStore } from '@/store/gameStore';
-import { ScreenWrapper } from '@/components/ScreenWrapper';
-import { GameButton } from '@/components/GameButton';
-import { ParentGate } from '@/components/ParentGate';
-import { Colors } from '@/lib/colors';
 
 export default function Settings() {
-  const {
-    playerName, level, currentDay, coins, stars,
-    musicEnabled, sfxEnabled, breakReminderMinutes,
-    toggleMusic, toggleSFX, setBreakReminder,
-    saveGame, resetGame,
-  } = useGameStore();
-
-  const [showParentGate, setShowParentGate] = useState(false);
-  const [gateAction, setGateAction] = useState<'reset' | 'settings' | null>(null);
+  const { level, xp, stars, coins, stats, stickerAlbum, resetGame, saveGame } = useGameStore();
+  const totalStickers = stickerAlbum.pages.reduce((sum, p) => sum + p.stickers.filter(s => s.earned).length, 0);
+  const [soundEnabled, setSoundEnabled] = useState(true);
+  const [musicEnabled, setMusicEnabled] = useState(true);
+  const [breakReminder, setBreakReminder] = useState(true);
 
   const handleReset = () => {
-    setGateAction('reset');
-    setShowParentGate(true);
-  };
-
-  const handleParentGateSuccess = () => {
-    setShowParentGate(false);
-    if (gateAction === 'reset') {
-      Alert.alert(
-        'Reset Game?',
-        'This will erase ALL progress, coins, items, and stickers. Are you sure?',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Reset Everything',
-            style: 'destructive',
-            onPress: () => {
-              resetGame();
-              Alert.alert('Game Reset', 'All progress has been reset.');
-            },
+    Alert.alert(
+      'Reset Game?',
+      'This will erase ALL progress. Are you sure?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Reset',
+          style: 'destructive',
+          onPress: async () => {
+            resetGame();
+            await saveGame();
+            Alert.alert('Done', 'Game has been reset!');
           },
-        ]
-      );
-    }
+        },
+      ]
+    );
   };
 
   return (
-    <ScreenWrapper title="Settings" emoji="⚙️" bgColor={Colors.gray100}>
-      {/* Player Info */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>👧 Player Info</Text>
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Name</Text>
-          <Text style={styles.infoValue}>{playerName}</Text>
-        </View>
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Level</Text>
-          <Text style={styles.infoValue}>{level}</Text>
-        </View>
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Day</Text>
-          <Text style={styles.infoValue}>{currentDay}</Text>
-        </View>
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Coins</Text>
-          <Text style={styles.infoValue}>₹{coins}</Text>
-        </View>
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Stars</Text>
-          <Text style={styles.infoValue}>⭐ {stars}</Text>
-        </View>
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+          <Text style={styles.backBtnText}>{'\u2190'}</Text>
+        </TouchableOpacity>
+        <Text style={styles.title}>Settings</Text>
       </View>
 
-      {/* Audio Settings */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>🔊 Audio</Text>
-        <View style={styles.toggleRow}>
-          <Text style={styles.toggleLabel}>🎵 Music</Text>
-          <Switch
-            value={musicEnabled}
-            onValueChange={() => { toggleMusic(); saveGame(); }}
-            trackColor={{ false: Colors.gray300, true: Colors.pinkLight }}
-            thumbColor={musicEnabled ? Colors.pink : Colors.gray400}
-          />
+      <ScrollView style={styles.content} contentContainerStyle={{ paddingBottom: 40 }}>
+        <Text style={styles.section}>Game Stats</Text>
+        <View style={styles.statsCard}>
+          <View style={styles.statRow}>
+            <Text style={styles.statLabel}>Level</Text>
+            <Text style={styles.statValue}>{level}</Text>
+          </View>
+          <View style={styles.statRow}>
+            <Text style={styles.statLabel}>XP</Text>
+            <Text style={styles.statValue}>{xp}</Text>
+          </View>
+          <View style={styles.statRow}>
+            <Text style={styles.statLabel}>Stars</Text>
+            <Text style={styles.statValue}>{stars}</Text>
+          </View>
+          <View style={styles.statRow}>
+            <Text style={styles.statLabel}>Coins</Text>
+            <Text style={styles.statValue}>{'\u20B9'}{coins}</Text>
+          </View>
+          <View style={styles.statRow}>
+            <Text style={styles.statLabel}>Stickers</Text>
+            <Text style={styles.statValue}>{totalStickers}</Text>
+          </View>
         </View>
-        <View style={styles.toggleRow}>
-          <Text style={styles.toggleLabel}>🔔 Sound Effects</Text>
-          <Switch
-            value={sfxEnabled}
-            onValueChange={() => { toggleSFX(); saveGame(); }}
-            trackColor={{ false: Colors.gray300, true: Colors.pinkLight }}
-            thumbColor={sfxEnabled ? Colors.pink : Colors.gray400}
-          />
+
+        <Text style={styles.section}>Audio</Text>
+        <View style={styles.settingCard}>
+          <View style={styles.settingRow}>
+            <Text style={styles.settingLabel}>Sound Effects</Text>
+            <Switch value={soundEnabled} onValueChange={setSoundEnabled} />
+          </View>
+          <View style={styles.settingRow}>
+            <Text style={styles.settingLabel}>Background Music</Text>
+            <Switch value={musicEnabled} onValueChange={setMusicEnabled} />
+          </View>
         </View>
-      </View>
 
-      {/* Break Reminders */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>⏰ Break Reminders</Text>
-        <Text style={styles.sectionDesc}>Gentle reminders to take a break</Text>
-        {[0, 15, 30, 45, 60].map((minutes) => (
-          <GameButton
-            key={minutes}
-            title={minutes === 0 ? 'Off' : `Every ${minutes} min`}
-            onPress={() => { setBreakReminder(minutes); saveGame(); }}
-            variant={breakReminderMinutes === minutes ? 'primary' : 'outline'}
-            size="small"
-            style={styles.breakBtn}
-          />
-        ))}
-      </View>
+        <Text style={styles.section}>Parent Controls</Text>
+        <View style={styles.settingCard}>
+          <View style={styles.settingRow}>
+            <Text style={styles.settingLabel}>Break Reminders (30 min)</Text>
+            <Switch value={breakReminder} onValueChange={setBreakReminder} />
+          </View>
+        </View>
 
-      {/* Parent Controls */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>🔒 Parent Controls</Text>
-        <Text style={styles.sectionDesc}>Requires solving a math problem</Text>
-        <GameButton
-          title="Reset All Game Data"
-          emoji="🗑️"
-          onPress={handleReset}
-          variant="danger"
-          size="medium"
-          style={{ marginTop: 8 }}
-        />
-      </View>
-
-      {/* Save */}
-      <View style={styles.section}>
-        <GameButton
-          title="Save Game Now"
-          emoji="💾"
-          onPress={async () => {
-            await saveGame();
-            Alert.alert('Saved! 💾', 'Your game has been saved.');
-          }}
-          variant="secondary"
-          size="medium"
-        />
-      </View>
-
-      {/* About */}
-      <View style={styles.aboutSection}>
-        <Text style={styles.aboutTitle}>Emersyn's Big Day</Text>
-        <Text style={styles.aboutVersion}>Version 1.0.0</Text>
-        <Text style={styles.aboutDesc}>
-          A fun, safe, and educational game made with love 💖
-        </Text>
-        <Text style={styles.aboutSafety}>
-          🛡️ No ads · No chat · No real social media · No data collection
-        </Text>
-      </View>
-
-      <ParentGate
-        visible={showParentGate}
-        onSuccess={handleParentGateSuccess}
-        onCancel={() => setShowParentGate(false)}
-      />
-    </ScreenWrapper>
+        <Text style={styles.section}>Danger Zone</Text>
+        <TouchableOpacity style={styles.resetBtn} onPress={handleReset}>
+          <Text style={styles.resetBtnText}>Reset All Progress</Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  section: {
-    backgroundColor: Colors.white, marginHorizontal: 16, marginVertical: 6,
-    padding: 16, borderRadius: 18,
-    shadowColor: Colors.dark, shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, elevation: 1,
-  },
-  sectionTitle: { fontSize: 18, fontWeight: '800', color: Colors.dark, marginBottom: 8 },
-  sectionDesc: { fontSize: 12, color: Colors.gray400, marginBottom: 8 },
-  infoRow: {
-    flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 6,
-    borderBottomWidth: 1, borderBottomColor: Colors.gray100,
-  },
-  infoLabel: { fontSize: 15, color: Colors.gray500 },
-  infoValue: { fontSize: 15, fontWeight: '700', color: Colors.dark },
-  toggleRow: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 8,
-  },
-  toggleLabel: { fontSize: 15, fontWeight: '600', color: Colors.dark },
-  breakBtn: { marginVertical: 3 },
-  aboutSection: {
-    alignItems: 'center', paddingVertical: 24, paddingHorizontal: 16,
-  },
-  aboutTitle: { fontSize: 20, fontWeight: '800', color: Colors.pink },
-  aboutVersion: { fontSize: 13, color: Colors.gray400, marginTop: 4 },
-  aboutDesc: { fontSize: 14, color: Colors.gray500, textAlign: 'center', marginTop: 8 },
-  aboutSafety: { fontSize: 12, color: Colors.success, textAlign: 'center', marginTop: 8 },
+  container: { flex: 1, backgroundColor: '#F5F5F5' },
+  header: { flexDirection: 'row', alignItems: 'center', padding: 16, paddingTop: 50, gap: 12 },
+  backBtn: { width: 40, height: 40, borderRadius: 12, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' },
+  backBtnText: { fontSize: 20, fontWeight: '800' },
+  title: { fontSize: 22, fontWeight: '800', color: '#333' },
+  content: { flex: 1, paddingHorizontal: 16 },
+  section: { fontSize: 16, fontWeight: '800', color: '#999', marginTop: 20, marginBottom: 8 },
+  statsCard: { backgroundColor: '#fff', borderRadius: 16, padding: 16, gap: 10 },
+  statRow: { flexDirection: 'row', justifyContent: 'space-between' },
+  statLabel: { fontSize: 15, fontWeight: '600', color: '#666' },
+  statValue: { fontSize: 15, fontWeight: '800', color: '#333' },
+  settingCard: { backgroundColor: '#fff', borderRadius: 16, padding: 16, gap: 12 },
+  settingRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  settingLabel: { fontSize: 15, fontWeight: '600', color: '#333' },
+  resetBtn: { backgroundColor: '#ff4444', padding: 16, borderRadius: 16, alignItems: 'center' },
+  resetBtnText: { fontSize: 16, fontWeight: '800', color: '#fff' },
 });

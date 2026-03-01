@@ -1,127 +1,114 @@
+/**
+ * Shop - Shopping interface with categories and items
+ */
 import React, { useState, useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Dimensions } from 'react-native';
+import { router } from 'expo-router';
 import { useGameStore } from '@/store/gameStore';
-import { ScreenWrapper } from '@/components/ScreenWrapper';
-import { CoinDisplay } from '@/components/CoinDisplay';
-import { ShopItemCard } from '@/components/ShopItemCard';
-import { Colors } from '@/lib/colors';
-import { shopCatalog, getItemsByCategory, getCategoryEmoji, getCategoryName } from '@/content/shopCatalog';
-import { ShopCategory } from '@/lib/types';
+import { shopCatalog } from '@/content/shopCatalog';
 
-const CATEGORIES: ShopCategory[] = [
-  'clothes_top', 'clothes_bottom', 'clothes_dress', 'shoes', 'bags',
-  'hair', 'accessories', 'unicorn', 'makeup', 'toys', 'books',
-  'room_decor', 'food_ingredients', 'bug_safety',
-];
+const { width: SW } = Dimensions.get('window');
+
+const CATEGORIES = ['all', 'food', 'clothing', 'accessories', 'toys', 'decor', 'school', 'beauty'];
 
 export default function Shop() {
-  const { coins, stars, level, inventory, purchaseItem, equipItem, earnSticker, saveGame } = useGameStore();
-  const [selectedCategory, setSelectedCategory] = useState<ShopCategory>('clothes_dress');
+  const { coins, level, inventory, addCoins, addXP, updateStats, purchaseItem, saveGame } = useGameStore();
+  const [selectedCat, setSelectedCat] = useState('all');
 
-  const items = useMemo(() => getItemsByCategory(selectedCategory), [selectedCategory]);
-  const ownedIds = useMemo(() => new Set(inventory.map((i) => i.id)), [inventory]);
+  const items = useMemo(() => {
+    const available = shopCatalog.filter(item => item.unlockLevel <= level);
+    if (selectedCat === 'all') return available;
+    return available.filter(item => item.category === selectedCat);
+  }, [selectedCat, level]);
 
-  const handlePurchase = async (itemId: string, price: number, name: string) => {
-    if (coins < price) {
-      Alert.alert('Not enough coins! 😢', `You need ₹${price} but only have ₹${coins}.`);
+  const handleBuy = async (item: typeof shopCatalog[0]) => {
+    if (coins < item.price) {
+      Alert.alert('Not enough coins!', `You need ${'\u20B9'}${item.price - coins} more coins.`);
       return;
     }
-
-    Alert.alert(
-      `Buy ${name}?`,
-      `This will cost ₹${price}`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Buy! 🛍️',
-          onPress: async () => {
-            purchaseItem(itemId);
-            earnSticker('sticker_first_purchase');
-            if (inventory.length >= 9) earnSticker('sticker_10_items');
-            if (inventory.length >= 49) earnSticker('sticker_50_items');
-            await saveGame();
-            Alert.alert('Purchased! 🎉', `${name} is now yours!`);
-          },
-        },
-      ]
-    );
+    const owned = inventory.some(i => i.id === item.id);
+    if (owned) {
+      Alert.alert('Already owned!', 'You already have this item.');
+      return;
+    }
+    purchaseItem(item.id, item.category, item.price);
+    addXP(5);
+    if (item.category === 'food_ingredients') {
+      updateStats({ hunger: 15 });
+    }
+    await saveGame();
+    Alert.alert('Purchased!', `You got ${item.name}!`);
   };
 
   return (
-    <ScreenWrapper title="Shop" emoji="🛍️" bgColor={Colors.bgShop}>
-      <View style={styles.headerArea}>
-        <CoinDisplay coins={coins} stars={stars} size="medium" />
-        <Text style={styles.levelText}>Level {level} · {inventory.length} items owned</Text>
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+          <Text style={styles.backBtnText}>{'\u2190'}</Text>
+        </TouchableOpacity>
+        <Text style={styles.title}>Shop</Text>
+        <View style={styles.coinBadge}>
+          <Text style={styles.coinText}>{'\u20B9'}{coins}</Text>
+        </View>
       </View>
 
-      {/* Category Tabs */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoryScroll}>
-        {CATEGORIES.map((cat) => (
+      <ScrollView horizontal style={styles.catBar} showsHorizontalScrollIndicator={false}>
+        {CATEGORIES.map(cat => (
           <TouchableOpacity
             key={cat}
-            style={[styles.categoryTab, selectedCategory === cat && styles.categoryTabActive]}
-            onPress={() => setSelectedCategory(cat)}
+            style={[styles.catBtn, selectedCat === cat && styles.catBtnActive]}
+            onPress={() => setSelectedCat(cat)}
           >
-            <Text style={styles.categoryEmoji}>{getCategoryEmoji[cat]}</Text>
-            <Text style={[styles.categoryName, selectedCategory === cat && styles.categoryNameActive]}>
-              {getCategoryName[cat]}
+            <Text style={[styles.catBtnText, selectedCat === cat && styles.catBtnTextActive]}>
+              {cat.charAt(0).toUpperCase() + cat.slice(1)}
             </Text>
           </TouchableOpacity>
         ))}
       </ScrollView>
 
-      {/* Items Grid */}
-      <View style={styles.itemGrid}>
-        {items.map((item) => (
-          <ShopItemCard
-            key={item.id}
-            item={item}
-            owned={ownedIds.has(item.id)}
-            canAfford={coins >= item.price}
-            onPress={() => handlePurchase(item.id, item.price, item.name)}
-          />
-        ))}
-      </View>
-
-      {items.length === 0 && (
-        <View style={styles.emptyState}>
-          <Text style={styles.emptyEmoji}>🔒</Text>
-          <Text style={styles.emptyText}>No items available in this category yet.</Text>
-          <Text style={styles.emptySubtext}>Level up to unlock more!</Text>
-        </View>
-      )}
-    </ScreenWrapper>
+      <ScrollView style={styles.itemGrid} contentContainerStyle={styles.gridContent}>
+        {items.map(item => {
+          const owned = inventory.some(i => i.id === item.id);
+          return (
+            <TouchableOpacity
+              key={item.id}
+              style={[styles.itemCard, owned && styles.itemOwned]}
+              onPress={() => handleBuy(item)}
+              disabled={owned}
+            >
+              <Text style={styles.itemEmoji}>{item.emoji}</Text>
+              <Text style={styles.itemName} numberOfLines={1}>{item.name}</Text>
+              <Text style={styles.itemPrice}>
+                {owned ? 'Owned' : `${'\u20B9'}${item.price}`}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  headerArea: {
-    alignItems: 'center', paddingVertical: 12, gap: 6,
+  container: { flex: 1, backgroundColor: '#FFF8E1' },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 16, paddingTop: 50 },
+  backBtn: { width: 40, height: 40, borderRadius: 12, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' },
+  backBtnText: { fontSize: 20, fontWeight: '800' },
+  title: { fontSize: 22, fontWeight: '800', color: '#333' },
+  coinBadge: { backgroundColor: '#ff9f43', paddingHorizontal: 14, paddingVertical: 6, borderRadius: 14 },
+  coinText: { fontSize: 16, fontWeight: '800', color: '#fff' },
+  catBar: { paddingHorizontal: 12, maxHeight: 44, marginBottom: 8 },
+  catBtn: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 14, backgroundColor: '#fff', marginRight: 8 },
+  catBtnActive: { backgroundColor: '#ff9f43' },
+  catBtnText: { fontSize: 13, fontWeight: '700', color: '#666' },
+  catBtnTextActive: { color: '#fff' },
+  itemGrid: { flex: 1, paddingHorizontal: 12 },
+  gridContent: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, paddingBottom: 30 },
+  itemCard: {
+    width: (SW - 44) / 3, backgroundColor: '#fff', borderRadius: 16, padding: 12, alignItems: 'center',
   },
-  levelText: {
-    fontSize: 13, color: Colors.gray500, fontWeight: '600',
-  },
-  categoryScroll: {
-    paddingHorizontal: 8, marginBottom: 8, maxHeight: 50,
-  },
-  categoryTab: {
-    flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 6,
-    borderRadius: 18, backgroundColor: Colors.white, marginHorizontal: 3, gap: 4,
-    borderWidth: 2, borderColor: Colors.gray200,
-  },
-  categoryTabActive: {
-    backgroundColor: Colors.pink, borderColor: Colors.pink,
-  },
-  categoryEmoji: { fontSize: 16 },
-  categoryName: { fontSize: 11, fontWeight: '700', color: Colors.gray500 },
-  categoryNameActive: { color: Colors.white },
-  itemGrid: {
-    flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 4,
-  },
-  emptyState: {
-    alignItems: 'center', paddingVertical: 40,
-  },
-  emptyEmoji: { fontSize: 48 },
-  emptyText: { fontSize: 16, fontWeight: '700', color: Colors.gray400, marginTop: 12 },
-  emptySubtext: { fontSize: 13, color: Colors.gray400, marginTop: 4 },
+  itemOwned: { opacity: 0.5 },
+  itemEmoji: { fontSize: 36 },
+  itemName: { fontSize: 12, fontWeight: '700', color: '#333', marginTop: 4, textAlign: 'center' },
+  itemPrice: { fontSize: 13, fontWeight: '800', color: '#ff9f43', marginTop: 4 },
 });

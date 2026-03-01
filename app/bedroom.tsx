@@ -1,143 +1,88 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, Alert } from 'react-native';
+/**
+ * Bedroom - 3D interactive bedroom with morning/bedtime activities
+ */
+import React, { useState, useCallback } from 'react';
+import { View, Text, StyleSheet, Dimensions, Alert } from 'react-native';
+import { router } from 'expo-router';
 import { useGameStore } from '@/store/gameStore';
-import { ScreenWrapper } from '@/components/ScreenWrapper';
-import { ActivityButton } from '@/components/ActivityButton';
-import { Colors } from '@/lib/colors';
-import { getActivitiesBySegment } from '@/content/activities';
 import { getRandomEncouragement } from '@/lib/helpers';
+import GameScene from '@/components/GameScene';
+import GameHUD from '@/components/GameHUD';
+import { InteractableInfo } from '@/engine/RoomBuilder';
+import { NPCCharacter } from '@/engine/NPCCharacter';
+
+const { width: SW } = Dimensions.get('window');
+
+const INTERACTION_REWARDS: Record<string, { stats: Record<string, number>; coins: number; xp: number; sticker?: string }> = {
+  bed: { stats: { energy: 30 }, coins: 5, xp: 10, sticker: 'sticker_bedtime' },
+  wardrobe: { stats: { fun: 10 }, coins: 3, xp: 5, sticker: 'sticker_first_wake' },
+  desk: { stats: { fun: 5 }, coins: 2, xp: 8 },
+  toybox: { stats: { fun: 15 }, coins: 3, xp: 5 },
+  lamp: { stats: { energy: 5 }, coins: 1, xp: 2 },
+  nightstand: { stats: { energy: 5 }, coins: 1, xp: 3 },
+  window: { stats: { fun: 5, energy: 5 }, coins: 2, xp: 3 },
+  rug: { stats: { fun: 3 }, coins: 1, xp: 2 },
+};
 
 export default function Bedroom() {
-  const { stats, updateStats, addCoins, addXP, addStars, earnSticker, saveGame } = useGameStore();
-  const [completedActivities, setCompletedActivities] = useState<string[]>([]);
+  const { coins, stats, xp, level, updateStats, addCoins, addXP, earnSticker, saveGame } = useGameStore();
+  const [showCoinAnim, setShowCoinAnim] = useState(false);
+  const [coinDelta, setCoinDelta] = useState(0);
+  const [npcDialogue, setNpcDialogue] = useState<{ npcName: string; text: string } | null>(null);
 
-  const morningActivities = getActivitiesBySegment('morning').filter(
-    (a) => ['wake_up', 'make_bed', 'get_dressed'].includes(a.id)
-  );
-  const bedtimeActivities = getActivitiesBySegment('bedtime');
+  const xpToNext = level * 100;
 
-  const handleActivity = async (activityId: string, statDeltas: Record<string, number>, coinReward: number, xpReward: number, starReward: number) => {
-    if (completedActivities.includes(activityId)) return;
+  const handleInteract = useCallback((interactable: InteractableInfo) => {
+    const reward = INTERACTION_REWARDS[interactable.id] || { stats: { fun: 3 }, coins: 1, xp: 2 };
+    updateStats(reward.stats);
+    if (reward.coins > 0) {
+      addCoins(reward.coins);
+      setCoinDelta(reward.coins);
+      setShowCoinAnim(true);
+      setTimeout(() => setShowCoinAnim(false), 1000);
+    }
+    addXP(reward.xp);
+    if (reward.sticker) earnSticker(reward.sticker);
+    saveGame();
+    Alert.alert(getRandomEncouragement(), `+₹${reward.coins} coins!`);
+  }, [updateStats, addCoins, addXP, earnSticker, saveGame]);
 
-    updateStats(statDeltas);
-    addCoins(coinReward);
-    addXP(xpReward);
-    if (starReward > 0) addStars(starReward);
-
-    setCompletedActivities((prev) => [...prev, activityId]);
-
-    // Sticker drops
-    if (activityId === 'wake_up') earnSticker('sticker_first_wake');
-    if (activityId === 'go_sleep') earnSticker('sticker_bedtime');
-    if (activityId === 'bath_time') earnSticker('sticker_bath_time');
-
-    await saveGame();
-    Alert.alert(getRandomEncouragement(), `+₹${coinReward} coins!`);
-  };
+  const handleNPCTap = useCallback((npc: NPCCharacter) => {
+    setNpcDialogue({ npcName: npc.name, text: npc.currentDialogue });
+  }, []);
 
   return (
-    <ScreenWrapper title="Bedroom" emoji="🛏️" bgColor={Colors.bgBedroom}>
-      {/* Character */}
-      <View style={styles.characterArea}>
-        <Text style={styles.characterEmoji}>👧</Text>
-        <Text style={styles.roomDesc}>Emersyn's cozy bedroom</Text>
-      </View>
-
-      {/* Morning Activities */}
-      <Text style={styles.sectionTitle}>🌅 Morning</Text>
-      {morningActivities.map((activity) => (
-        <ActivityButton
-          key={activity.id}
-          activity={activity}
-          completed={completedActivities.includes(activity.id)}
-          onPress={() =>
-            handleActivity(
-              activity.id,
-              activity.statDeltas,
-              activity.coinReward,
-              activity.xpReward,
-              activity.starReward
-            )
-          }
+    <View style={styles.container}>
+      <View style={styles.sceneContainer}>
+        <GameScene
+          roomType="bedroom"
+          onInteract={handleInteract}
+          onNPCTap={handleNPCTap}
+          height={SW * 0.85}
         />
-      ))}
-
-      {/* Bedtime Activities */}
-      <Text style={styles.sectionTitle}>🌙 Bedtime</Text>
-      {bedtimeActivities.map((activity) => (
-        <ActivityButton
-          key={activity.id}
-          activity={activity}
-          completed={completedActivities.includes(activity.id)}
-          onPress={() =>
-            handleActivity(
-              activity.id,
-              activity.statDeltas,
-              activity.coinReward,
-              activity.xpReward,
-              activity.starReward
-            )
-          }
+        <GameHUD
+          coins={coins}
+          stats={stats}
+          level={level}
+          xp={xp % xpToNext}
+          xpToNext={xpToNext}
+          roomName="Emersyn's Bedroom"
+          onBack={() => router.back()}
+          showCoinAnimation={showCoinAnim}
+          coinDelta={coinDelta}
+          activeNPCDialogue={npcDialogue}
         />
-      ))}
-
-      {/* Room Decor Preview */}
-      <View style={styles.decorSection}>
-        <Text style={styles.sectionTitle}>🏠 Room Decor</Text>
-        <View style={styles.decorGrid}>
-          {['🛏️', '💡', '🖼️', '🧸', '🌈', '⭐'].map((emoji, i) => (
-            <View key={i} style={styles.decorSlot}>
-              <Text style={styles.decorEmoji}>{emoji}</Text>
-            </View>
-          ))}
-        </View>
       </View>
-    </ScreenWrapper>
+      <View style={styles.tip}>
+        <Text style={styles.tipText}>Tap the bed to sleep, wardrobe to dress up, toys to play!</Text>
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  characterArea: {
-    alignItems: 'center',
-    paddingVertical: 20,
-  },
-  characterEmoji: {
-    fontSize: 72,
-  },
-  roomDesc: {
-    fontSize: 14,
-    color: Colors.gray500,
-    marginTop: 8,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: Colors.dark,
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 8,
-  },
-  decorSection: {
-    marginTop: 8,
-  },
-  decorGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    paddingHorizontal: 16,
-    gap: 10,
-  },
-  decorSlot: {
-    width: 60,
-    height: 60,
-    borderRadius: 14,
-    backgroundColor: Colors.white,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: Colors.gray200,
-    borderStyle: 'dashed',
-  },
-  decorEmoji: {
-    fontSize: 28,
-  },
+  container: { flex: 1, backgroundColor: '#FFE4F0' },
+  sceneContainer: { flex: 1, position: 'relative' },
+  tip: { padding: 12, backgroundColor: '#fff', alignItems: 'center' },
+  tipText: { fontSize: 12, color: '#999', fontWeight: '500' },
 });

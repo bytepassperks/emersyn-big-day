@@ -1,107 +1,116 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, Alert } from 'react-native';
-import { useRouter } from 'expo-router';
+/**
+ * Back Home - Post-outing routine (shoes off, wash hands, face wash, change, water)
+ */
+import React, { useState, useCallback } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
+import { router } from 'expo-router';
 import { useGameStore } from '@/store/gameStore';
-import { ScreenWrapper } from '@/components/ScreenWrapper';
-import { ActivityButton } from '@/components/ActivityButton';
-import { GameButton } from '@/components/GameButton';
-import { Colors } from '@/lib/colors';
-import { getActivitiesBySegment } from '@/content/activities';
 import { getRandomEncouragement } from '@/lib/helpers';
 
+const { width: SW } = Dimensions.get('window');
+
+type Step = { id: string; name: string; emoji: string; stat: Record<string, number>; coins: number; xp: number };
+
+const STEPS: Step[] = [
+  { id: 'shoes', name: 'Take off shoes', emoji: '\uD83D\uDC5F', stat: { cleanliness: 5 }, coins: 2, xp: 3 },
+  { id: 'hands', name: 'Wash hands', emoji: '\uD83D\uDE4C', stat: { cleanliness: 15 }, coins: 3, xp: 5 },
+  { id: 'face', name: 'Wash face', emoji: '\uD83E\uDDD1', stat: { cleanliness: 15 }, coins: 3, xp: 5 },
+  { id: 'change', name: 'Change clothes', emoji: '\uD83D\uDC57', stat: { cleanliness: 10 }, coins: 3, xp: 5 },
+  { id: 'water', name: 'Drink water', emoji: '\uD83D\uDCA7', stat: { energy: 10 }, coins: 2, xp: 3 },
+];
+
 export default function BackHome() {
-  const router = useRouter();
-  const { updateStats, addCoins, addXP, earnSticker, saveGame } = useGameStore();
-  const [completedActivities, setCompletedActivities] = useState<string[]>([]);
+  const { updateStats, addCoins, addXP, addStars, earnSticker, saveGame } = useGameStore();
+  const [currentStep, setCurrentStep] = useState(0);
+  const [completed, setCompleted] = useState(false);
+  const [totalCoins, setTotalCoins] = useState(0);
 
-  const backHomeActivities = getActivitiesBySegment('backHome');
-  const allDone = completedActivities.length === backHomeActivities.length;
+  const handleStep = useCallback(async () => {
+    const step = STEPS[currentStep];
+    updateStats(step.stat);
+    addCoins(step.coins);
+    addXP(step.xp);
+    setTotalCoins(prev => prev + step.coins);
 
-  const handleActivity = async (activityId: string, statDeltas: Record<string, number>, coinReward: number, xpReward: number) => {
-    if (completedActivities.includes(activityId)) return;
+    if (currentStep < STEPS.length - 1) {
+      setCurrentStep(prev => prev + 1);
+    } else {
+      addStars(1);
+      earnSticker('sticker_tidy_emersyn');
+      setCompleted(true);
+      await saveGame();
+    }
+  }, [currentStep, updateStats, addCoins, addXP, addStars, earnSticker, saveGame]);
 
-    updateStats(statDeltas);
-    addCoins(coinReward);
-    addXP(xpReward);
-    setCompletedActivities((prev) => [...prev, activityId]);
+  if (completed) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.center}>
+          <Text style={styles.doneEmoji}>{'\u2728'}</Text>
+          <Text style={styles.doneTitle}>All Clean!</Text>
+          <Text style={styles.doneMsg}>{getRandomEncouragement()}</Text>
+          <View style={styles.rewardBox}>
+            <Text style={styles.rewardLine}>+{'\u20B9'}{totalCoins} coins</Text>
+            <Text style={styles.rewardLine}>+1 Star</Text>
+            <Text style={styles.rewardLine}>Tidy Emersyn sticker!</Text>
+          </View>
+          <TouchableOpacity style={styles.homeBtn} onPress={() => router.replace('/')}>
+            <Text style={styles.homeBtnText}>Back Home</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
 
-    await saveGame();
-    Alert.alert(getRandomEncouragement(), `+₹${coinReward} coins!`);
-  };
-
-  const handleAllDone = () => {
-    earnSticker('sticker_clean_room');
-    Alert.alert('All Clean! 🌟', 'Great job completing the back home routine!');
-    router.back();
-  };
+  const step = STEPS[currentStep];
 
   return (
-    <ScreenWrapper title="Back Home" emoji="🏠" bgColor={Colors.pinkLight}>
-      <View style={styles.characterArea}>
-        <Text style={styles.characterEmoji}>🏠</Text>
-        <Text style={styles.roomDesc}>Complete the back home routine!</Text>
-        <Text style={styles.routineOrder}>Shoes → Hands → Face → Clothes → Water</Text>
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+          <Text style={styles.backBtnText}>{'\u2190'}</Text>
+        </TouchableOpacity>
+        <Text style={styles.title}>Back Home Routine</Text>
       </View>
-
-      <Text style={styles.sectionTitle}>📋 Routine Checklist</Text>
-      {backHomeActivities.map((activity, index) => {
-        const prevCompleted = index === 0 || completedActivities.includes(backHomeActivities[index - 1].id);
-        return (
-          <ActivityButton
-            key={activity.id}
-            activity={activity}
-            completed={completedActivities.includes(activity.id)}
-            disabled={!prevCompleted}
-            onPress={() =>
-              handleActivity(activity.id, activity.statDeltas, activity.coinReward, activity.xpReward)
-            }
-          />
-        );
-      })}
-
-      {/* Progress indicator */}
-      <View style={styles.progressRow}>
-        {backHomeActivities.map((act, i) => (
-          <View
-            key={i}
-            style={[
-              styles.progressDot,
-              completedActivities.includes(act.id) && styles.progressDotDone,
-            ]}
-          />
-        ))}
+      <View style={styles.center}>
+        <Text style={styles.stepEmoji}>{step.emoji}</Text>
+        <Text style={styles.stepName}>{step.name}</Text>
+        <Text style={styles.stepCount}>Step {currentStep + 1} of {STEPS.length}</Text>
+        <View style={styles.dotsRow}>
+          {STEPS.map((_, i) => (
+            <View key={i} style={[styles.dot, i <= currentStep && styles.dotActive]} />
+          ))}
+        </View>
+        <TouchableOpacity style={styles.doBtn} onPress={handleStep}>
+          <Text style={styles.doBtnText}>
+            {currentStep < STEPS.length - 1 ? 'Done! Next' : 'All Done!'}
+          </Text>
+        </TouchableOpacity>
       </View>
-
-      {allDone && (
-        <GameButton
-          title="All Done! Go Home"
-          emoji="🎉"
-          onPress={handleAllDone}
-          variant="accent"
-          size="large"
-          style={{ marginHorizontal: 16, marginTop: 16 }}
-        />
-      )}
-    </ScreenWrapper>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  characterArea: { alignItems: 'center', paddingVertical: 20 },
-  characterEmoji: { fontSize: 64 },
-  roomDesc: { fontSize: 14, color: Colors.gray500, marginTop: 8 },
-  routineOrder: { fontSize: 12, color: Colors.pink, fontWeight: '700', marginTop: 4 },
-  sectionTitle: {
-    fontSize: 18, fontWeight: '800', color: Colors.dark,
-    paddingHorizontal: 16, paddingTop: 16, paddingBottom: 8,
-  },
-  progressRow: {
-    flexDirection: 'row', justifyContent: 'center', gap: 10, paddingVertical: 16,
-  },
-  progressDot: {
-    width: 16, height: 16, borderRadius: 8, backgroundColor: Colors.gray200,
-  },
-  progressDotDone: {
-    backgroundColor: Colors.success,
-  },
+  container: { flex: 1, backgroundColor: '#E4F0F8' },
+  header: { flexDirection: 'row', alignItems: 'center', padding: 16, paddingTop: 50, gap: 12 },
+  backBtn: { width: 40, height: 40, borderRadius: 12, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' },
+  backBtnText: { fontSize: 20, fontWeight: '800' },
+  title: { fontSize: 20, fontWeight: '800', color: '#333' },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
+  stepEmoji: { fontSize: 80 },
+  stepName: { fontSize: 26, fontWeight: '800', color: '#333', marginTop: 16 },
+  stepCount: { fontSize: 14, color: '#999', marginTop: 8 },
+  dotsRow: { flexDirection: 'row', gap: 10, marginTop: 16 },
+  dot: { width: 14, height: 14, borderRadius: 7, backgroundColor: '#ddd' },
+  dotActive: { backgroundColor: '#5ca7d8' },
+  doBtn: { marginTop: 30, backgroundColor: '#5ca7d8', paddingHorizontal: 36, paddingVertical: 16, borderRadius: 18 },
+  doBtnText: { fontSize: 20, fontWeight: '800', color: '#fff' },
+  doneEmoji: { fontSize: 80 },
+  doneTitle: { fontSize: 30, fontWeight: '800', color: '#333', marginTop: 12 },
+  doneMsg: { fontSize: 15, color: '#999', marginTop: 8 },
+  rewardBox: { backgroundColor: '#fff', padding: 20, borderRadius: 18, marginTop: 20, width: '100%', gap: 8 },
+  rewardLine: { fontSize: 18, fontWeight: '700', color: '#333' },
+  homeBtn: { marginTop: 24, backgroundColor: '#5ca7d8', paddingHorizontal: 30, paddingVertical: 14, borderRadius: 16 },
+  homeBtnText: { fontSize: 18, fontWeight: '800', color: '#fff' },
 });

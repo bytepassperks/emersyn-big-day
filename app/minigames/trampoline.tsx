@@ -1,269 +1,243 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions, Alert } from 'react-native';
-import { useRouter } from 'expo-router';
+/**
+ * Trampoline - Jump timing game with combo multipliers and tricks
+ */
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { View, Text, StyleSheet, Dimensions, TouchableOpacity, Animated } from 'react-native';
+import { router } from 'expo-router';
 import { useGameStore } from '@/store/gameStore';
-import { ScreenWrapper } from '@/components/ScreenWrapper';
-import { GameButton } from '@/components/GameButton';
-import { Colors } from '@/lib/colors';
-import { getRandomEncouragement } from '@/lib/helpers';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const { width: SW, height: SH } = Dimensions.get('window');
 
-type TrampolinePhase = 'menu' | 'playing' | 'results';
-
-interface Collectible {
-  id: number;
-  x: number;
-  y: number;
-  emoji: string;
-  points: number;
-  collected: boolean;
-}
-
-const COLLECTIBLE_TYPES = [
-  { emoji: '⭐', points: 5 },
-  { emoji: '💎', points: 10 },
-  { emoji: '🌈', points: 15 },
-  { emoji: '💰', points: 3 },
-  { emoji: '🎵', points: 5 },
-  { emoji: '🦋', points: 8 },
+const TRICKS = [
+  { id: 'flip', name: 'Flip', emoji: '\uD83E\uDD38', points: 50 },
+  { id: 'spin', name: 'Spin', emoji: '\uD83C\uDF00', points: 30 },
+  { id: 'star', name: 'Star Jump', emoji: '\u2B50', points: 40 },
+  { id: 'split', name: 'Split', emoji: '\uD83E\uDDB8', points: 60 },
 ];
 
 export default function Trampoline() {
-  const router = useRouter();
-  const { addCoins, addXP, addStars, earnSticker, recordMiniGameResult, saveGame } = useGameStore();
-
-  const [phase, setPhase] = useState<TrampolinePhase>('menu');
-  const [bounceCount, setBounceCount] = useState(0);
+  const { addCoins, addXP, addStars, earnSticker, saveGame } = useGameStore();
+  const [gameState, setGameState] = useState<'ready' | 'playing' | 'over'>('ready');
+  const [score, setScore] = useState(0);
   const [combo, setCombo] = useState(0);
   const [maxCombo, setMaxCombo] = useState(0);
-  const [score, setScore] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(30);
-  const [collectibles, setCollectibles] = useState<Collectible[]>([]);
-  const [playerY, setPlayerY] = useState(0);
-  const [bouncing, setBouncing] = useState(false);
-  const nextId = useRef(0);
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [jumpsLeft, setJumpsLeft] = useState(20);
+  const [currentTrick, setCurrentTrick] = useState<typeof TRICKS[0] | null>(null);
+  const [isJumping, setIsJumping] = useState(false);
+  const [showTrick, setShowTrick] = useState(false);
+  const [feedback, setFeedback] = useState('');
+  const bounceAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+  const trickTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const startGame = () => {
-    setPhase('playing');
-    setBounceCount(0);
+    setGameState('playing');
+    setScore(0);
     setCombo(0);
     setMaxCombo(0);
-    setScore(0);
-    setTimeLeft(30);
-    setCollectibles([]);
-    setBouncing(false);
-    nextId.current = 0;
-
-    // Spawn initial collectibles
-    spawnCollectibles();
+    setJumpsLeft(20);
+    setFeedback('');
+    setCurrentTrick(null);
+    setShowTrick(false);
   };
 
-  const spawnCollectibles = () => {
-    const newCollectibles: Collectible[] = Array.from({ length: 6 }, () => {
-      const type = COLLECTIBLE_TYPES[Math.floor(Math.random() * COLLECTIBLE_TYPES.length)];
-      return {
-        id: nextId.current++,
-        x: Math.random() * (SCREEN_WIDTH - 80) + 20,
-        y: Math.random() * 200 + 50,
-        emoji: type.emoji,
-        points: type.points,
-        collected: false,
-      };
-    });
-    setCollectibles((prev) => [...prev.filter((c) => !c.collected), ...newCollectibles]);
-  };
-
-  // Game timer
-  useEffect(() => {
-    if (phase !== 'playing') return;
-
-    timerRef.current = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          if (timerRef.current) clearInterval(timerRef.current);
-          endGame();
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => { if (timerRef.current) clearInterval(timerRef.current); };
-  }, [phase]);
-
-  // Respawn collectibles
-  useEffect(() => {
-    if (phase !== 'playing') return;
-    const uncollected = collectibles.filter((c) => !c.collected);
-    if (uncollected.length < 3) {
-      spawnCollectibles();
-    }
-  }, [collectibles, phase]);
-
-  const handleBounce = () => {
-    if (phase !== 'playing') return;
-
-    setBouncing(true);
-    setBounceCount((prev) => prev + 1);
-
-    const newCombo = combo + 1;
-    setCombo(newCombo);
-    setMaxCombo((prev) => Math.max(prev, newCombo));
-
-    // Collect nearby items
-    setCollectibles((prev) => {
-      let collected = false;
-      const updated = prev.map((c) => {
-        if (!c.collected && c.y < 250) {
-          collected = true;
-          setScore((s) => s + c.points * (1 + Math.floor(newCombo / 5)));
-          return { ...c, collected: true };
-        }
-        return c;
-      });
-      return updated;
-    });
-
-    setScore((prev) => prev + 1 + Math.floor(newCombo / 3));
+  const handleJump = () => {
+    if (isJumping || jumpsLeft <= 0) return;
+    setIsJumping(true);
+    setJumpsLeft(j => j - 1);
 
     // Bounce animation
-    setPlayerY(120);
-    setTimeout(() => setPlayerY(60), 150);
-    setTimeout(() => setPlayerY(0), 300);
-    setTimeout(() => setBouncing(false), 300);
+    Animated.sequence([
+      Animated.timing(bounceAnim, { toValue: -150, duration: 300, useNativeDriver: true }),
+      Animated.timing(bounceAnim, { toValue: 0, duration: 400, useNativeDriver: true }),
+    ]).start(() => setIsJumping(false));
+
+    // Random trick prompt
+    if (Math.random() > 0.4) {
+      const trick = TRICKS[Math.floor(Math.random() * TRICKS.length)];
+      setCurrentTrick(trick);
+      setShowTrick(true);
+
+      trickTimer.current = setTimeout(() => {
+        // Missed trick
+        setShowTrick(false);
+        setCurrentTrick(null);
+        setCombo(0);
+        setFeedback('Too slow!');
+        setTimeout(() => setFeedback(''), 600);
+      }, 1500);
+    } else {
+      // Normal jump
+      const pts = 10 * (1 + Math.floor(combo / 3));
+      setScore(s => s + pts);
+      setCombo(c => { const nc = c + 1; setMaxCombo(m => Math.max(m, nc)); return nc; });
+      setFeedback(`+${pts}`);
+      setTimeout(() => setFeedback(''), 400);
+    }
   };
 
-  const endGame = async () => {
-    setPhase('results');
-    if (timerRef.current) clearInterval(timerRef.current);
+  const handleTrick = (trick: typeof TRICKS[0]) => {
+    if (!showTrick || !currentTrick) return;
 
-    const coinReward = Math.floor(score / 2) + 5;
-    const xpReward = Math.floor(score / 3);
+    if (trickTimer.current) clearTimeout(trickTimer.current);
+    setShowTrick(false);
 
-    addCoins(coinReward);
-    addXP(xpReward);
-    addStars(Math.floor(score / 20));
-    earnSticker('sticker_trampoline');
-    if (maxCombo >= 10) earnSticker('sticker_high_score');
-    recordMiniGameResult({ gameId: 'trampoline', score, coinsEarned: coinReward, playedAt: Date.now() });
+    if (trick.id === currentTrick.id) {
+      const pts = trick.points * (1 + Math.floor(combo / 3));
+      setScore(s => s + pts);
+      setCombo(c => { const nc = c + 1; setMaxCombo(m => Math.max(m, nc)); return nc; });
+      setFeedback(`${trick.name}! +${pts}`);
+
+      Animated.sequence([
+        Animated.timing(scaleAnim, { toValue: 1.3, duration: 150, useNativeDriver: true }),
+        Animated.timing(scaleAnim, { toValue: 1, duration: 150, useNativeDriver: true }),
+      ]).start();
+    } else {
+      setCombo(0);
+      setFeedback('Wrong trick!');
+    }
+
+    setCurrentTrick(null);
+    setTimeout(() => setFeedback(''), 600);
+  };
+
+  useEffect(() => {
+    if (gameState === 'playing' && jumpsLeft <= 0 && !isJumping) {
+      endGame();
+    }
+  }, [jumpsLeft, isJumping, gameState]);
+
+  const endGame = useCallback(async () => {
+    setGameState('over');
+    const coinsEarned = Math.floor(score / 30) + maxCombo * 2;
+    addCoins(coinsEarned);
+    addXP(Math.floor(score / 15));
+    if (maxCombo >= 8) addStars(1);
+    if (score > 500) earnSticker('sticker_trampoline_pro');
     await saveGame();
-  };
+  }, [score, maxCombo, addCoins, addXP, addStars, earnSticker, saveGame]);
 
-  if (phase === 'menu') {
+  if (gameState === 'ready') {
     return (
-      <ScreenWrapper title="Trampoline" emoji="🤸" bgColor={Colors.skyLight}>
-        <View style={styles.menuArea}>
-          <Text style={styles.menuEmoji}>🤸</Text>
-          <Text style={styles.menuTitle}>Trampoline Combo!</Text>
-          <Text style={styles.menuDesc}>
-            Tap to bounce! Collect stars and build combos!{'\n'}
-            30 seconds to get the highest score!
-          </Text>
-          <GameButton title="Bounce! 🤸" onPress={startGame} variant="primary" size="large" style={{ marginTop: 20 }} />
+      <View style={styles.container}>
+        <View style={styles.center}>
+          <Text style={styles.jumpEmoji}>{'\uD83E\uDD38'}</Text>
+          <Text style={styles.gameTitle}>Trampoline Jump</Text>
+          <Text style={styles.hint}>Tap to bounce! Match the trick when prompted!</Text>
+          <TouchableOpacity style={styles.playBtn} onPress={startGame}>
+            <Text style={styles.playBtnText}>Jump!</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.backLink} onPress={() => router.back()}>
+            <Text style={styles.backLinkText}>Back to Arcade</Text>
+          </TouchableOpacity>
         </View>
-      </ScreenWrapper>
+      </View>
     );
   }
 
-  if (phase === 'results') {
+  if (gameState === 'over') {
+    const coinsEarned = Math.floor(score / 30) + maxCombo * 2;
     return (
-      <ScreenWrapper title="Results" emoji="🏆" bgColor={Colors.skyLight} showBack={false}>
-        <View style={styles.resultsArea}>
-          <Text style={styles.resultsEmoji}>🏆</Text>
-          <Text style={styles.resultsTitle}>{getRandomEncouragement()}</Text>
-          <Text style={styles.resultsScore}>Score: {score}</Text>
-
-          <View style={styles.statsRow}>
-            <View style={styles.statItem}><Text style={styles.statValue}>{bounceCount}</Text><Text style={styles.statLabel}>Bounces</Text></View>
-            <View style={styles.statItem}><Text style={styles.statValue}>{maxCombo}</Text><Text style={styles.statLabel}>Max Combo</Text></View>
+      <View style={styles.container}>
+        <View style={styles.center}>
+          <Text style={styles.overTitle}>Great Jumping!</Text>
+          <Text style={styles.finalScore}>Score: {score}</Text>
+          <View style={styles.rewardBox}>
+            <Text style={styles.rewardLine}>Max Combo: {maxCombo}</Text>
+            <Text style={styles.rewardLine}>{'\u20B9'}{coinsEarned} coins</Text>
+            <Text style={styles.rewardLine}>+{Math.floor(score / 15)} XP</Text>
           </View>
-
-          <View style={styles.rewardCard}>
-            <Text style={styles.rewardText}>💰 +₹{Math.floor(score / 2) + 5}</Text>
-            <Text style={styles.rewardText}>⭐ +{Math.floor(score / 3)} XP</Text>
-          </View>
-
-          <GameButton title="Bounce Again" emoji="🤸" onPress={startGame} variant="primary" size="large" style={{ marginTop: 16 }} />
-          <GameButton title="Back" emoji="🏠" onPress={() => router.back()} variant="outline" size="medium" style={{ marginTop: 8 }} />
+          <TouchableOpacity style={styles.playBtn} onPress={startGame}>
+            <Text style={styles.playBtnText}>Jump Again</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.backLink} onPress={() => router.back()}>
+            <Text style={styles.backLinkText}>Back to Arcade</Text>
+          </TouchableOpacity>
         </View>
-      </ScreenWrapper>
+      </View>
     );
   }
 
   return (
-    <View style={styles.gameScreen}>
+    <View style={styles.container}>
       {/* HUD */}
       <View style={styles.hud}>
-        <Text style={styles.hudText}>⏱️ {timeLeft}s</Text>
-        <Text style={styles.hudText}>🏁 {score}</Text>
-        <Text style={styles.hudText}>🔥 x{combo}</Text>
+        <Text style={styles.hudScore}>{score}</Text>
+        <Text style={styles.hudJumps}>{jumpsLeft} jumps</Text>
+        {combo > 1 && <Text style={styles.hudCombo}>x{combo}</Text>}
       </View>
 
-      {/* Game Area */}
-      <View style={styles.gameArea}>
-        {/* Collectibles */}
-        {collectibles.filter((c) => !c.collected).map((c) => (
-          <View key={c.id} style={[styles.collectible, { left: c.x, top: c.y }]}>
-            <Text style={styles.collectibleEmoji}>{c.emoji}</Text>
-          </View>
-        ))}
-
-        {/* Player */}
-        <View style={[styles.player, { bottom: 100 + playerY }]}>
-          <Text style={styles.playerEmoji}>{bouncing ? '🤸' : '🧍'}</Text>
-        </View>
-
-        {/* Trampoline */}
-        <View style={styles.trampoline}>
-          <Text style={styles.trampolineEmoji}>🔵🔵🔵🔵🔵</Text>
-        </View>
+      {/* Character */}
+      <View style={styles.characterArea}>
+        <Animated.View style={{ transform: [{ translateY: bounceAnim }, { scale: scaleAnim }] }}>
+          <Text style={styles.characterEmoji}>{'\uD83E\uDDD2'}</Text>
+        </Animated.View>
+        {feedback !== '' && <Text style={styles.feedbackText}>{feedback}</Text>}
       </View>
 
-      {/* Bounce Button */}
-      <TouchableOpacity style={styles.bounceBtn} onPress={handleBounce} activeOpacity={0.6}>
-        <Text style={styles.bounceBtnText}>BOUNCE! 🤸</Text>
-      </TouchableOpacity>
+      {/* Trick prompt */}
+      {showTrick && currentTrick && (
+        <View style={styles.trickPrompt}>
+          <Text style={styles.trickLabel}>Do this trick!</Text>
+          <Text style={styles.trickEmoji}>{currentTrick.emoji}</Text>
+          <Text style={styles.trickName}>{currentTrick.name}</Text>
+        </View>
+      )}
+
+      {/* Trick buttons (shown when trick is prompted) */}
+      {showTrick && (
+        <View style={styles.trickRow}>
+          {TRICKS.map(trick => (
+            <TouchableOpacity key={trick.id} style={styles.trickBtn} onPress={() => handleTrick(trick)}>
+              <Text style={styles.trickBtnEmoji}>{trick.emoji}</Text>
+              <Text style={styles.trickBtnName}>{trick.name}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
+
+      {/* Trampoline / Jump button */}
+      <View style={styles.trampolineArea}>
+        <TouchableOpacity style={styles.trampolineBtn} onPress={handleJump} disabled={isJumping}>
+          <View style={styles.trampoline} />
+          <Text style={styles.tapHint}>{isJumping ? 'Wheee!' : 'TAP!'}</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  menuArea: { alignItems: 'center', paddingHorizontal: 20, paddingTop: 30 },
-  menuEmoji: { fontSize: 64 },
-  menuTitle: { fontSize: 28, fontWeight: '800', color: Colors.dark, marginTop: 12 },
-  menuDesc: { fontSize: 14, color: Colors.gray500, textAlign: 'center', marginTop: 8 },
-  gameScreen: { flex: 1, backgroundColor: Colors.skyLight, paddingTop: 50 },
-  hud: {
-    flexDirection: 'row', justifyContent: 'space-around', paddingVertical: 8,
-    backgroundColor: Colors.overlay, borderRadius: 16, marginHorizontal: 16,
-  },
-  hudText: { fontSize: 18, fontWeight: '800', color: Colors.white },
-  gameArea: { flex: 1, position: 'relative', marginHorizontal: 16 },
-  collectible: { position: 'absolute' },
-  collectibleEmoji: { fontSize: 28 },
-  player: { position: 'absolute', alignSelf: 'center', left: '45%' },
-  playerEmoji: { fontSize: 48 },
-  trampoline: { position: 'absolute', bottom: 60, alignSelf: 'center', left: '20%' },
-  trampolineEmoji: { fontSize: 20 },
-  bounceBtn: {
-    marginHorizontal: 40, marginBottom: 40, paddingVertical: 20, borderRadius: 30,
-    backgroundColor: Colors.pink, alignItems: 'center',
-    shadowColor: Colors.dark, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 6, elevation: 6,
-  },
-  bounceBtnText: { fontSize: 24, fontWeight: '800', color: Colors.white },
-  resultsArea: { alignItems: 'center', paddingHorizontal: 20, paddingTop: 20 },
-  resultsEmoji: { fontSize: 64 },
-  resultsTitle: { fontSize: 22, fontWeight: '800', color: Colors.dark, marginTop: 12 },
-  resultsScore: { fontSize: 32, fontWeight: '800', color: Colors.sky, marginTop: 8 },
-  statsRow: { flexDirection: 'row', gap: 16, marginTop: 16 },
-  statItem: { backgroundColor: Colors.white, padding: 16, borderRadius: 14, alignItems: 'center', width: '40%' },
-  statValue: { fontSize: 28, fontWeight: '800', color: Colors.dark },
-  statLabel: { fontSize: 12, color: Colors.gray500, marginTop: 4 },
-  rewardCard: {
-    backgroundColor: Colors.white, padding: 20, borderRadius: 18, marginTop: 16,
-    width: '100%', borderWidth: 2, borderColor: Colors.skyLight, gap: 8,
-  },
-  rewardText: { fontSize: 18, fontWeight: '700', color: Colors.dark },
+  container: { flex: 1, backgroundColor: '#E8F8E8' },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
+  jumpEmoji: { fontSize: 80 },
+  gameTitle: { fontSize: 32, fontWeight: '800', color: '#333', marginTop: 12 },
+  hint: { fontSize: 14, color: '#999', marginTop: 12, textAlign: 'center' },
+  playBtn: { marginTop: 30, backgroundColor: '#10B981', paddingHorizontal: 40, paddingVertical: 16, borderRadius: 20 },
+  playBtnText: { fontSize: 22, fontWeight: '800', color: '#fff' },
+  backLink: { marginTop: 16 },
+  backLinkText: { fontSize: 14, fontWeight: '700', color: '#999' },
+  hud: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: 50 },
+  hudScore: { fontSize: 24, fontWeight: '800', color: '#333' },
+  hudJumps: { fontSize: 16, fontWeight: '700', color: '#666' },
+  hudCombo: { fontSize: 20, fontWeight: '800', color: '#10B981' },
+  characterArea: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  characterEmoji: { fontSize: 72 },
+  feedbackText: { fontSize: 24, fontWeight: '800', color: '#10B981', marginTop: 8, position: 'absolute', top: '30%' },
+  trickPrompt: { alignItems: 'center', paddingVertical: 10 },
+  trickLabel: { fontSize: 14, fontWeight: '800', color: '#F59E0B' },
+  trickEmoji: { fontSize: 48 },
+  trickName: { fontSize: 16, fontWeight: '800', color: '#333' },
+  trickRow: { flexDirection: 'row', justifyContent: 'center', gap: 10, paddingHorizontal: 16 },
+  trickBtn: { width: 75, height: 80, backgroundColor: '#fff', borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
+  trickBtnEmoji: { fontSize: 28 },
+  trickBtnName: { fontSize: 10, fontWeight: '800', color: '#666', marginTop: 2 },
+  trampolineArea: { alignItems: 'center', paddingBottom: 40 },
+  trampolineBtn: { alignItems: 'center' },
+  trampoline: { width: SW * 0.6, height: 20, backgroundColor: '#10B981', borderRadius: 10 },
+  tapHint: { fontSize: 18, fontWeight: '800', color: '#10B981', marginTop: 8 },
+  overTitle: { fontSize: 32, fontWeight: '800', color: '#10B981' },
+  finalScore: { fontSize: 24, fontWeight: '800', color: '#333', marginTop: 8 },
+  rewardBox: { backgroundColor: '#fff', padding: 20, borderRadius: 18, marginTop: 16, width: '100%', gap: 8 },
+  rewardLine: { fontSize: 16, fontWeight: '700', color: '#333' },
 });

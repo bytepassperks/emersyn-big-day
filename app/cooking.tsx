@@ -1,249 +1,231 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert, ScrollView } from 'react-native';
+/**
+ * Kitchen/Cooking - 3D kitchen with cooking activities
+ */
+import React, { useState, useCallback } from 'react';
+import { View, Text, StyleSheet, Dimensions, TouchableOpacity, ScrollView } from 'react-native';
+import { router } from 'expo-router';
 import { useGameStore } from '@/store/gameStore';
-import { ScreenWrapper } from '@/components/ScreenWrapper';
-import { GameButton } from '@/components/GameButton';
-import { Colors } from '@/lib/colors';
-import { recipes, getRecipesByCategory } from '@/content/recipes';
 import { getRandomEncouragement } from '@/lib/helpers';
+import GameScene from '@/components/GameScene';
+import GameHUD from '@/components/GameHUD';
+import { InteractableInfo } from '@/engine/RoomBuilder';
+import { NPCCharacter } from '@/engine/NPCCharacter';
+import { getRecipesByCategory } from '@/content/recipes';
 import { Recipe } from '@/lib/types';
+import { GameEngine } from '@/engine/GameEngine';
 
-type CookingPhase = 'menu' | 'cooking' | 'done';
+const { width: SW } = Dimensions.get('window');
+
+const INTERACTION_REWARDS: Record<string, { stats: Record<string, number>; coins: number; xp: number; sticker?: string }> = {
+  stove: { stats: { hunger: 20, fun: 10 }, coins: 5, xp: 10, sticker: 'sticker_first_cook' },
+  fridge: { stats: { hunger: 10 }, coins: 3, xp: 5 },
+  sink: { stats: { cleanliness: 10 }, coins: 2, xp: 3 },
+  table: { stats: { hunger: 15, fun: 5 }, coins: 4, xp: 8 },
+  counter: { stats: { fun: 5 }, coins: 2, xp: 3 },
+  hanging_pots: { stats: { fun: 3 }, coins: 1, xp: 2 },
+};
+
+type Phase = 'scene' | 'cooking' | 'done';
 
 export default function Cooking() {
-  const { coins, recipeBook, level, updateStats, addCoins, addXP, addStars, unlockRecipe, earnSticker, saveGame } = useGameStore();
-  const [selectedCategory, setSelectedCategory] = useState<string>('lunch');
+  const { coins, stats, xp, level, updateStats, addCoins, addXP, addStars, unlockRecipe, earnSticker, saveGame } = useGameStore();
+  const [showCoinAnim, setShowCoinAnim] = useState(false);
+  const [coinDelta, setCoinDelta] = useState(0);
+  const [npcDialogue, setNpcDialogue] = useState<{ npcName: string; text: string } | null>(null);
+  const [phase, setPhase] = useState<Phase>('scene');
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
-  const [phase, setPhase] = useState<CookingPhase>('menu');
   const [currentStep, setCurrentStep] = useState(0);
+  const [engineRef, setEngineRef] = useState<GameEngine | null>(null);
 
-  const categories = [
-    { id: 'breakfast', name: 'Breakfast', emoji: '🥞' },
-    { id: 'lunch', name: 'Lunch', emoji: '🍕' },
-    { id: 'snack', name: 'Snacks', emoji: '🍿' },
-    { id: 'dinner', name: 'Dinner', emoji: '🍽️' },
-    { id: 'dessert', name: 'Desserts', emoji: '🧁' },
-    { id: 'drink', name: 'Drinks', emoji: '🥤' },
-  ];
+  const xpToNext = level * 100;
 
-  const availableRecipes = getRecipesByCategory(selectedCategory as Recipe['category'])
-    .filter((r) => r.unlockLevel <= level);
+  const handleInteract = useCallback((interactable: InteractableInfo) => {
+    if (interactable.id === 'stove') {
+      setPhase('cooking');
+      return;
+    }
+    const reward = INTERACTION_REWARDS[interactable.id] || { stats: { fun: 3 }, coins: 1, xp: 2 };
+    updateStats(reward.stats);
+    if (reward.coins > 0) {
+      addCoins(reward.coins);
+      setCoinDelta(reward.coins);
+      setShowCoinAnim(true);
+      setTimeout(() => setShowCoinAnim(false), 1000);
+    }
+    addXP(reward.xp);
+    if (reward.sticker) earnSticker(reward.sticker);
+    saveGame();
+  }, [updateStats, addCoins, addXP, earnSticker, saveGame]);
+
+  const handleNPCTap = useCallback((npc: NPCCharacter) => {
+    setNpcDialogue({ npcName: npc.name, text: npc.currentDialogue });
+  }, []);
 
   const startCooking = (recipe: Recipe) => {
     setSelectedRecipe(recipe);
     setCurrentStep(0);
-    setPhase('cooking');
+    if (engineRef) engineRef.character.setAnimation('cook');
   };
 
   const nextStep = async () => {
     if (!selectedRecipe) return;
-
     if (currentStep < selectedRecipe.steps.length - 1) {
-      setCurrentStep((prev) => prev + 1);
+      setCurrentStep(prev => prev + 1);
     } else {
-      // Cooking complete!
       updateStats({ hunger: selectedRecipe.healthBonus, fun: selectedRecipe.happinessBonus });
       addCoins(selectedRecipe.coinReward);
       addXP(15);
       addStars(1);
       unlockRecipe(selectedRecipe.id);
-
-      if (!recipeBook.includes(selectedRecipe.id)) {
-        earnSticker('sticker_first_cook');
-      }
       if (selectedRecipe.id.includes('pizza')) earnSticker('sticker_pizza_master');
-      if (selectedRecipe.id.includes('burger')) earnSticker('sticker_burger_stack');
       if (selectedRecipe.category === 'dessert') earnSticker('sticker_dessert_queen');
-
+      if (engineRef) engineRef.character.setAnimation('happy');
       setPhase('done');
       await saveGame();
     }
   };
 
+  if (phase === 'cooking' && !selectedRecipe) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.menuHeader}>
+          <TouchableOpacity style={styles.backBtn} onPress={() => setPhase('scene')}>
+            <Text style={styles.backBtnText}>{'\u2190'} Back</Text>
+          </TouchableOpacity>
+          <Text style={styles.menuTitle}>What shall we cook?</Text>
+        </View>
+        <ScrollView style={styles.recipeList} contentContainerStyle={{ paddingBottom: 30 }}>
+          {['breakfast', 'lunch', 'snack', 'dinner', 'dessert', 'drink'].map(cat => {
+            const catRecipes = getRecipesByCategory(cat as Recipe['category']).filter(r => r.unlockLevel <= level);
+            if (catRecipes.length === 0) return null;
+            return (
+              <View key={cat}>
+                <Text style={styles.catTitle}>{cat.charAt(0).toUpperCase() + cat.slice(1)}</Text>
+                {catRecipes.map(recipe => (
+                  <TouchableOpacity key={recipe.id} style={styles.recipeCard} onPress={() => startCooking(recipe)}>
+                    <Text style={styles.recipeEmoji}>{recipe.emoji}</Text>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.recipeName}>{recipe.name}</Text>
+                      <Text style={styles.recipeSteps}>{recipe.steps.length} steps</Text>
+                    </View>
+                    <Text style={styles.recipeCoin}>{'\u20B9'}{recipe.coinReward}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            );
+          })}
+        </ScrollView>
+      </View>
+    );
+  }
+
   if (phase === 'cooking' && selectedRecipe) {
     return (
-      <ScreenWrapper title="Cooking!" emoji="👩‍🍳" bgColor={Colors.bgKitchen} showBack={false}>
-        <View style={styles.cookingArea}>
-          <Text style={styles.recipeName}>{selectedRecipe.emoji} {selectedRecipe.name}</Text>
-
+      <View style={styles.container}>
+        <View style={styles.cookingView}>
+          <Text style={styles.cookingTitle}>{selectedRecipe.emoji} {selectedRecipe.name}</Text>
           <View style={styles.stepCard}>
-            <Text style={styles.stepNumber}>Step {currentStep + 1} of {selectedRecipe.steps.length}</Text>
+            <Text style={styles.stepNum}>Step {currentStep + 1} of {selectedRecipe.steps.length}</Text>
             <Text style={styles.stepText}>{selectedRecipe.steps[currentStep]}</Text>
           </View>
-
-          {/* Progress dots */}
-          <View style={styles.progressRow}>
+          <View style={styles.dotsRow}>
             {selectedRecipe.steps.map((_, i) => (
-              <View
-                key={i}
-                style={[styles.progressDot, i <= currentStep && styles.progressDotActive]}
-              />
+              <View key={i} style={[styles.dot, i <= currentStep && styles.dotActive]} />
             ))}
           </View>
-
-          {/* Ingredients display */}
-          <View style={styles.ingredientsRow}>
-            {selectedRecipe.ingredients.map((ing, i) => (
-              <View key={i} style={styles.ingredientChip}>
-                <Text style={styles.ingredientText}>{ing}</Text>
-              </View>
-            ))}
-          </View>
-
-          <GameButton
-            title={currentStep < selectedRecipe.steps.length - 1 ? 'Next Step →' : 'Finish! 🎉'}
-            onPress={nextStep}
-            variant={currentStep < selectedRecipe.steps.length - 1 ? 'primary' : 'accent'}
-            size="large"
-            style={{ marginTop: 20 }}
-          />
+          <TouchableOpacity style={styles.nextBtn} onPress={nextStep}>
+            <Text style={styles.nextBtnText}>
+              {currentStep < selectedRecipe.steps.length - 1 ? 'Next Step' : 'Finish!'}
+            </Text>
+          </TouchableOpacity>
         </View>
-      </ScreenWrapper>
+      </View>
     );
   }
 
   if (phase === 'done' && selectedRecipe) {
     return (
-      <ScreenWrapper title="Yummy!" emoji="🎉" bgColor={Colors.bgKitchen} showBack={false}>
-        <View style={styles.doneArea}>
+      <View style={styles.container}>
+        <View style={styles.doneView}>
           <Text style={styles.doneEmoji}>{selectedRecipe.emoji}</Text>
           <Text style={styles.doneName}>{selectedRecipe.name}</Text>
-          <Text style={styles.doneSubtitle}>{getRandomEncouragement()}</Text>
-
-          <View style={styles.rewardCard}>
-            <Text style={styles.rewardText}>💰 +₹{selectedRecipe.coinReward}</Text>
-            <Text style={styles.rewardText}>⭐ +1 Star</Text>
-            <Text style={styles.rewardText}>❤️ +{selectedRecipe.healthBonus} Health</Text>
-            <Text style={styles.rewardText}>🎉 +{selectedRecipe.happinessBonus} Fun</Text>
+          <Text style={styles.doneMsg}>{getRandomEncouragement()}</Text>
+          <View style={styles.rewardBox}>
+            <Text style={styles.rewardLine}>+{'\u20B9'}{selectedRecipe.coinReward}</Text>
+            <Text style={styles.rewardLine}>+1 Star</Text>
+            <Text style={styles.rewardLine}>+{selectedRecipe.healthBonus} Health</Text>
           </View>
-
-          <GameButton
-            title="Cook Again"
-            emoji="🍳"
-            onPress={() => setPhase('menu')}
-            variant="primary"
-            size="large"
-            style={{ marginTop: 20 }}
-          />
-          <GameButton
-            title="Go Home"
-            emoji="🏠"
-            onPress={() => {
-              setPhase('menu');
-              // Router back handled by ScreenWrapper
-            }}
-            variant="outline"
-            size="medium"
-            style={{ marginTop: 10 }}
-          />
+          <TouchableOpacity style={styles.nextBtn} onPress={() => { setPhase('scene'); setSelectedRecipe(null); }}>
+            <Text style={styles.nextBtnText}>Back to Kitchen</Text>
+          </TouchableOpacity>
         </View>
-      </ScreenWrapper>
+      </View>
     );
   }
 
   return (
-    <ScreenWrapper title="Kitchen" emoji="🍳" bgColor={Colors.bgKitchen}>
-      <View style={styles.characterArea}>
-        <Text style={styles.characterEmoji}>👩‍🍳</Text>
-        <Text style={styles.roomDesc}>What shall we cook today?</Text>
+    <View style={styles.container}>
+      <View style={styles.sceneContainer}>
+        <GameScene
+          roomType="kitchen"
+          onInteract={handleInteract}
+          onNPCTap={handleNPCTap}
+          onEngineReady={setEngineRef}
+          height={SW * 0.85}
+        />
+        <GameHUD
+          coins={coins}
+          stats={stats}
+          level={level}
+          xp={xp % xpToNext}
+          xpToNext={xpToNext}
+          roomName="Kitchen"
+          onBack={() => router.back()}
+          showCoinAnimation={showCoinAnim}
+          coinDelta={coinDelta}
+          activeNPCDialogue={npcDialogue}
+        />
       </View>
-
-      {/* Category Tabs */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoryScroll}>
-        {categories.map((cat) => (
-          <TouchableOpacity
-            key={cat.id}
-            style={[styles.categoryTab, selectedCategory === cat.id && styles.categoryTabActive]}
-            onPress={() => setSelectedCategory(cat.id)}
-          >
-            <Text style={styles.categoryEmoji}>{cat.emoji}</Text>
-            <Text style={[styles.categoryName, selectedCategory === cat.id && styles.categoryNameActive]}>
-              {cat.name}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
-
-      {/* Recipes */}
-      {availableRecipes.map((recipe) => (
-        <TouchableOpacity
-          key={recipe.id}
-          style={styles.recipeCard}
-          onPress={() => startCooking(recipe)}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.recipeEmoji}>{recipe.emoji}</Text>
-          <View style={styles.recipeInfo}>
-            <Text style={styles.recipeCardName}>{recipe.name}</Text>
-            <Text style={styles.recipeDifficulty}>
-              {'⭐'.repeat(recipe.difficulty)} · {recipe.steps.length} steps
-            </Text>
-          </View>
-          <View style={styles.recipeReward}>
-            <Text style={styles.recipeCoins}>₹{recipe.coinReward}</Text>
-            {recipeBook.includes(recipe.id) && (
-              <Text style={styles.recipeUnlocked}>✓</Text>
-            )}
-          </View>
-        </TouchableOpacity>
-      ))}
-    </ScreenWrapper>
+      <View style={styles.tip}>
+        <Text style={styles.tipText}>Tap the stove to cook, fridge to snack, sink to clean!</Text>
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  characterArea: { alignItems: 'center', paddingVertical: 16 },
-  characterEmoji: { fontSize: 64 },
-  roomDesc: { fontSize: 14, color: Colors.gray500, marginTop: 8 },
-  categoryScroll: { paddingHorizontal: 12, marginBottom: 8 },
-  categoryTab: {
-    flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 8,
-    borderRadius: 20, backgroundColor: Colors.white, marginHorizontal: 4, gap: 6,
-    borderWidth: 2, borderColor: Colors.gray200,
-  },
-  categoryTabActive: { backgroundColor: Colors.pink, borderColor: Colors.pink },
-  categoryEmoji: { fontSize: 18 },
-  categoryName: { fontSize: 13, fontWeight: '700', color: Colors.gray500 },
-  categoryNameActive: { color: Colors.white },
+  container: { flex: 1, backgroundColor: '#FFF0D4' },
+  sceneContainer: { flex: 1, position: 'relative' },
+  tip: { padding: 12, backgroundColor: '#fff', alignItems: 'center' },
+  tipText: { fontSize: 12, color: '#999', fontWeight: '500' },
+  menuHeader: { flexDirection: 'row', alignItems: 'center', padding: 16, gap: 12, paddingTop: 50 },
+  backBtn: { padding: 8, backgroundColor: '#fff', borderRadius: 12 },
+  backBtnText: { fontSize: 14, fontWeight: '700', color: '#333' },
+  menuTitle: { fontSize: 20, fontWeight: '800', color: '#333' },
+  recipeList: { flex: 1, paddingHorizontal: 16 },
+  catTitle: { fontSize: 16, fontWeight: '800', color: '#ff9f43', marginTop: 16, marginBottom: 8 },
   recipeCard: {
-    flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.white,
-    marginHorizontal: 16, marginVertical: 4, padding: 14, borderRadius: 16,
-    borderWidth: 2, borderColor: Colors.orangeLight,
-    shadowColor: Colors.dark, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 3, elevation: 2,
+    flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff',
+    padding: 14, borderRadius: 16, marginBottom: 8, gap: 12,
   },
-  recipeEmoji: { fontSize: 36, marginRight: 12 },
-  recipeInfo: { flex: 1 },
-  recipeCardName: { fontSize: 16, fontWeight: '700', color: Colors.dark },
-  recipeDifficulty: { fontSize: 12, color: Colors.gray400, marginTop: 2 },
-  recipeReward: { alignItems: 'flex-end' },
-  recipeCoins: { fontSize: 16, fontWeight: '800', color: Colors.orange },
-  recipeUnlocked: { fontSize: 14, fontWeight: '800', color: Colors.success, marginTop: 2 },
-  // Cooking phase
-  cookingArea: { alignItems: 'center', paddingHorizontal: 20, paddingTop: 30 },
-  recipeName: { fontSize: 26, fontWeight: '800', color: Colors.dark, marginBottom: 20 },
-  stepCard: {
-    backgroundColor: Colors.white, padding: 24, borderRadius: 20, width: '100%',
-    alignItems: 'center', borderWidth: 2, borderColor: Colors.orangeLight,
-    shadowColor: Colors.dark, shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.1, shadowRadius: 6, elevation: 4,
-  },
-  stepNumber: { fontSize: 13, fontWeight: '600', color: Colors.gray400, marginBottom: 8 },
-  stepText: { fontSize: 22, fontWeight: '800', color: Colors.dark, textAlign: 'center' },
-  progressRow: { flexDirection: 'row', gap: 8, marginTop: 20 },
-  progressDot: { width: 12, height: 12, borderRadius: 6, backgroundColor: Colors.gray200 },
-  progressDotActive: { backgroundColor: Colors.orange },
-  ingredientsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 16, justifyContent: 'center' },
-  ingredientChip: {
-    backgroundColor: Colors.yellowLight, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10,
-  },
-  ingredientText: { fontSize: 12, fontWeight: '600', color: Colors.orange },
-  // Done phase
-  doneArea: { alignItems: 'center', paddingHorizontal: 20, paddingTop: 40 },
+  recipeEmoji: { fontSize: 32 },
+  recipeName: { fontSize: 16, fontWeight: '700', color: '#333' },
+  recipeSteps: { fontSize: 12, color: '#999', marginTop: 2 },
+  recipeCoin: { fontSize: 16, fontWeight: '800', color: '#ff9f43' },
+  cookingView: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
+  cookingTitle: { fontSize: 26, fontWeight: '800', color: '#333', marginBottom: 20 },
+  stepCard: { backgroundColor: '#fff', padding: 24, borderRadius: 20, width: '100%', alignItems: 'center' },
+  stepNum: { fontSize: 13, fontWeight: '600', color: '#999', marginBottom: 8 },
+  stepText: { fontSize: 20, fontWeight: '800', color: '#333', textAlign: 'center' },
+  dotsRow: { flexDirection: 'row', gap: 8, marginTop: 20 },
+  dot: { width: 12, height: 12, borderRadius: 6, backgroundColor: '#ddd' },
+  dotActive: { backgroundColor: '#ff9f43' },
+  nextBtn: { marginTop: 24, backgroundColor: '#ff9f43', paddingHorizontal: 30, paddingVertical: 14, borderRadius: 16 },
+  nextBtnText: { fontSize: 18, fontWeight: '800', color: '#fff' },
+  doneView: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
   doneEmoji: { fontSize: 80 },
-  doneName: { fontSize: 28, fontWeight: '800', color: Colors.dark, marginTop: 12 },
-  doneSubtitle: { fontSize: 16, color: Colors.gray500, marginTop: 8 },
-  rewardCard: {
-    backgroundColor: Colors.white, padding: 20, borderRadius: 18, marginTop: 20,
-    width: '100%', borderWidth: 2, borderColor: Colors.yellowLight, gap: 8,
-  },
-  rewardText: { fontSize: 18, fontWeight: '700', color: Colors.dark },
+  doneName: { fontSize: 28, fontWeight: '800', color: '#333', marginTop: 12 },
+  doneMsg: { fontSize: 16, color: '#999', marginTop: 8 },
+  rewardBox: { backgroundColor: '#fff', padding: 20, borderRadius: 18, marginTop: 20, width: '100%', gap: 8 },
+  rewardLine: { fontSize: 18, fontWeight: '700', color: '#333' },
 });

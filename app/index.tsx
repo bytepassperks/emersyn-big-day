@@ -1,284 +1,151 @@
-import React, { useEffect, useCallback } from 'react';
+/**
+ * Home Hub - Main screen with 3D room and navigation to other rooms
+ */
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
-  SafeAreaView,
   TouchableOpacity,
+  Dimensions,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { router } from 'expo-router';
 import { useGameStore } from '@/store/gameStore';
-import { StatMeter } from '@/components/StatMeter';
-import { CoinDisplay } from '@/components/CoinDisplay';
-import { RoomCard } from '@/components/RoomCard';
-import { Colors } from '@/lib/colors';
-import { getTimeOfDayEmoji, getSegmentName } from '@/lib/helpers';
-import { Scene3D } from '@/components/Scene3D';
+import { getSegmentName, getTimeOfDayEmoji } from '@/lib/helpers';
+import GameScene from '@/components/GameScene';
+import GameHUD from '@/components/GameHUD';
+import { InteractableInfo } from '@/engine/RoomBuilder';
+import { NPCCharacter } from '@/engine/NPCCharacter';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
+const ROOMS = [
+  { id: 'bedroom', name: 'Bedroom', emoji: '\uD83D\uDECF\uFE0F', color: '#FFE4F0', route: '/bedroom' },
+  { id: 'bathroom', name: 'Bathroom', emoji: '\uD83D\uDEC1', color: '#E0F2F8', route: '/bathroom' },
+  { id: 'kitchen', name: 'Kitchen', emoji: '\uD83C\uDF73', color: '#FFF0D4', route: '/cooking' },
+  { id: 'school', name: 'School', emoji: '\uD83C\uDFEB', color: '#F0E6FF', route: '/school' },
+  { id: 'park', name: 'Park', emoji: '\uD83C\uDFDE\uFE0F', color: '#C8E6C9', route: '/park' },
+  { id: 'arcade', name: 'Arcade', emoji: '\uD83C\uDFAE', color: '#E8D5FF', route: '/arcade' },
+  { id: 'studio', name: 'Studio', emoji: '\uD83C\uDFAC', color: '#FFE0E8', route: '/studio' },
+  { id: 'shop', name: 'Shop', emoji: '\uD83D\uDECD\uFE0F', color: '#FFF8DC', route: '/shop' },
+  { id: 'stickers', name: 'Stickers', emoji: '\u2B50', color: '#FFF5CC', route: '/stickers' },
+  { id: 'settings', name: 'Settings', emoji: '\u2699\uFE0F', color: '#F0F0F0', route: '/settings' },
+];
 
 export default function HomeHub() {
-  const router = useRouter();
   const {
-    playerName,
-    coins,
-    stars,
-    level,
-    stats,
-    currentDay,
-    dayType,
-    currentSegment,
-    segmentsCompleted,
-    saveGame,
+    coins, stars, xp, level, stats, playerName,
+    currentSegment, dayType, currentDay,
+    updateStats, addCoins, addXP, saveGame,
   } = useGameStore();
 
-  // Auto-save every 30 seconds
+  const [showCoinAnim, setShowCoinAnim] = useState(false);
+  const [coinDelta, setCoinDelta] = useState(0);
+  const [npcDialogue, setNpcDialogue] = useState<{ npcName: string; text: string } | null>(null);
+
+  const xpToNext = level * 100;
+
   useEffect(() => {
-    const interval = setInterval(() => {
-      saveGame();
-    }, 30000);
+    const interval = setInterval(() => { saveGame(); }, 30000);
     return () => clearInterval(interval);
   }, [saveGame]);
+
+  const handleInteract = useCallback((interactable: InteractableInfo) => {
+    const rewards: Record<string, { stats: Record<string, number>; coins: number; xp: number }> = {
+      couch: { stats: { energy: 10, fun: 5 }, coins: 2, xp: 5 },
+      tv: { stats: { fun: 15 }, coins: 3, xp: 5 },
+      door_outside: { stats: {}, coins: 0, xp: 0 },
+    };
+    const reward = rewards[interactable.id] || { stats: { fun: 5 }, coins: 2, xp: 3 };
+    if (Object.keys(reward.stats).length > 0) updateStats(reward.stats);
+    if (reward.coins > 0) {
+      addCoins(reward.coins);
+      setCoinDelta(reward.coins);
+      setShowCoinAnim(true);
+      setTimeout(() => setShowCoinAnim(false), 1000);
+    }
+    if (reward.xp > 0) addXP(reward.xp);
+    saveGame();
+  }, [updateStats, addCoins, addXP, saveGame]);
+
+  const handleNPCTap = useCallback((npc: NPCCharacter) => {
+    setNpcDialogue({ npcName: npc.name, text: npc.currentDialogue });
+  }, []);
 
   const isWeekend = dayType === 'weekend';
 
   return (
-    <SafeAreaView style={styles.safe}>
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Header */}
-        <View style={styles.header}>
-          <View>
-            <Text style={styles.greeting}>
-              {getTimeOfDayEmoji(currentSegment)} {getSegmentName(currentSegment)}
-            </Text>
-            <Text style={styles.playerName}>{playerName}</Text>
-            <Text style={styles.dayInfo}>
-              Day {currentDay} {isWeekend ? '🎉 Weekend!' : '📅 Weekday'} · Level {level}
-            </Text>
-          </View>
-          <TouchableOpacity
-            style={styles.settingsBtn}
-            onPress={() => router.push('/settings')}
-          >
-            <Text style={styles.settingsEmoji}>⚙️</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Coin & Stars Display */}
-        <View style={styles.currencyRow}>
-          <CoinDisplay coins={coins} stars={stars} size="medium" />
-        </View>
-
-        {/* 3D Character Scene */}
-        <Scene3D
-          sceneType="home"
-          characterVisible={true}
-          characterAnimation="idle"
-          height={240}
+    <View style={styles.container}>
+      <View style={styles.sceneContainer}>
+        <GameScene
+          roomType="home"
+          onInteract={handleInteract}
+          onNPCTap={handleNPCTap}
+          height={SCREEN_WIDTH * 0.75}
         />
+        <GameHUD
+          coins={coins}
+          stats={stats}
+          level={level}
+          xp={xp % xpToNext}
+          xpToNext={xpToNext}
+          roomName={`${getTimeOfDayEmoji(currentSegment)} ${playerName}'s Home`}
+          showCoinAnimation={showCoinAnim}
+          coinDelta={coinDelta}
+          activeNPCDialogue={npcDialogue}
+        />
+      </View>
 
-        {/* Stats */}
-        <View style={styles.statsContainer}>
-          <StatMeter label="Hunger" value={stats.hunger} emoji="🍕" stat="hunger" />
-          <StatMeter label="Energy" value={stats.energy} emoji="⚡" stat="energy" />
-          <StatMeter label="Clean" value={stats.cleanliness} emoji="✨" stat="cleanliness" />
-          <StatMeter label="Fun" value={stats.fun} emoji="🎉" stat="fun" />
-          <StatMeter label="Popular" value={stats.popularity} emoji="💖" stat="popularity" />
+      <View style={styles.dayBar}>
+        <Text style={styles.dayText}>
+          Day {currentDay} {'\u2022'} {isWeekend ? 'Weekend' : 'Weekday'} {'\u2022'} {getSegmentName(currentSegment)}
+        </Text>
+        <View style={styles.starsBadge}>
+          <Text style={styles.starsText}>{'\u2B50'} {stars}</Text>
         </View>
+      </View>
 
-        {/* Room Navigation */}
-        <Text style={styles.sectionTitle}>🏠 Where to go?</Text>
-        <View style={styles.roomGrid}>
-          <RoomCard
-            name="Bedroom"
-            emoji="🛏️"
-            description="Rest & get ready"
-            bgColor={Colors.bgBedroom}
-            onPress={() => router.push('/bedroom')}
-          />
-          <RoomCard
-            name="Bathroom"
-            emoji="🛁"
-            description="Clean up!"
-            bgColor={Colors.skyLight}
-            onPress={() => router.push('/bathroom')}
-          />
-          <RoomCard
-            name="Kitchen"
-            emoji="🍳"
-            description="Cook yummy food"
-            bgColor={Colors.bgKitchen}
-            onPress={() => router.push('/cooking')}
-          />
-          {!isWeekend && (
-            <RoomCard
-              name="School"
-              emoji="🏫"
-              description="Learn & play"
-              bgColor={Colors.bgSchool}
-              onPress={() => router.push('/school')}
-            />
-          )}
-          <RoomCard
-            name="Park"
-            emoji="🏞️"
-            description="Outdoor fun!"
-            bgColor={Colors.bgPark}
-            onPress={() => router.push('/park')}
-          />
-          <RoomCard
-            name="Arcade"
-            emoji="🕹️"
-            description="Mini-games!"
-            bgColor={Colors.bgArcade}
-            onPress={() => router.push('/arcade')}
-            badge="NEW"
-          />
-          <RoomCard
-            name="Shop"
-            emoji="🛍️"
-            description="Buy cute things"
-            bgColor={Colors.bgShop}
-            onPress={() => router.push('/shop')}
-          />
-          {isWeekend && (
-            <RoomCard
-              name="Studio"
-              emoji="🎬"
-              description="Create reels!"
-              bgColor={Colors.bgStudio}
-              onPress={() => router.push('/studio')}
-              badge="WEEKEND"
-            />
-          )}
-          <RoomCard
-            name="Stickers"
-            emoji="🏷️"
-            description="Collection album"
-            bgColor={Colors.purpleLight}
-            onPress={() => router.push('/stickers')}
-          />
-          <RoomCard
-            name="Homework"
-            emoji="📚"
-            description="Shapes & counting"
-            bgColor={Colors.mintLight}
-            onPress={() => router.push('/minigames/homework')}
-          />
+      <ScrollView style={styles.scrollArea} contentContainerStyle={styles.gridContainer} showsVerticalScrollIndicator={false}>
+        <Text style={styles.sectionTitle}>Explore Rooms</Text>
+        <View style={styles.grid}>
+          {ROOMS.map((room) => (
+            <TouchableOpacity
+              key={room.id}
+              style={[styles.roomCard, { backgroundColor: room.color }]}
+              onPress={() => router.push(room.route as any)}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.roomEmoji}>{room.emoji}</Text>
+              <Text style={styles.roomName}>{room.name}</Text>
+            </TouchableOpacity>
+          ))}
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-    backgroundColor: Colors.pinkLight,
+  container: { flex: 1, backgroundColor: '#FFF5F8' },
+  sceneContainer: { width: '100%', position: 'relative' },
+  dayBar: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingHorizontal: 16, paddingVertical: 8, backgroundColor: '#fff',
+    borderBottomWidth: 1, borderBottomColor: '#f0e0e8',
   },
-  scroll: {
-    flex: 1,
+  dayText: { fontSize: 13, fontWeight: '600', color: '#666' },
+  starsBadge: { backgroundColor: '#FFF5CC', paddingHorizontal: 10, paddingVertical: 3, borderRadius: 12 },
+  starsText: { fontSize: 12, fontWeight: '700', color: '#f5a623' },
+  scrollArea: { flex: 1 },
+  gridContainer: { padding: 12, paddingBottom: 24 },
+  sectionTitle: { fontSize: 18, fontWeight: '800', color: '#333', marginBottom: 10, marginLeft: 4 },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  roomCard: {
+    width: (SCREEN_WIDTH - 44) / 3, aspectRatio: 1, borderRadius: 16,
+    alignItems: 'center', justifyContent: 'center',
+    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 4, elevation: 2,
   },
-  scrollContent: {
-    paddingBottom: 40,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 8,
-  },
-  greeting: {
-    fontSize: 24,
-    fontWeight: '800',
-    color: Colors.dark,
-  },
-  playerName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: Colors.pink,
-    marginTop: 2,
-  },
-  dayInfo: {
-    fontSize: 13,
-    color: Colors.gray500,
-    marginTop: 4,
-  },
-  settingsBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: Colors.white,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: Colors.dark,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  settingsEmoji: {
-    fontSize: 22,
-  },
-  currencyRow: {
-    paddingHorizontal: 20,
-    paddingVertical: 8,
-  },
-  characterArea: {
-    alignItems: 'center',
-    paddingVertical: 16,
-  },
-  characterPlaceholder: {
-    width: 140,
-    height: 140,
-    borderRadius: 70,
-    backgroundColor: Colors.white,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 3,
-    borderColor: Colors.pink,
-    shadowColor: Colors.pink,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 5,
-  },
-  characterEmoji: {
-    fontSize: 64,
-  },
-  characterLabel: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: Colors.pink,
-    marginTop: 4,
-  },
-  statsContainer: {
-    backgroundColor: Colors.white,
-    marginHorizontal: 16,
-    borderRadius: 20,
-    padding: 12,
-    shadowColor: Colors.dark,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: Colors.dark,
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 8,
-  },
-  roomGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    paddingHorizontal: 8,
-  },
+  roomEmoji: { fontSize: 28, marginBottom: 4 },
+  roomName: { fontSize: 12, fontWeight: '700', color: '#333' },
 });

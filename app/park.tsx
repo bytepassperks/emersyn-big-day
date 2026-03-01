@@ -1,99 +1,88 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, Alert } from 'react-native';
-import { useRouter } from 'expo-router';
+/**
+ * Park - 3D outdoor playground with activities
+ */
+import React, { useState, useCallback } from 'react';
+import { View, Text, StyleSheet, Dimensions } from 'react-native';
+import { router } from 'expo-router';
 import { useGameStore } from '@/store/gameStore';
-import { ScreenWrapper } from '@/components/ScreenWrapper';
-import { ActivityButton } from '@/components/ActivityButton';
-import { GameButton } from '@/components/GameButton';
-import { Colors } from '@/lib/colors';
-import { getActivitiesBySegment } from '@/content/activities';
-import { getRandomEncouragement } from '@/lib/helpers';
+import GameScene from '@/components/GameScene';
+import GameHUD from '@/components/GameHUD';
+import { InteractableInfo } from '@/engine/RoomBuilder';
+import { NPCCharacter } from '@/engine/NPCCharacter';
+
+const { width: SW } = Dimensions.get('window');
+
+const INTERACTION_REWARDS: Record<string, { stats: Record<string, number>; coins: number; xp: number; sticker?: string }> = {
+  swing: { stats: { fun: 20, energy: -5 }, coins: 5, xp: 8, sticker: 'sticker_swing_master' },
+  slide: { stats: { fun: 15 }, coins: 4, xp: 6 },
+  seesaw: { stats: { fun: 15, popularity: 5 }, coins: 4, xp: 6 },
+  sandbox: { stats: { fun: 10 }, coins: 3, xp: 5 },
+  bench: { stats: { energy: 15 }, coins: 2, xp: 3 },
+  tree: { stats: { fun: 8, energy: 5 }, coins: 2, xp: 4 },
+  flowers: { stats: { fun: 5 }, coins: 2, xp: 3 },
+  fountain: { stats: { fun: 10, cleanliness: 5 }, coins: 3, xp: 5 },
+  kite: { stats: { fun: 20 }, coins: 5, xp: 8 },
+  bicycle: { stats: { fun: 18, energy: -8 }, coins: 5, xp: 10, sticker: 'sticker_cyclist' },
+};
 
 export default function Park() {
-  const router = useRouter();
-  const { updateStats, addCoins, addXP, addStars, earnSticker, saveGame } = useGameStore();
-  const [completedActivities, setCompletedActivities] = useState<string[]>([]);
+  const { coins, stats, xp, level, updateStats, addCoins, addXP, earnSticker, saveGame } = useGameStore();
+  const [showCoinAnim, setShowCoinAnim] = useState(false);
+  const [coinDelta, setCoinDelta] = useState(0);
+  const [npcDialogue, setNpcDialogue] = useState<{ npcName: string; text: string } | null>(null);
 
-  const parkActivities = getActivitiesBySegment('park');
+  const xpToNext = level * 100;
 
-  const handleActivity = async (activityId: string, statDeltas: Record<string, number>, coinReward: number, xpReward: number, starReward: number, miniGameRoute?: string) => {
-    if (completedActivities.includes(activityId)) return;
-
-    if (miniGameRoute) {
-      router.push(miniGameRoute as any);
-      return;
+  const handleInteract = useCallback((interactable: InteractableInfo) => {
+    const reward = INTERACTION_REWARDS[interactable.id] || { stats: { fun: 5 }, coins: 2, xp: 3 };
+    updateStats(reward.stats);
+    if (reward.coins > 0) {
+      addCoins(reward.coins);
+      setCoinDelta(reward.coins);
+      setShowCoinAnim(true);
+      setTimeout(() => setShowCoinAnim(false), 1000);
     }
+    addXP(reward.xp);
+    if (reward.sticker) earnSticker(reward.sticker);
+    saveGame();
+  }, [updateStats, addCoins, addXP, earnSticker, saveGame]);
 
-    updateStats(statDeltas);
-    addCoins(coinReward);
-    addXP(xpReward);
-    if (starReward > 0) addStars(starReward);
-    setCompletedActivities((prev) => [...prev, activityId]);
-
-    if (completedActivities.length === 0) earnSticker('sticker_first_park');
-    if (activityId === 'park_scooty') earnSticker('sticker_scooty_ride');
-    if (activityId === 'park_trampoline') earnSticker('sticker_trampoline');
-    if (activityId === 'park_skating') earnSticker('sticker_skating');
-    if (activityId === 'park_slides') earnSticker('sticker_slide_fun');
-
-    await saveGame();
-    Alert.alert(getRandomEncouragement(), `+₹${coinReward} coins!`);
-  };
+  const handleNPCTap = useCallback((npc: NPCCharacter) => {
+    setNpcDialogue({ npcName: npc.name, text: npc.currentDialogue });
+  }, []);
 
   return (
-    <ScreenWrapper title="Park" emoji="🏞️" bgColor={Colors.bgPark}>
-      <View style={styles.characterArea}>
-        <Text style={styles.characterEmoji}>🌳</Text>
-        <Text style={styles.roomDesc}>Sunshine and outdoor fun!</Text>
-      </View>
-
-      <Text style={styles.sectionTitle}>🎢 Activities</Text>
-      {parkActivities.map((activity) => (
-        <ActivityButton
-          key={activity.id}
-          activity={activity}
-          completed={completedActivities.includes(activity.id)}
-          onPress={() =>
-            handleActivity(
-              activity.id,
-              activity.statDeltas,
-              activity.coinReward,
-              activity.xpReward,
-              activity.starReward,
-              activity.miniGameRoute
-            )
-          }
+    <View style={styles.container}>
+      <View style={styles.sceneContainer}>
+        <GameScene
+          roomType="park"
+          onInteract={handleInteract}
+          onNPCTap={handleNPCTap}
+          height={SW * 0.85}
         />
-      ))}
-
-      <View style={styles.backHomeSection}>
-        <Text style={styles.sectionTitle}>🏠 Back Home Routine</Text>
-        <Text style={styles.routineDesc}>
-          After playing outside, don't forget to clean up!
-        </Text>
-        <GameButton
-          title="Go Back Home"
-          emoji="🏠"
-          onPress={() => router.push('/back-home')}
-          variant="primary"
-          size="medium"
-          style={{ marginHorizontal: 16, marginVertical: 8 }}
+        <GameHUD
+          coins={coins}
+          stats={stats}
+          level={level}
+          xp={xp % xpToNext}
+          xpToNext={xpToNext}
+          roomName="Park"
+          onBack={() => router.back()}
+          showCoinAnimation={showCoinAnim}
+          coinDelta={coinDelta}
+          activeNPCDialogue={npcDialogue}
         />
       </View>
-    </ScreenWrapper>
+      <View style={styles.tip}>
+        <Text style={styles.tipText}>Tap the swings, slide, or sandbox to play!</Text>
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  characterArea: { alignItems: 'center', paddingVertical: 20 },
-  characterEmoji: { fontSize: 64 },
-  roomDesc: { fontSize: 14, color: Colors.gray500, marginTop: 8 },
-  sectionTitle: {
-    fontSize: 18, fontWeight: '800', color: Colors.dark,
-    paddingHorizontal: 16, paddingTop: 16, paddingBottom: 8,
-  },
-  backHomeSection: { marginTop: 8 },
-  routineDesc: {
-    fontSize: 13, color: Colors.gray500, paddingHorizontal: 16, marginBottom: 4,
-  },
+  container: { flex: 1, backgroundColor: '#D4F0D4' },
+  sceneContainer: { flex: 1, position: 'relative' },
+  tip: { padding: 12, backgroundColor: '#fff', alignItems: 'center' },
+  tipText: { fontSize: 12, color: '#999', fontWeight: '500' },
 });

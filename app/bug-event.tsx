@@ -1,133 +1,147 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Alert } from 'react-native';
-import { useRouter } from 'expo-router';
+/**
+ * Bug Event - Gentle, empowering bug encounter
+ */
+import React, { useState, useCallback, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
+import { router } from 'expo-router';
 import { useGameStore } from '@/store/gameStore';
-import { ScreenWrapper } from '@/components/ScreenWrapper';
-import { GameButton } from '@/components/GameButton';
-import { Colors } from '@/lib/colors';
-import { getRandomBugEvent } from '@/content/activities';
-import { BugEvent, BugAction } from '@/lib/types';
 import { getRandomEncouragement } from '@/lib/helpers';
 
-export default function BugEventScreen() {
-  const router = useRouter();
-  const { handleBugEvent, addCoins, addXP, earnSticker, saveGame } = useGameStore();
-  const [event, setEvent] = useState<BugEvent | null>(null);
-  const [resolved, setResolved] = useState(false);
-  const [selectedAction, setSelectedAction] = useState<BugAction | null>(null);
+type BugType = { id: string; name: string; emoji: string };
+
+const BUGS: BugType[] = [
+  { id: 'mosquito', name: 'Mosquito', emoji: '\uD83E\uDD9F' },
+  { id: 'fly', name: 'House Fly', emoji: '\uD83E\uDEB0' },
+  { id: 'spider', name: 'Tiny Spider', emoji: '\uD83D\uDD77\uFE0F' },
+  { id: 'ant', name: 'Ant', emoji: '\uD83D\uDC1C' },
+  { id: 'ladybug', name: 'Ladybug', emoji: '\uD83D\uDC1E' },
+];
+
+type Action = { id: string; name: string; emoji: string; stat: Record<string, number>; coins: number };
+
+const ACTIONS: Action[] = [
+  { id: 'window', name: 'Close Window', emoji: '\uD83E\uDE9F', stat: { cleanliness: 5 }, coins: 3 },
+  { id: 'fan', name: 'Turn on Fan', emoji: '\uD83C\uDF2C\uFE0F', stat: { energy: 5 }, coins: 3 },
+  { id: 'net', name: 'Place Net', emoji: '\uD83E\uDD4F', stat: { cleanliness: 8 }, coins: 4 },
+  { id: 'shoo', name: 'Shoo Bug', emoji: '\uD83D\uDC4B', stat: { fun: 5 }, coins: 5 },
+];
+
+export default function BugEvent() {
+  const { updateStats, addCoins, addXP, addStars, earnSticker, saveGame } = useGameStore();
+  const [bug] = useState(() => BUGS[Math.floor(Math.random() * BUGS.length)]);
+  const [actionsUsed, setActionsUsed] = useState<string[]>([]);
+  const [phase, setPhase] = useState<'encounter' | 'done'>('encounter');
+  const [totalCoins, setTotalCoins] = useState(0);
+  const [bounceAnim] = useState(() => new Animated.Value(0));
 
   useEffect(() => {
-    setEvent(getRandomBugEvent());
-  }, []);
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(bounceAnim, { toValue: -20, duration: 500, useNativeDriver: true }),
+        Animated.timing(bounceAnim, { toValue: 0, duration: 500, useNativeDriver: true }),
+      ])
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [bounceAnim]);
 
-  if (!event) return null;
+  const handleAction = useCallback(async (action: Action) => {
+    if (actionsUsed.includes(action.id)) return;
+    updateStats(action.stat);
+    addCoins(action.coins);
+    addXP(5);
+    setTotalCoins(prev => prev + action.coins);
+    setActionsUsed(prev => [...prev, action.id]);
 
-  const bugEmoji = event.type === 'mosquito' ? '🦟' : event.type === 'fly' ? '🪰' : '🐜';
-
-  const handleAction = async (action: BugAction) => {
-    setSelectedAction(action);
-
-    const success = Math.random() * 100 < action.effectiveness;
-    handleBugEvent(event.id, action.id, success);
-
-    if (success) {
-      addCoins(10);
-      addXP(15);
-      earnSticker('sticker_first_bug');
-      earnSticker('sticker_' + action.id.replace(/_[a-z]$/, ''));
-    } else {
-      addCoins(5);
-      addXP(8);
+    if (actionsUsed.length >= 2) {
+      addStars(1);
+      earnSticker('sticker_brave_badge');
+      setPhase('done');
+      await saveGame();
     }
+  }, [actionsUsed, updateStats, addCoins, addXP, addStars, earnSticker, saveGame]);
 
-    setResolved(true);
-    await saveGame();
-  };
-
-  if (resolved && selectedAction) {
-    const success = Math.random() * 100 < selectedAction.effectiveness;
+  if (phase === 'done') {
     return (
-      <ScreenWrapper title="Bug Event" emoji="🦸" bgColor={Colors.mintLight} showBack={false} scrollable={false}>
-        <View style={styles.resultArea}>
-          <Text style={styles.resultEmoji}>{success ? '🎉' : '😅'}</Text>
-          <Text style={styles.resultTitle}>
-            {success ? 'Great job!' : 'Almost got it!'}
-          </Text>
-          <Text style={styles.resultDesc}>
-            {success
-              ? `You used "${selectedAction.name}" and it worked! The ${event.type} is gone!`
-              : `The ${event.type} escaped, but you were really brave trying!`
-            }
-          </Text>
-          <Text style={styles.encouragement}>{getRandomEncouragement()}</Text>
-
-          <View style={styles.rewardCard}>
-            <Text style={styles.rewardText}>💰 +₹{success ? 10 : 5} coins</Text>
-            <Text style={styles.rewardText}>⭐ +{success ? 15 : 8} XP</Text>
-            <Text style={styles.rewardText}>🦸 Brave Badge progress!</Text>
+      <View style={styles.container}>
+        <View style={styles.center}>
+          <Text style={styles.doneEmoji}>{'\uD83C\uDFC5'}</Text>
+          <Text style={styles.doneTitle}>Brave Badge Earned!</Text>
+          <Text style={styles.doneMsg}>{getRandomEncouragement()}</Text>
+          <View style={styles.rewardBox}>
+            <Text style={styles.rewardLine}>+{'\u20B9'}{totalCoins} coins</Text>
+            <Text style={styles.rewardLine}>+1 Star</Text>
+            <Text style={styles.rewardLine}>Brave Badge sticker!</Text>
           </View>
-
-          <GameButton
-            title="Continue"
-            emoji="✨"
-            onPress={() => router.back()}
-            variant="primary"
-            size="large"
-            style={{ marginTop: 20 }}
-          />
+          <TouchableOpacity style={styles.homeBtn} onPress={() => router.replace('/')}>
+            <Text style={styles.homeBtnText}>Back Home</Text>
+          </TouchableOpacity>
         </View>
-      </ScreenWrapper>
+      </View>
     );
   }
 
   return (
-    <ScreenWrapper title="Bug Alert!" emoji="⚠️" bgColor={Colors.yellowLight} showBack={false} scrollable={false}>
-      <View style={styles.eventArea}>
-        <Text style={styles.bugEmoji}>{bugEmoji}</Text>
-        <Text style={styles.eventTitle}>Oh no! A {event.type}!</Text>
-        <Text style={styles.eventDesc}>
-          A {event.type} appeared in the {event.location}! What should we do?
-        </Text>
-        <Text style={styles.encourageText}>
-          Don't worry, you can handle this! 💪
-        </Text>
-
-        <Text style={styles.actionsTitle}>Choose an action:</Text>
-        {event.actions.map((action) => (
-          <GameButton
-            key={action.id}
-            title={action.name}
-            emoji={action.emoji}
-            onPress={() => handleAction(action)}
-            variant="primary"
-            size="medium"
-            style={styles.actionBtn}
-          />
-        ))}
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+          <Text style={styles.backBtnText}>{'\u2190'}</Text>
+        </TouchableOpacity>
+        <Text style={styles.title}>Bug Alert!</Text>
       </View>
-    </ScreenWrapper>
+      <View style={styles.center}>
+        <Animated.Text style={[styles.bugEmoji, { transform: [{ translateY: bounceAnim }] }]}>
+          {bug.emoji}
+        </Animated.Text>
+        <Text style={styles.bugName}>A {bug.name} appeared!</Text>
+        <Text style={styles.bugHint}>Use actions to handle it bravely!</Text>
+        <View style={styles.actionGrid}>
+          {ACTIONS.map(action => {
+            const used = actionsUsed.includes(action.id);
+            return (
+              <TouchableOpacity
+                key={action.id}
+                style={[styles.actionBtn, used && styles.actionUsed]}
+                onPress={() => handleAction(action)}
+                disabled={used}
+              >
+                <Text style={styles.actionEmoji}>{action.emoji}</Text>
+                <Text style={styles.actionName}>{action.name}</Text>
+                {!used && <Text style={styles.actionCoins}>+{'\u20B9'}{action.coins}</Text>}
+                {used && <Text style={styles.actionDone}>Done!</Text>}
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+        <Text style={styles.progressText}>{actionsUsed.length}/3 actions to earn Brave Badge</Text>
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  eventArea: { alignItems: 'center', paddingHorizontal: 20, paddingTop: 30 },
+  container: { flex: 1, backgroundColor: '#FFF0E0' },
+  header: { flexDirection: 'row', alignItems: 'center', padding: 16, paddingTop: 50, gap: 12 },
+  backBtn: { width: 40, height: 40, borderRadius: 12, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' },
+  backBtnText: { fontSize: 20, fontWeight: '800' },
+  title: { fontSize: 22, fontWeight: '800', color: '#333' },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
   bugEmoji: { fontSize: 80 },
-  eventTitle: { fontSize: 26, fontWeight: '800', color: Colors.dark, marginTop: 12 },
-  eventDesc: { fontSize: 16, color: Colors.gray500, textAlign: 'center', marginTop: 8 },
-  encourageText: { fontSize: 14, color: Colors.pink, fontWeight: '700', marginTop: 8 },
-  actionsTitle: {
-    fontSize: 18, fontWeight: '800', color: Colors.dark, marginTop: 24, marginBottom: 12,
-  },
-  actionBtn: { width: '100%', marginVertical: 4 },
-  // Result
-  resultArea: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 20 },
-  resultEmoji: { fontSize: 80 },
-  resultTitle: { fontSize: 28, fontWeight: '800', color: Colors.dark, marginTop: 12 },
-  resultDesc: { fontSize: 16, color: Colors.gray500, textAlign: 'center', marginTop: 8 },
-  encouragement: { fontSize: 16, color: Colors.pink, fontWeight: '700', marginTop: 8 },
-  rewardCard: {
-    backgroundColor: Colors.white, padding: 20, borderRadius: 18, marginTop: 20,
-    width: '100%', borderWidth: 2, borderColor: Colors.mintLight, gap: 8,
-  },
-  rewardText: { fontSize: 18, fontWeight: '700', color: Colors.dark },
+  bugName: { fontSize: 24, fontWeight: '800', color: '#333', marginTop: 16 },
+  bugHint: { fontSize: 14, color: '#999', marginTop: 6 },
+  actionGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginTop: 24, justifyContent: 'center' },
+  actionBtn: { width: 140, backgroundColor: '#fff', padding: 16, borderRadius: 16, alignItems: 'center' },
+  actionUsed: { opacity: 0.5 },
+  actionEmoji: { fontSize: 32 },
+  actionName: { fontSize: 14, fontWeight: '700', color: '#333', marginTop: 6 },
+  actionCoins: { fontSize: 13, fontWeight: '800', color: '#ff9f43', marginTop: 4 },
+  actionDone: { fontSize: 13, fontWeight: '800', color: '#10b981', marginTop: 4 },
+  progressText: { fontSize: 13, color: '#999', marginTop: 16 },
+  doneEmoji: { fontSize: 80 },
+  doneTitle: { fontSize: 28, fontWeight: '800', color: '#333', marginTop: 12 },
+  doneMsg: { fontSize: 15, color: '#999', marginTop: 8 },
+  rewardBox: { backgroundColor: '#fff', padding: 20, borderRadius: 18, marginTop: 20, width: '100%', gap: 8 },
+  rewardLine: { fontSize: 18, fontWeight: '700', color: '#333' },
+  homeBtn: { marginTop: 24, backgroundColor: '#ff9f43', paddingHorizontal: 30, paddingVertical: 14, borderRadius: 16 },
+  homeBtnText: { fontSize: 18, fontWeight: '800', color: '#fff' },
 });

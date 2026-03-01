@@ -1,373 +1,264 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions, Alert } from 'react-native';
-import { useRouter } from 'expo-router';
+/**
+ * Scooty Dash - 3-lane endless runner with obstacles, coins, powerups
+ */
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { View, Text, StyleSheet, Dimensions, TouchableOpacity, Animated, PanResponder } from 'react-native';
+import { router } from 'expo-router';
 import { useGameStore } from '@/store/gameStore';
-import { ScreenWrapper } from '@/components/ScreenWrapper';
-import { GameButton } from '@/components/GameButton';
-import { Colors } from '@/lib/colors';
-import { getRandomEncouragement } from '@/lib/helpers';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const LANE_WIDTH = SCREEN_WIDTH / 3;
-const GAME_HEIGHT = 500;
-const PLAYER_SIZE = 50;
-const OBSTACLE_SIZE = 40;
-const POWERUP_SIZE = 35;
-const TICK_MS = 50;
+const { width: SW, height: SH } = Dimensions.get('window');
+const LANE_WIDTH = SW / 3;
+const LANES = [-1, 0, 1]; // left, center, right
+const GAME_SPEED_BASE = 4;
+const SPAWN_INTERVAL = 1200;
 
-type Lane = 0 | 1 | 2;
-type GamePhase = 'menu' | 'playing' | 'gameover';
+type GameObj = { id: number; type: 'obstacle' | 'coin' | 'powerup'; lane: number; y: number; emoji: string };
 
-interface Obstacle {
-  id: number;
-  lane: Lane;
-  y: number;
-  type: 'cone' | 'rock' | 'puddle';
-  emoji: string;
-}
-
-interface Powerup {
-  id: number;
-  lane: Lane;
-  y: number;
-  type: 'coin' | 'star' | 'shield';
-  emoji: string;
-}
-
-const OBSTACLE_EMOJIS: Record<string, string> = { cone: '🔶', rock: '🪨', puddle: '💧' };
-const POWERUP_EMOJIS: Record<string, string> = { coin: '💰', star: '⭐', shield: '🛡️' };
+const OBSTACLES = ['\uD83D\uDEA7', '\uD83E\uDEA8', '\uD83C\uDF32', '\uD83D\uDEB8', '\uD83D\uDCE6'];
+const POWERUPS = ['\u2B50', '\uD83D\uDEE1\uFE0F', '\uD83C\uDF1F'];
 const TRACKS = [
-  { id: 'park', name: 'Park Path', emoji: '🌳', color: Colors.bgPark },
-  { id: 'city', name: 'City Road', emoji: '🏙️', color: Colors.skyLight },
-  { id: 'beach', name: 'Beach Run', emoji: '🏖️', color: Colors.yellowLight },
+  { name: 'City Road', bg: '#E8E8E8', obstacleSet: ['\uD83D\uDEA7', '\uD83D\uDE97', '\uD83D\uDEB8'] },
+  { name: 'Park Trail', bg: '#D4E8D4', obstacleSet: ['\uD83C\uDF32', '\uD83E\uDEA8', '\uD83D\uDC15'] },
+  { name: 'Beach Path', bg: '#E8DCC8', obstacleSet: ['\uD83C\uDF34', '\uD83E\uDEBB', '\uD83E\uDD80'] },
 ];
 
 export default function EndlessRunner() {
-  const router = useRouter();
-  const { addCoins, addXP, addStars, earnSticker, recordMiniGameResult, saveGame } = useGameStore();
-
-  const [phase, setPhase] = useState<GamePhase>('menu');
-  const [selectedTrack, setSelectedTrack] = useState(0);
-  const [lane, setLane] = useState<Lane>(1);
+  const { addCoins, addXP, addStars, earnSticker, saveGame } = useGameStore();
+  const [gameState, setGameState] = useState<'ready' | 'playing' | 'over'>('ready');
   const [score, setScore] = useState(0);
   const [coinsCollected, setCoinsCollected] = useState(0);
-  const [obstacles, setObstacles] = useState<Obstacle[]>([]);
-  const [powerups, setPowerups] = useState<Powerup[]>([]);
-  const [speed, setSpeed] = useState(5);
-  const [hasShield, setHasShield] = useState(false);
-
+  const [playerLane, setPlayerLane] = useState(0);
+  const [objects, setObjects] = useState<GameObj[]>([]);
+  const [speed, setSpeed] = useState(GAME_SPEED_BASE);
+  const [track] = useState(() => TRACKS[Math.floor(Math.random() * TRACKS.length)]);
+  const [shield, setShield] = useState(false);
+  const [combo, setCombo] = useState(0);
+  const idCounter = useRef(0);
   const gameLoop = useRef<ReturnType<typeof setInterval> | null>(null);
-  const obstacleId = useRef(0);
-  const frameCount = useRef(0);
+  const spawnLoop = useRef<ReturnType<typeof setInterval> | null>(null);
+  const playerAnim = useRef(new Animated.Value(0)).current;
+
+  const movePlayer = useCallback((dir: number) => {
+    setPlayerLane(prev => {
+      const next = prev + dir;
+      if (next < -1 || next > 1) return prev;
+      Animated.spring(playerAnim, { toValue: next * LANE_WIDTH, useNativeDriver: true }).start();
+      return next;
+    });
+  }, [playerAnim]);
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onPanResponderRelease: (_, gs) => {
+        if (Math.abs(gs.dx) > 30) {
+          movePlayer(gs.dx > 0 ? 1 : -1);
+        }
+      },
+    })
+  ).current;
 
   const startGame = () => {
-    setPhase('playing');
-    setLane(1);
+    setGameState('playing');
     setScore(0);
     setCoinsCollected(0);
-    setObstacles([]);
-    setPowerups([]);
-    setSpeed(5);
-    setHasShield(false);
-    frameCount.current = 0;
-    obstacleId.current = 0;
+    setObjects([]);
+    setSpeed(GAME_SPEED_BASE);
+    setPlayerLane(0);
+    setShield(false);
+    setCombo(0);
+    playerAnim.setValue(0);
   };
 
   const endGame = useCallback(async () => {
-    if (gameLoop.current) {
-      clearInterval(gameLoop.current);
-      gameLoop.current = null;
-    }
-    setPhase('gameover');
-
-    const coinReward = coinsCollected + Math.floor(score / 10);
-    const xpReward = Math.floor(score / 5);
-    addCoins(coinReward);
-    addXP(xpReward);
-    addStars(Math.floor(score / 50));
-    earnSticker('sticker_first_game');
-    if (score >= 100) earnSticker('sticker_runner_1000');
-    if (score >= 200) earnSticker('sticker_high_score');
-    recordMiniGameResult({ gameId: 'scooty_dash', score, coinsEarned: coinReward, playedAt: Date.now() });
+    setGameState('over');
+    if (gameLoop.current) clearInterval(gameLoop.current);
+    if (spawnLoop.current) clearInterval(spawnLoop.current);
+    addCoins(coinsCollected);
+    addXP(Math.floor(score / 10));
+    if (score > 100) addStars(1);
+    if (score > 500) earnSticker('sticker_scooty_master');
     await saveGame();
-  }, [coinsCollected, score]);
+  }, [coinsCollected, score, addCoins, addXP, addStars, earnSticker, saveGame]);
 
   useEffect(() => {
-    if (phase !== 'playing') return;
+    if (gameState !== 'playing') return;
+
+    spawnLoop.current = setInterval(() => {
+      const rand = Math.random();
+      let type: GameObj['type'] = 'obstacle';
+      let emoji = track.obstacleSet[Math.floor(Math.random() * track.obstacleSet.length)];
+
+      if (rand > 0.7) {
+        type = 'coin';
+        emoji = '\uD83D\uDCB0';
+      } else if (rand > 0.92) {
+        type = 'powerup';
+        emoji = POWERUPS[Math.floor(Math.random() * POWERUPS.length)];
+      }
+
+      const lane = LANES[Math.floor(Math.random() * LANES.length)];
+      idCounter.current += 1;
+      setObjects(prev => [...prev, { id: idCounter.current, type, lane, y: -60, emoji }]);
+    }, SPAWN_INTERVAL);
 
     gameLoop.current = setInterval(() => {
-      frameCount.current++;
+      setScore(prev => prev + 1);
+      setSpeed(prev => Math.min(prev + 0.002, 12));
 
-      // Move obstacles down
-      setObstacles((prev) => {
-        const moved = prev.map((o) => ({ ...o, y: o.y + speed })).filter((o) => o.y < GAME_HEIGHT + 50);
-        return moved;
+      setObjects(prev => {
+        const updated = prev.map(obj => ({ ...obj, y: obj.y + speed })).filter(obj => obj.y < SH + 50);
+        return updated;
       });
-
-      // Move powerups down
-      setPowerups((prev) => {
-        const moved = prev.map((p) => ({ ...p, y: p.y + speed })).filter((p) => p.y < GAME_HEIGHT + 50);
-        return moved;
-      });
-
-      // Spawn obstacles
-      if (frameCount.current % 20 === 0) {
-        const types: Array<'cone' | 'rock' | 'puddle'> = ['cone', 'rock', 'puddle'];
-        const type = types[Math.floor(Math.random() * types.length)];
-        const newLane = Math.floor(Math.random() * 3) as Lane;
-        setObstacles((prev) => [
-          ...prev,
-          { id: obstacleId.current++, lane: newLane, y: -OBSTACLE_SIZE, type, emoji: OBSTACLE_EMOJIS[type] },
-        ]);
-      }
-
-      // Spawn powerups
-      if (frameCount.current % 30 === 0) {
-        const types: Array<'coin' | 'star' | 'shield'> = ['coin', 'coin', 'coin', 'star', 'shield'];
-        const type = types[Math.floor(Math.random() * types.length)];
-        const newLane = Math.floor(Math.random() * 3) as Lane;
-        setPowerups((prev) => [
-          ...prev,
-          { id: obstacleId.current++, lane: newLane, y: -POWERUP_SIZE, type, emoji: POWERUP_EMOJIS[type] },
-        ]);
-      }
-
-      // Increase score
-      setScore((prev) => prev + 1);
-
-      // Speed up gradually
-      if (frameCount.current % 200 === 0) {
-        setSpeed((prev) => Math.min(prev + 0.5, 12));
-      }
-    }, TICK_MS);
+    }, 16);
 
     return () => {
       if (gameLoop.current) clearInterval(gameLoop.current);
+      if (spawnLoop.current) clearInterval(spawnLoop.current);
     };
-  }, [phase, speed]);
+  }, [gameState, speed, track]);
 
   // Collision detection
   useEffect(() => {
-    if (phase !== 'playing') return;
+    if (gameState !== 'playing') return;
 
-    const playerY = GAME_HEIGHT - 80;
+    const playerY = SH - 160;
+    const hitObjects = objects.filter(obj =>
+      obj.lane === playerLane && Math.abs(obj.y - playerY) < 40
+    );
 
-    // Check obstacle collisions
-    for (const obs of obstacles) {
-      if (obs.lane === lane && Math.abs(obs.y - playerY) < PLAYER_SIZE) {
-        if (hasShield) {
-          setHasShield(false);
-          setObstacles((prev) => prev.filter((o) => o.id !== obs.id));
+    hitObjects.forEach(obj => {
+      if (obj.type === 'coin') {
+        setCoinsCollected(prev => prev + (combo > 5 ? 2 : 1));
+        setCombo(prev => prev + 1);
+        setObjects(prev => prev.filter(o => o.id !== obj.id));
+      } else if (obj.type === 'powerup') {
+        setShield(true);
+        setTimeout(() => setShield(false), 5000);
+        setObjects(prev => prev.filter(o => o.id !== obj.id));
+      } else if (obj.type === 'obstacle') {
+        if (shield) {
+          setShield(false);
+          setObjects(prev => prev.filter(o => o.id !== obj.id));
         } else {
           endGame();
-          return;
         }
       }
-    }
+    });
+  }, [objects, playerLane, gameState, shield, combo, endGame]);
 
-    // Check powerup collisions
-    for (const pu of powerups) {
-      if (pu.lane === lane && Math.abs(pu.y - playerY) < PLAYER_SIZE) {
-        setPowerups((prev) => prev.filter((p) => p.id !== pu.id));
-        if (pu.type === 'coin') setCoinsCollected((prev) => prev + 3);
-        if (pu.type === 'star') setScore((prev) => prev + 10);
-        if (pu.type === 'shield') setHasShield(true);
-      }
-    }
-  }, [obstacles, powerups, lane, phase, hasShield, endGame]);
-
-  const moveLane = (direction: 'left' | 'right') => {
-    if (direction === 'left' && lane > 0) setLane((prev) => (prev - 1) as Lane);
-    if (direction === 'right' && lane < 2) setLane((prev) => (prev + 1) as Lane);
-  };
-
-  if (phase === 'menu') {
+  if (gameState === 'ready') {
     return (
-      <ScreenWrapper title="Scooty Dash" emoji="🛴" bgColor={Colors.mintLight}>
-        <View style={styles.menuArea}>
-          <Text style={styles.menuEmoji}>🛴</Text>
-          <Text style={styles.menuTitle}>Scooty Dash!</Text>
-          <Text style={styles.menuDesc}>Dodge obstacles and collect coins!</Text>
-
-          <Text style={styles.trackTitle}>Choose Track:</Text>
-          {TRACKS.map((track, i) => (
-            <GameButton
-              key={track.id}
-              title={`${track.emoji} ${track.name}`}
-              onPress={() => setSelectedTrack(i)}
-              variant={selectedTrack === i ? 'primary' : 'outline'}
-              size="medium"
-              style={styles.trackBtn}
-            />
-          ))}
-
-          <GameButton
-            title="Start! 🏁"
-            onPress={startGame}
-            variant="accent"
-            size="large"
-            style={{ marginTop: 20 }}
-          />
+      <View style={[styles.container, { backgroundColor: track.bg }]}>
+        <View style={styles.center}>
+          <Text style={styles.scootyEmoji}>{'\uD83D\uDEF5'}</Text>
+          <Text style={styles.gameTitle}>Scooty Dash</Text>
+          <Text style={styles.trackName}>{track.name}</Text>
+          <Text style={styles.hint}>Swipe left/right to dodge obstacles!</Text>
+          <TouchableOpacity style={styles.playBtn} onPress={startGame}>
+            <Text style={styles.playBtnText}>Play!</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.backLink} onPress={() => router.back()}>
+            <Text style={styles.backLinkText}>Back to Arcade</Text>
+          </TouchableOpacity>
         </View>
-      </ScreenWrapper>
+      </View>
     );
   }
 
-  if (phase === 'gameover') {
-    const totalCoins = coinsCollected + Math.floor(score / 10);
+  if (gameState === 'over') {
     return (
-      <ScreenWrapper title="Game Over" emoji="🏁" bgColor={Colors.mintLight} showBack={false} scrollable={false}>
-        <View style={styles.gameOverArea}>
-          <Text style={styles.gameOverEmoji}>🏁</Text>
-          <Text style={styles.gameOverTitle}>Game Over!</Text>
-          <Text style={styles.gameOverScore}>Score: {score}</Text>
-          <Text style={styles.gameOverEncouragement}>{getRandomEncouragement()}</Text>
-
-          <View style={styles.rewardCard}>
-            <Text style={styles.rewardText}>💰 +₹{totalCoins}</Text>
-            <Text style={styles.rewardText}>⭐ +{Math.floor(score / 5)} XP</Text>
-            <Text style={styles.rewardText}>🌟 +{Math.floor(score / 50)} Stars</Text>
+      <View style={[styles.container, { backgroundColor: track.bg }]}>
+        <View style={styles.center}>
+          <Text style={styles.overTitle}>Game Over!</Text>
+          <Text style={styles.finalScore}>Score: {score}</Text>
+          <View style={styles.rewardBox}>
+            <Text style={styles.rewardLine}>{'\u20B9'}{coinsCollected} coins earned</Text>
+            <Text style={styles.rewardLine}>+{Math.floor(score / 10)} XP</Text>
+            {score > 100 && <Text style={styles.rewardLine}>+1 Star!</Text>}
           </View>
-
-          <GameButton title="Play Again" emoji="🔄" onPress={startGame} variant="primary" size="large" style={{ marginTop: 16 }} />
-          <GameButton title="Back" emoji="🏠" onPress={() => router.back()} variant="outline" size="medium" style={{ marginTop: 8 }} />
+          <TouchableOpacity style={styles.playBtn} onPress={startGame}>
+            <Text style={styles.playBtnText}>Play Again</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.backLink} onPress={() => router.back()}>
+            <Text style={styles.backLinkText}>Back to Arcade</Text>
+          </TouchableOpacity>
         </View>
-      </ScreenWrapper>
+      </View>
     );
   }
-
-  const track = TRACKS[selectedTrack];
 
   return (
-    <View style={[styles.gameScreen, { backgroundColor: track.color }]}>
+    <View style={[styles.container, { backgroundColor: track.bg }]} {...panResponder.panHandlers}>
+      {/* Lane lines */}
+      <View style={styles.laneLines}>
+        <View style={styles.laneLine} />
+        <View style={styles.laneLine} />
+      </View>
+
       {/* HUD */}
       <View style={styles.hud}>
-        <Text style={styles.hudText}>🏁 {score}</Text>
-        <Text style={styles.hudText}>💰 {coinsCollected}</Text>
-        {hasShield && <Text style={styles.hudText}>🛡️</Text>}
+        <Text style={styles.hudScore}>Score: {score}</Text>
+        <Text style={styles.hudCoins}>{'\u20B9'}{coinsCollected}</Text>
+        {shield && <Text style={styles.hudShield}>{'\uD83D\uDEE1\uFE0F'}</Text>}
+        {combo > 3 && <Text style={styles.hudCombo}>x{combo}</Text>}
       </View>
 
-      {/* Game Area */}
-      <View style={styles.gameArea}>
-        {/* Lane lines */}
-        <View style={[styles.laneLine, { left: LANE_WIDTH }]} />
-        <View style={[styles.laneLine, { left: LANE_WIDTH * 2 }]} />
-
-        {/* Player */}
-        <View
+      {/* Objects */}
+      {objects.map(obj => (
+        <Text
+          key={obj.id}
           style={[
-            styles.player,
-            {
-              left: lane * LANE_WIDTH + (LANE_WIDTH - PLAYER_SIZE) / 2,
-              bottom: 60,
-            },
+            styles.gameObj,
+            { top: obj.y, left: SW / 2 + obj.lane * LANE_WIDTH - 20 },
           ]}
         >
-          <Text style={styles.playerEmoji}>🛴</Text>
-          {hasShield && <Text style={styles.shieldEmoji}>🛡️</Text>}
-        </View>
+          {obj.emoji}
+        </Text>
+      ))}
 
-        {/* Obstacles */}
-        {obstacles.map((obs) => (
-          <View
-            key={obs.id}
-            style={[
-              styles.obstacle,
-              {
-                left: obs.lane * LANE_WIDTH + (LANE_WIDTH - OBSTACLE_SIZE) / 2,
-                top: obs.y,
-              },
-            ]}
-          >
-            <Text style={styles.obstacleEmoji}>{obs.emoji}</Text>
-          </View>
-        ))}
+      {/* Player */}
+      <Animated.View style={[styles.player, { transform: [{ translateX: playerAnim }] }]}>
+        <Text style={styles.playerEmoji}>{'\uD83D\uDEF5'}</Text>
+        {shield && <View style={styles.shieldGlow} />}
+      </Animated.View>
 
-        {/* Powerups */}
-        {powerups.map((pu) => (
-          <View
-            key={pu.id}
-            style={[
-              styles.powerup,
-              {
-                left: pu.lane * LANE_WIDTH + (LANE_WIDTH - POWERUP_SIZE) / 2,
-                top: pu.y,
-              },
-            ]}
-          >
-            <Text style={styles.powerupEmoji}>{pu.emoji}</Text>
-          </View>
-        ))}
-      </View>
-
-      {/* Controls */}
-      <View style={styles.controls}>
-        <TouchableOpacity style={styles.controlBtn} onPress={() => moveLane('left')}>
-          <Text style={styles.controlText}>⬅️</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.controlBtn} onPress={() => moveLane('right')}>
-          <Text style={styles.controlText}>➡️</Text>
-        </TouchableOpacity>
+      {/* Touch zones */}
+      <View style={styles.touchZones}>
+        <TouchableOpacity style={styles.touchZone} onPress={() => movePlayer(-1)} />
+        <TouchableOpacity style={styles.touchZone} onPress={() => {}} />
+        <TouchableOpacity style={styles.touchZone} onPress={() => movePlayer(1)} />
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  menuArea: { alignItems: 'center', paddingHorizontal: 20, paddingTop: 30 },
-  menuEmoji: { fontSize: 64 },
-  menuTitle: { fontSize: 28, fontWeight: '800', color: Colors.dark, marginTop: 12 },
-  menuDesc: { fontSize: 16, color: Colors.gray500, marginTop: 4 },
-  trackTitle: { fontSize: 18, fontWeight: '800', color: Colors.dark, marginTop: 24, marginBottom: 8 },
-  trackBtn: { width: '100%', marginVertical: 4 },
-  gameScreen: { flex: 1, paddingTop: 50 },
-  hud: {
-    flexDirection: 'row', justifyContent: 'space-around', paddingHorizontal: 20, paddingVertical: 8,
-    backgroundColor: Colors.overlay, borderRadius: 16, marginHorizontal: 16,
-  },
-  hudText: { fontSize: 18, fontWeight: '800', color: Colors.white },
-  gameArea: {
-    flex: 1, marginHorizontal: 16, marginTop: 8, position: 'relative', overflow: 'hidden',
-    borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.3)',
-  },
-  laneLine: {
-    position: 'absolute', top: 0, bottom: 0, width: 2,
-    backgroundColor: 'rgba(255,255,255,0.4)',
-  },
-  player: {
-    position: 'absolute', width: PLAYER_SIZE, height: PLAYER_SIZE,
-    justifyContent: 'center', alignItems: 'center',
-  },
-  playerEmoji: { fontSize: 36 },
-  shieldEmoji: { fontSize: 16, position: 'absolute', top: -8, right: -8 },
-  obstacle: {
-    position: 'absolute', width: OBSTACLE_SIZE, height: OBSTACLE_SIZE,
-    justifyContent: 'center', alignItems: 'center',
-  },
-  obstacleEmoji: { fontSize: 30 },
-  powerup: {
-    position: 'absolute', width: POWERUP_SIZE, height: POWERUP_SIZE,
-    justifyContent: 'center', alignItems: 'center',
-  },
-  powerupEmoji: { fontSize: 26 },
-  controls: {
-    flexDirection: 'row', justifyContent: 'space-around', paddingVertical: 16, paddingHorizontal: 40,
-  },
-  controlBtn: {
-    width: 80, height: 80, borderRadius: 40, backgroundColor: Colors.white,
-    justifyContent: 'center', alignItems: 'center',
-    shadowColor: Colors.dark, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 4, elevation: 4,
-  },
-  controlText: { fontSize: 32 },
-  // Game over
-  gameOverArea: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 20 },
-  gameOverEmoji: { fontSize: 64 },
-  gameOverTitle: { fontSize: 32, fontWeight: '800', color: Colors.dark, marginTop: 12 },
-  gameOverScore: { fontSize: 24, fontWeight: '800', color: Colors.purple, marginTop: 8 },
-  gameOverEncouragement: { fontSize: 16, color: Colors.gray500, marginTop: 8 },
-  rewardCard: {
-    backgroundColor: Colors.white, padding: 20, borderRadius: 18, marginTop: 16,
-    width: '100%', borderWidth: 2, borderColor: Colors.mintLight, gap: 8,
-  },
-  rewardText: { fontSize: 18, fontWeight: '700', color: Colors.dark },
+  container: { flex: 1 },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
+  scootyEmoji: { fontSize: 80 },
+  gameTitle: { fontSize: 32, fontWeight: '800', color: '#333', marginTop: 12 },
+  trackName: { fontSize: 16, fontWeight: '700', color: '#666', marginTop: 4 },
+  hint: { fontSize: 14, color: '#999', marginTop: 12 },
+  playBtn: { marginTop: 30, backgroundColor: '#FF6B6B', paddingHorizontal: 40, paddingVertical: 16, borderRadius: 20 },
+  playBtnText: { fontSize: 22, fontWeight: '800', color: '#fff' },
+  backLink: { marginTop: 16 },
+  backLinkText: { fontSize: 14, fontWeight: '700', color: '#999' },
+  laneLines: { position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, flexDirection: 'row', justifyContent: 'space-evenly' },
+  laneLine: { width: 2, backgroundColor: 'rgba(0,0,0,0.1)' },
+  hud: { position: 'absolute', top: 50, left: 0, right: 0, flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 20, zIndex: 10 },
+  hudScore: { fontSize: 18, fontWeight: '800', color: '#333' },
+  hudCoins: { fontSize: 18, fontWeight: '800', color: '#ff9f43' },
+  hudShield: { fontSize: 24 },
+  hudCombo: { fontSize: 18, fontWeight: '800', color: '#A855F7' },
+  gameObj: { position: 'absolute', fontSize: 36, width: 40, textAlign: 'center' },
+  player: { position: 'absolute', bottom: 120, left: SW / 2 - 25, width: 50, alignItems: 'center' },
+  playerEmoji: { fontSize: 48 },
+  shieldGlow: { position: 'absolute', width: 60, height: 60, borderRadius: 30, backgroundColor: 'rgba(168,85,247,0.3)', top: -5 },
+  touchZones: { position: 'absolute', bottom: 0, left: 0, right: 0, height: SH * 0.6, flexDirection: 'row' },
+  touchZone: { flex: 1 },
+  overTitle: { fontSize: 36, fontWeight: '800', color: '#FF6B6B' },
+  finalScore: { fontSize: 24, fontWeight: '800', color: '#333', marginTop: 8 },
+  rewardBox: { backgroundColor: '#fff', padding: 20, borderRadius: 18, marginTop: 16, width: '100%', gap: 8 },
+  rewardLine: { fontSize: 16, fontWeight: '700', color: '#333' },
 });
