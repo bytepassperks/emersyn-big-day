@@ -187,7 +187,7 @@ export class UtilityAI {
       const keys = Object.keys(boosts) as (keyof CharacterStats)[];
       for (const stat of keys) {
         const boost = boosts[stat] || 0;
-        if (boost <= 0) continue;
+        if (boost === 0) continue;
         const urgency = this.getUrgency(stat);
         const weight = this.getWeight(stat);
         const s = urgency * (boost / 50) * weight;

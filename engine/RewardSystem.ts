@@ -139,6 +139,7 @@ export class RewardSystem {
 
   /** Record coins earned and check achievements */
   async addCoins(amount: number): Promise<Achievement[]> {
+    if (amount <= 0) return [];
     this.lifetimeCoins += amount;
     await AsyncStorage.setItem(STORAGE_KEYS.LIFETIME_COINS, String(this.lifetimeCoins));
     return this.checkAchievements('coins_earned', this.lifetimeCoins);

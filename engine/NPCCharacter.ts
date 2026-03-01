@@ -462,7 +462,7 @@ export class NPCCharacter {
       if (child instanceof THREE.Mesh) {
         child.geometry.dispose();
         if (Array.isArray(child.material)) {
-          child.material.forEach((m: THREE.Material) => m.dispose());
+          child.material.forEach((m: THREE.Material) => { m.dispose(); });
         } else {
           child.material.dispose();
         }

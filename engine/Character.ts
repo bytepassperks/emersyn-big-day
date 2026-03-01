@@ -456,6 +456,15 @@ export class Character {
 
   private buildMouth(emotion: EmotionFace) {
     if (this.mouth.parent) {
+      // Dispose old mouth resources before replacing
+      if (this.mouth instanceof THREE.Mesh) {
+        this.mouth.geometry.dispose();
+        if (Array.isArray(this.mouth.material)) {
+          this.mouth.material.forEach((m: THREE.Material) => { m.dispose(); });
+        } else {
+          this.mouth.material.dispose();
+        }
+      }
       this.mouth.parent.remove(this.mouth);
     }
     let geom: THREE.BufferGeometry;
@@ -918,7 +927,7 @@ export class Character {
       }
       case 'happy': {
         const jh = Math.abs(Math.sin(t * 5)) * 0.15;
-        this.group.position.y = jh;
+        this.body.position.y = jh;
         this.leftArm.rotation.z = Math.sin(t * 8) * 0.3 + 0.8;
         this.rightArm.rotation.z = -Math.sin(t * 8) * 0.3 - 0.8;
         this.leftArm.rotation.x = Math.sin(t * 6) * 0.2;
@@ -929,7 +938,7 @@ export class Character {
       case 'jump': {
         const jp = (t * 3) % (Math.PI * 2);
         const jH = Math.max(0, Math.sin(jp)) * 0.5;
-        this.group.position.y = jH;
+        this.body.position.y = jH;
         if (jH > 0.1) {
           this.leftArm.rotation.z = 1.2;
           this.rightArm.rotation.z = -1.2;
@@ -967,7 +976,7 @@ export class Character {
       }
       case 'dance': {
         const db = Math.abs(Math.sin(t * 6)) * 0.1;
-        this.group.position.y = db;
+        this.body.position.y = db;
         this.body.rotation.z = Math.sin(t * 4) * 0.15;
         this.head.rotation.z = Math.sin(t * 4) * 0.1;
         this.leftArm.rotation.z = Math.sin(t * 6) * 0.5 + 0.5;
@@ -1034,7 +1043,7 @@ export class Character {
       }
       case 'scared': {
         const sh = Math.sin(t * 20) * 0.02;
-        this.group.position.x += sh;
+        this.body.position.x = sh;
         this.leftArm.rotation.z = 0.3 + Math.sin(t * 15) * 0.1;
         this.rightArm.rotation.z = -0.3 - Math.sin(t * 15) * 0.1;
         this.head.rotation.z = Math.sin(t * 12) * 0.05;
@@ -1070,7 +1079,7 @@ export class Character {
       if (child instanceof THREE.Mesh) {
         child.geometry.dispose();
         if (Array.isArray(child.material)) {
-          child.material.forEach((m: THREE.Material) => m.dispose());
+          child.material.forEach((m: THREE.Material) => { m.dispose(); });
         } else {
           child.material.dispose();
         }

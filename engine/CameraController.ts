@@ -227,6 +227,7 @@ export class CameraController {
 
   // Convert screen tap to world position on floor plane
   screenToWorld(screenX: number, screenY: number, width: number, height: number): THREE.Vector3 | null {
+    if (width === 0 || height === 0) return null;
     const ndc = new THREE.Vector2(
       (screenX / width) * 2 - 1,
       -(screenY / height) * 2 + 1,
@@ -245,6 +246,7 @@ export class CameraController {
     screenX: number, screenY: number, width: number, height: number,
     objects: THREE.Object3D[],
   ): THREE.Intersection[] {
+    if (width === 0 || height === 0) return [];
     const ndc = new THREE.Vector2(
       (screenX / width) * 2 - 1,
       -(screenY / height) * 2 + 1,

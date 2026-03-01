@@ -174,10 +174,22 @@ export class GameEngine {
   }
 
   private clearScene() {
-    while (this.scene.children.length > 0) {
-      this.scene.remove(this.scene.children[0]);
+    // Dispose geometries and materials to prevent GPU memory leaks
+    const toRemove = [...this.scene.children];
+    for (const child of toRemove) {
+      child.traverse((node: THREE.Object3D) => {
+        if (node instanceof THREE.Mesh) {
+          node.geometry.dispose();
+          if (Array.isArray(node.material)) {
+            node.material.forEach((m: THREE.Material) => { m.dispose(); });
+          } else {
+            node.material.dispose();
+          }
+        }
+      });
+      this.scene.remove(child);
     }
-    this.npcs.forEach((npc) => npc.dispose());
+    this.npcs.forEach((npc) => { npc.dispose(); });
     this.npcs = [];
     this.particles.clear();
     this.animatedObjects = [];
@@ -584,7 +596,7 @@ export class GameEngine {
     this.character.update(dt);
 
     // Update NPCs
-    this.npcs.forEach((npc) => npc.update(dt));
+    this.npcs.forEach((npc) => { npc.update(dt); });
 
     // Update particles
     this.particles.update(dt);
@@ -736,6 +748,11 @@ export class GameEngine {
   }
 
   startLoop() {
+    // Guard against multiple concurrent RAF loops
+    if (this.animationId !== null) {
+      cancelAnimationFrame(this.animationId);
+      this.animationId = null;
+    }
     this.lastTime = 0;
     const loop = () => {
       this.update();
