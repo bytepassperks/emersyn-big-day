@@ -25,7 +25,7 @@ export default function Arcade() {
   const [showCoinAnim, setShowCoinAnim] = useState(false);
   const [coinDelta, setCoinDelta] = useState(0);
 
-  const xpToNext = level * 100;
+  const xpToNext = 100;
 
   const handleInteract = useCallback((interactable: InteractableInfo) => {
     const game = GAMES.find(g => g.id === interactable.id);

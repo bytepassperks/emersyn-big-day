@@ -424,7 +424,6 @@ export class GameEngine {
           walkTarget.z += 0.5;
           this.character.walkTo(walkTarget, () => {
             this.character.setAnimation('wave');
-            npc.currentDialogue = npc.getRandomDialogue();
             npc.onInteraction();
             this.utilityAI.boostStat('popularity', 5);
             this.utilityAI.boostStat('fun', 3);
@@ -716,8 +715,10 @@ export class GameEngine {
     this.scene.traverse((child: THREE.Object3D) => {
       if (child.userData?.isIndicator) {
         if (child.userData.isDot) {
-          const baseY = child.position.y;
-          child.position.y = baseY + Math.sin(time * 3) * 0.02;
+          if (child.userData.baseY === undefined) {
+            child.userData.baseY = child.position.y;
+          }
+          child.position.y = child.userData.baseY + Math.sin(time * 3) * 0.02;
           if (child instanceof THREE.Mesh) {
             const mat = child.material as THREE.MeshBasicMaterial;
             mat.opacity = 0.5 + Math.sin(time * 4) * 0.3;

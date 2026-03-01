@@ -9,7 +9,7 @@ import { shopCatalog } from '@/content/shopCatalog';
 
 const { width: SW } = Dimensions.get('window');
 
-const CATEGORIES = ['all', 'food', 'clothing', 'accessories', 'toys', 'decor', 'school', 'beauty'];
+const CATEGORIES = ['all', 'bags', 'unicorn', 'clothes_top', 'clothes_bottom', 'clothes_dress', 'shoes', 'hair', 'accessories', 'food_ingredients', 'food_snacks', 'food_drinks', 'toys', 'decor'];
 
 export default function Shop() {
   const { coins, level, inventory, addCoins, addXP, updateStats, purchaseItem, saveGame } = useGameStore();
@@ -31,7 +31,11 @@ export default function Shop() {
       Alert.alert('Already owned!', 'You already have this item.');
       return;
     }
-    purchaseItem(item.id, item.category, item.price);
+    const success = purchaseItem(item.id, item.category, item.price);
+    if (!success) {
+      Alert.alert('Purchase failed', 'Something went wrong. Please try again.');
+      return;
+    }
     addXP(5);
     if (item.category === 'food_ingredients') {
       updateStats({ hunger: 15 });

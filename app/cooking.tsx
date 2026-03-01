@@ -37,7 +37,7 @@ export default function Cooking() {
   const [currentStep, setCurrentStep] = useState(0);
   const [engineRef, setEngineRef] = useState<GameEngine | null>(null);
 
-  const xpToNext = level * 100;
+  const xpToNext = 100;
 
   const handleInteract = useCallback((interactable: InteractableInfo) => {
     if (interactable.id === 'stove') {

@@ -109,7 +109,9 @@ export class NPCCharacter {
   private wanderRadius: number = 2.0;
   private homePosition: THREE.Vector3;
   private isWalking: boolean = false;
-  currentDialogue: string = '';
+  get currentDialogue(): string {
+    return this.getRandomDialogue();
+  }
 
   // Idle micro-animations
   private breathPhase: number = Math.random() * Math.PI * 2;

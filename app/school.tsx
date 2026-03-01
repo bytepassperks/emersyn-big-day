@@ -30,7 +30,7 @@ export default function School() {
   const [coinDelta, setCoinDelta] = useState(0);
   const [npcDialogue, setNpcDialogue] = useState<{ npcName: string; text: string } | null>(null);
 
-  const xpToNext = level * 100;
+  const xpToNext = 100;
 
   const handleInteract = useCallback((interactable: InteractableInfo) => {
     const reward = INTERACTION_REWARDS[interactable.id] || { stats: { fun: 3 }, coins: 1, xp: 2 };

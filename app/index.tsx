@@ -44,7 +44,7 @@ export default function HomeHub() {
   const [coinDelta, setCoinDelta] = useState(0);
   const [npcDialogue, setNpcDialogue] = useState<{ npcName: string; text: string } | null>(null);
 
-  const xpToNext = level * 100;
+  const xpToNext = 100;
 
   useEffect(() => {
     const interval = setInterval(() => { saveGame(); }, 30000);

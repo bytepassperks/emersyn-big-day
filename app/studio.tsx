@@ -40,7 +40,7 @@ export default function Studio() {
   const [activeActivity, setActiveActivity] = useState<Activity | null>(null);
   const [likes, setLikes] = useState(0);
 
-  const xpToNext = level * 100;
+  const xpToNext = 100;
 
   const handleInteract = useCallback((interactable: InteractableInfo) => {
     const reward = INTERACTION_REWARDS[interactable.id] || { stats: { fun: 5 }, coins: 2, xp: 3 };
@@ -61,8 +61,11 @@ export default function Studio() {
     setPhase('activity');
   };
 
+  const [completing, setCompleting] = useState(false);
+
   const completeActivity = async () => {
-    if (!activeActivity) return;
+    if (!activeActivity || completing) return;
+    setCompleting(true);
     const r = activeActivity.rewards;
     updateStats(r.stats);
     addCoins(r.coins);
@@ -74,6 +77,7 @@ export default function Studio() {
     if (activeActivity.id === 'makeup') earnSticker('sticker_glam_queen');
     setPhase('result');
     await saveGame();
+    setCompleting(false);
   };
 
   if (phase === 'activity' && activeActivity) {

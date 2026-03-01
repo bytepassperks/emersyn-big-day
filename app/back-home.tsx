@@ -24,8 +24,11 @@ export default function BackHome() {
   const [currentStep, setCurrentStep] = useState(0);
   const [completed, setCompleted] = useState(false);
   const [totalCoins, setTotalCoins] = useState(0);
+  const [processing, setProcessing] = useState(false);
 
   const handleStep = useCallback(async () => {
+    if (processing || completed) return;
+    setProcessing(true);
     const step = STEPS[currentStep];
     updateStats(step.stat);
     addCoins(step.coins);
@@ -40,7 +43,8 @@ export default function BackHome() {
       setCompleted(true);
       await saveGame();
     }
-  }, [currentStep, updateStats, addCoins, addXP, addStars, earnSticker, saveGame]);
+    setProcessing(false);
+  }, [currentStep, completed, processing, updateStats, addCoins, addXP, addStars, earnSticker, saveGame]);
 
   if (completed) {
     return (

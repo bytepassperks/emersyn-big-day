@@ -57,17 +57,29 @@ export default function DanceParty() {
     patternIdx.current = 0;
   };
 
+  const scoreRef = useRef(0);
+  const perfectsRef = useRef(0);
+  const maxComboRef = useRef(0);
+
+  // Keep refs in sync with state
+  useEffect(() => { scoreRef.current = score; }, [score]);
+  useEffect(() => { perfectsRef.current = perfects; }, [perfects]);
+  useEffect(() => { maxComboRef.current = maxCombo; }, [maxCombo]);
+
   const endGame = useCallback(async () => {
     setGameState('over');
     if (gameLoop.current) clearInterval(gameLoop.current);
     if (spawnLoop.current) clearInterval(spawnLoop.current);
-    const coinsEarned = Math.floor(score / 50) + perfects * 2;
+    const s = scoreRef.current;
+    const p = perfectsRef.current;
+    const mc = maxComboRef.current;
+    const coinsEarned = Math.floor(s / 50) + p * 2;
     addCoins(coinsEarned);
-    addXP(Math.floor(score / 20));
-    if (maxCombo >= 10) addStars(1);
-    if (perfects >= 15) earnSticker('sticker_dance_star');
+    addXP(Math.floor(s / 20));
+    if (mc >= 10) addStars(1);
+    if (p >= 15) earnSticker('sticker_dance_star');
     await saveGame();
-  }, [score, perfects, maxCombo, addCoins, addXP, addStars, earnSticker, saveGame]);
+  }, [addCoins, addXP, addStars, earnSticker, saveGame]);
 
   useEffect(() => {
     if (gameState !== 'playing') return;
