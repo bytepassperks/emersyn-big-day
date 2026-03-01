@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Emersyn's Big Day",
+    "name": "Emersyn Big Day",
     "slug": "emersyn-big-day",
     "owner": "fried_mom274",
     "version": "1.0.0",
@@ -13,7 +13,9 @@
       "resizeMode": "contain",
       "backgroundColor": "#FFE4F0"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.bytepassperks.emersynbigday"
@@ -32,10 +34,25 @@
     "plugins": [
       "expo-router",
       "expo-font",
-      "expo-haptics"
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "kotlinVersion": "1.9.25"
+          }
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "2d72674c-ce0c-4046-97cc-70e32a11a9c1"
+      }
     }
   }
 }
