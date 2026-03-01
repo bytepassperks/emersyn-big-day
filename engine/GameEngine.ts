@@ -1,6 +1,7 @@
 /**
- * GameEngine.ts - Core game engine tying together all subsystems
- * Manages the game loop, scene, character, NPCs, particles, camera
+ * GameEngine.ts - Core game engine with Utility AI integration,
+ * stat decay, object advertisements, environment animations,
+ * touch zones, drag-drop, and camera shake.
  */
 import { THREE } from 'expo-three';
 import { Renderer } from 'expo-three';
@@ -11,19 +12,21 @@ import { ParticleSystem } from './ParticleSystem';
 import { CameraController } from './CameraController';
 import { NPCCharacter, NPCType } from './NPCCharacter';
 import { AudioManager } from './AudioManager';
+import { UtilityAI } from './UtilityAI';
+import { RewardSystem } from './RewardSystem';
 
 export type RoomType = 'bedroom' | 'kitchen' | 'park' | 'school' | 'arcade' | 'studio' | 'shop' | 'bathroom' | 'home';
 
 // Random daily events
 const DAILY_EVENTS = [
-  { id: 'surprise_party', text: '🎉 Surprise! A friend is visiting!', spawnNPC: 'ava' },
-  { id: 'rainy_day', text: '🌧️ It\'s raining! Stay cozy inside!', weather: 'rain' },
-  { id: 'pet_arrives', text: '🐱 A cute kitty appeared!', spawnPet: 'pet_cat' },
-  { id: 'bonus_coins', text: '💰 Lucky day! Double coins!', coinMultiplier: 2 },
-  { id: 'field_trip', text: '🚌 Field trip to the park!', bonusXP: true },
-  { id: 'sticker_drop', text: '⭐ You found a rare sticker!', stickerDrop: true },
-  { id: 'dance_contest', text: '💃 Dance contest today!', bonusDance: true },
-  { id: 'cooking_special', text: '🍰 Special recipe unlocked!', specialRecipe: true },
+  { id: 'surprise_party', text: 'Surprise! A friend is visiting!', spawnNPC: 'ava' },
+  { id: 'rainy_day', text: 'It\'s raining! Stay cozy inside!', weather: 'rain' },
+  { id: 'pet_arrives', text: 'A cute kitty appeared!', spawnPet: 'pet_cat' },
+  { id: 'bonus_coins', text: 'Lucky day! Double coins!', coinMultiplier: 2 },
+  { id: 'field_trip', text: 'Field trip to the park!', bonusXP: true },
+  { id: 'sticker_drop', text: 'You found a rare sticker!', stickerDrop: true },
+  { id: 'dance_contest', text: 'Dance contest today!', bonusDance: true },
+  { id: 'cooking_special', text: 'Special recipe unlocked!', specialRecipe: true },
 ];
 
 // Random environment details per room visit
@@ -48,6 +51,10 @@ export interface GameCallbacks {
   onNPCTap?: (npc: NPCCharacter) => void;
   onFloorTap?: (position: THREE.Vector3) => void;
   onActivityComplete?: (activityId: string) => void;
+  onStatUpdate?: (stats: { hunger: number; energy: number; cleanliness: number; fun: number; popularity: number }) => void;
+  onAchievement?: (achievement: { title: string; description: string; icon: string }) => void;
+  onMoodChange?: (mood: string) => void;
+  onRandomEvent?: (event: { title: string; description: string }) => void;
 }
 
 export class GameEngine {
@@ -60,6 +67,9 @@ export class GameEngine {
   camera: CameraController;
   particles: ParticleSystem;
   npcs: NPCCharacter[] = [];
+  // AI & Rewards
+  utilityAI: UtilityAI;
+  rewardSystem: RewardSystem;
   // Room data
   currentRoom: RoomType = 'home';
   interactables: InteractableInfo[] = [];
@@ -75,19 +85,28 @@ export class GameEngine {
   private animatedObjects: { mesh: THREE.Object3D; type: string; speed: number }[] = [];
   // Random details for this visit
   private visitSeed: number = Math.random();
+  // Stat update timer (don't callback every frame)
+  private statUpdateTimer: number = 0;
+  private lastMood: string = 'happy';
+  // Autonomous AI timer
+  private aiDecisionTimer: number = 0;
+  private aiDecisionInterval: number = 10; // seconds between autonomous decisions
+  // Drag state
+  private isDragging: boolean = false;
+  private dragObject: string | null = null;
 
   constructor() {
     this.scene = new THREE.Scene();
     this.character = new Character();
-    this.camera = new CameraController(1); // aspect will be updated
+    this.camera = new CameraController(1);
     this.particles = new ParticleSystem(this.scene);
+    this.utilityAI = new UtilityAI();
+    this.rewardSystem = new RewardSystem();
   }
 
   async init(gl: ExpoWebGLRenderingContext, width: number, height: number) {
-    // Store GL context for endFrameEXP
     this.gl = gl;
 
-    // Renderer
     this.renderer = new Renderer({ gl }) as unknown as THREE.WebGLRenderer;
     this.renderer.setSize(width, height);
     this.renderer.setClearColor(0xffd4e8, 1);
@@ -96,87 +115,79 @@ export class GameEngine {
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.1;
 
-    // Camera
     this.camera.updateAspect(width / height);
 
-    // Audio
     await AudioManager.init();
+    await this.rewardSystem.init();
 
-    // Character
     this.character.addToScene(this.scene);
     this.character.setPosition(0, 0, 0);
 
-    // Camera follows character
     this.camera.setFollowTarget(this.character.group);
+
+    // Check daily login
+    const loginResult = await this.rewardSystem.checkDailyLogin();
+    if (loginResult.isNewDay && loginResult.reward) {
+      // Emit coins and confetti for daily reward
+      this.particles.emitConfetti(new THREE.Vector3(0, 1.5, 0));
+      this.particles.emitCoinCollect(new THREE.Vector3(0, 1, 0));
+    }
   }
 
   loadRoom(roomType: RoomType) {
-    // Clear previous room
     this.clearScene();
     this.currentRoom = roomType;
     this.visitSeed = Math.random();
 
-    // Build room
     const roomData = RoomBuilder.build(this.scene, roomType);
     this.interactables = roomData.interactables;
 
-    // Re-add character
     this.character.addToScene(this.scene);
     this.character.setPosition(0, 0, 1.5);
     this.character.setAnimation('idle');
 
-    // Camera
     this.camera.setRoom(roomType);
     this.camera.setFollowTarget(this.character.group);
 
-    // Add glow indicators to interactable objects
     this.addInteractableIndicators();
-
-    // Add random NPCs based on room
     this.addRoomNPCs(roomType);
-
-    // Add animated environment objects
     this.addEnvironmentAnimations(roomType);
+
+    // Set utility AI advertisements for this room
+    this.utilityAI.setAdvertisements(roomType);
 
     // Random daily event check (10% chance per room visit)
     if (Math.random() < 0.1) {
       this.triggerRandomEvent();
     }
 
-    // Audio
+    // Random events from reward system
+    const events = this.rewardSystem.rollRandomEvents();
+    for (const event of events) {
+      this.callbacks.onRandomEvent?.({ title: event.title, description: event.description });
+      if (event.reward?.coins) {
+        this.particles.emitCoinCollect(this.character.group.position.clone().add(new THREE.Vector3(0, 1, 0)));
+      }
+    }
+
     AudioManager.playBGM(roomType);
   }
 
   private clearScene() {
-    // Remove everything except camera
-    const toRemove: THREE.Object3D[] = [];
-    this.scene.traverse((child: THREE.Object3D) => {
-      if (child !== this.scene) {
-        toRemove.push(child);
-      }
-    });
-    // Clear top-level children
     while (this.scene.children.length > 0) {
       this.scene.remove(this.scene.children[0]);
     }
-    // Dispose NPCs
     this.npcs.forEach((npc) => npc.dispose());
     this.npcs = [];
-    // Clear particles
     this.particles.clear();
-    // Clear animated objects
     this.animatedObjects = [];
   }
 
   private addInteractableIndicators() {
-    // Add glowing ring indicators at interactable positions
     this.interactables.forEach((item) => {
       const ringGeom = new THREE.RingGeometry(0.15, 0.2, 16);
       const ringMat = new THREE.MeshBasicMaterial({
-        color: 0xffd93d,
-        transparent: true,
-        opacity: 0.6,
-        side: THREE.DoubleSide,
+        color: 0xffd93d, transparent: true, opacity: 0.6, side: THREE.DoubleSide,
       });
       const ring = new THREE.Mesh(ringGeom, ringMat);
       ring.rotation.x = -Math.PI / 2;
@@ -186,12 +197,9 @@ export class GameEngine {
       ring.userData = { isIndicator: true, interactableId: item.id };
       this.scene.add(ring);
 
-      // Floating label dot above the object
       const dotGeom = new THREE.SphereGeometry(0.06, 8, 8);
       const dotMat = new THREE.MeshBasicMaterial({
-        color: 0xffd93d,
-        transparent: true,
-        opacity: 0.8,
+        color: 0xffd93d, transparent: true, opacity: 0.8,
       });
       const dot = new THREE.Mesh(dotGeom, dotMat);
       dot.position.copy(item.position);
@@ -205,12 +213,10 @@ export class GameEngine {
   private addRoomNPCs(roomType: RoomType) {
     switch (roomType) {
       case 'park': {
-        // Friend at park
         const friend = new NPCCharacter('ava', 'friend', new THREE.Vector3(-1, 0, 1));
         friend.setWanderRadius(2.5);
         friend.addToScene(this.scene);
         this.npcs.push(friend);
-        // Sometimes a pet
         if (this.visitSeed > 0.5) {
           const pet = new NPCCharacter('pet_cat', 'pet_cat', new THREE.Vector3(1, 0, 0.5));
           pet.setWanderRadius(3.0);
@@ -245,7 +251,6 @@ export class GameEngine {
         break;
       }
       case 'home': {
-        // Pet at home
         if (this.visitSeed > 0.3) {
           const pet = new NPCCharacter('pet_bunny', 'pet_bunny', new THREE.Vector3(1, 0, -1));
           pet.setWanderRadius(2.0);
@@ -258,7 +263,6 @@ export class GameEngine {
   }
 
   private addEnvironmentAnimations(roomType: RoomType) {
-    // Add subtle animated objects based on room
     switch (roomType) {
       case 'park': {
         // Butterflies
@@ -267,10 +271,7 @@ export class GameEngine {
           const wingGeom = new THREE.PlaneGeometry(0.08, 0.06);
           const wingColors = [0xff6b9d, 0xffd93d, 0x42a5f5];
           const wingMat = new THREE.MeshBasicMaterial({
-            color: wingColors[i],
-            transparent: true,
-            opacity: 0.8,
-            side: THREE.DoubleSide,
+            color: wingColors[i], transparent: true, opacity: 0.8, side: THREE.DoubleSide,
           });
           const leftWing = new THREE.Mesh(wingGeom, wingMat);
           leftWing.position.x = -0.04;
@@ -278,24 +279,66 @@ export class GameEngine {
           const rightWing = new THREE.Mesh(wingGeom, wingMat);
           rightWing.position.x = 0.04;
           bfGroup.add(rightWing);
-          bfGroup.position.set(
-            -2 + Math.random() * 4,
-            0.8 + Math.random() * 0.5,
-            -2 + Math.random() * 3
-          );
+          bfGroup.position.set(-2 + Math.random() * 4, 0.8 + Math.random() * 0.5, -2 + Math.random() * 3);
           this.scene.add(bfGroup);
-          this.animatedObjects.push({
-            mesh: bfGroup,
-            type: 'butterfly',
-            speed: 3 + Math.random() * 2,
-          });
+          this.animatedObjects.push({ mesh: bfGroup, type: 'butterfly', speed: 3 + Math.random() * 2 });
+        }
+        // Floating clouds
+        for (let i = 0; i < 2; i++) {
+          const cloudGroup = new THREE.Group();
+          const cloudMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.7 });
+          for (let j = 0; j < 3; j++) {
+            const puff = new THREE.Mesh(new THREE.SphereGeometry(0.2 + Math.random() * 0.15, 8, 8), cloudMat);
+            puff.position.set((j - 1) * 0.25, Math.random() * 0.1, 0);
+            cloudGroup.add(puff);
+          }
+          cloudGroup.position.set(-3 + i * 6, 4 + Math.random(), -3);
+          this.scene.add(cloudGroup);
+          this.animatedObjects.push({ mesh: cloudGroup, type: 'cloud', speed: 0.1 + Math.random() * 0.1 });
         }
         break;
       }
-      case 'bathroom': {
-        // Dripping faucet
+      case 'bedroom': {
+        // Floating dust motes
+        for (let i = 0; i < 5; i++) {
+          const mote = new THREE.Mesh(
+            new THREE.SphereGeometry(0.01, 4, 4),
+            new THREE.MeshBasicMaterial({ color: 0xffd93d, transparent: true, opacity: 0.4 }),
+          );
+          mote.position.set(-2 + Math.random() * 4, 0.5 + Math.random() * 2, -2 + Math.random() * 3);
+          this.scene.add(mote);
+          this.animatedObjects.push({ mesh: mote, type: 'dust_mote', speed: 0.5 + Math.random() * 0.5 });
+        }
         break;
       }
+      case 'kitchen': {
+        // Steam from stove area
+        this.animatedObjects.push({ mesh: new THREE.Group(), type: 'steam_emitter', speed: 1 });
+        break;
+      }
+      case 'bathroom': {
+        // Dripping water
+        this.animatedObjects.push({ mesh: new THREE.Group(), type: 'drip_emitter', speed: 2 });
+        break;
+      }
+    }
+    // Add swaying plants to indoor rooms
+    if (['bedroom', 'kitchen', 'home', 'studio'].includes(roomType)) {
+      const plantGroup = new THREE.Group();
+      const stemGeom = new THREE.CylinderGeometry(0.02, 0.025, 0.3, 6);
+      const stemMat = new THREE.MeshPhongMaterial({ color: 0x4caf50 });
+      const stem = new THREE.Mesh(stemGeom, stemMat);
+      stem.position.y = 0.15;
+      plantGroup.add(stem);
+      const leafGeom = new THREE.SphereGeometry(0.1, 8, 8);
+      leafGeom.scale(1.2, 0.8, 1);
+      const leafMat = new THREE.MeshPhongMaterial({ color: 0x66bb6a });
+      const leaves = new THREE.Mesh(leafGeom, leafMat);
+      leaves.position.y = 0.35;
+      plantGroup.add(leaves);
+      plantGroup.position.set(2.5, 0, 2);
+      this.scene.add(plantGroup);
+      this.animatedObjects.push({ mesh: plantGroup, type: 'plant_sway', speed: 1 });
     }
   }
 
@@ -306,7 +349,7 @@ export class GameEngine {
     }
     if (event.spawnPet) {
       const pet = new NPCCharacter(event.spawnPet, event.spawnPet as NPCType, new THREE.Vector3(
-        Math.random() * 2 - 1, 0, Math.random() * 2
+        Math.random() * 2 - 1, 0, Math.random() * 2,
       ));
       pet.setWanderRadius(2.0);
       pet.addToScene(this.scene);
@@ -314,12 +357,13 @@ export class GameEngine {
     }
     if (event.spawnNPC) {
       const npc = new NPCCharacter(event.spawnNPC, 'friend', new THREE.Vector3(
-        Math.random() * 2 - 1, 0, Math.random() * 2
+        Math.random() * 2 - 1, 0, Math.random() * 2,
       ));
       npc.setWanderRadius(2.0);
       npc.addToScene(this.scene);
       this.npcs.push(npc);
     }
+    this.callbacks.onRandomEvent?.({ title: event.id, description: event.text });
   }
 
   setCallbacks(callbacks: GameCallbacks) {
@@ -327,17 +371,36 @@ export class GameEngine {
   }
 
   handleTap(screenX: number, screenY: number, viewWidth: number, viewHeight: number) {
-    // Don't process taps during active interaction
     if (this.activeInteraction) return;
 
-    // Check if tapped on an interactable indicator
     const worldPos = this.camera.screenToWorld(screenX, screenY, viewWidth, viewHeight);
 
-    // Check proximity to interactables
     if (worldPos) {
+      // Check if tapped on character (touch zone detection)
+      const charPos = this.character.group.position;
+      const distToChar = new THREE.Vector2(worldPos.x - charPos.x, worldPos.z - charPos.z).length();
+      if (distToChar < 0.5) {
+        // Character tapped - determine zone
+        const localY = worldPos.y || 0.5;
+        const zone = this.character.getTouchZone(localY);
+        this.character.onTap(zone);
+        // Particles based on zone
+        const charTop = charPos.clone().add(new THREE.Vector3(0, 1, 0));
+        this.particles.emitHearts(charTop);
+        this.particles.emitStars(charTop);
+        // Camera shake on belly tap
+        if (zone === 'belly') {
+          this.camera.shake(0.05, 0.2);
+        }
+        // Boost fun stat
+        this.utilityAI.boostStat('fun', 5);
+        AudioManager.playSFX('tap');
+        return;
+      }
+
+      // Check proximity to interactables
       let closestInteractable: InteractableInfo | null = null;
       let closestDist = Infinity;
-
       for (const item of this.interactables) {
         const dist = worldPos.distanceTo(item.walkToOffset);
         if (dist < 1.0 && dist < closestDist) {
@@ -345,9 +408,7 @@ export class GameEngine {
           closestInteractable = item;
         }
       }
-
       if (closestInteractable) {
-        // Walk to interactable then interact
         this.character.walkTo(closestInteractable.walkToOffset, () => {
           this.startInteraction(closestInteractable!);
         });
@@ -359,16 +420,16 @@ export class GameEngine {
       for (const npc of this.npcs) {
         const npcDist = worldPos.distanceTo(npc.group.position);
         if (npcDist < 0.8) {
-          // Walk to NPC
           const walkTarget = npc.group.position.clone();
           walkTarget.z += 0.5;
           this.character.walkTo(walkTarget, () => {
             this.character.setAnimation('wave');
             npc.currentDialogue = npc.getRandomDialogue();
+            npc.onInteraction();
+            this.utilityAI.boostStat('popularity', 5);
+            this.utilityAI.boostStat('fun', 3);
             this.callbacks.onNPCTap?.(npc);
-            setTimeout(() => {
-              this.character.setAnimation('idle');
-            }, 2000);
+            setTimeout(() => { this.character.setAnimation('idle'); }, 2000);
           });
           AudioManager.playSFX('tap');
           return;
@@ -377,12 +438,10 @@ export class GameEngine {
 
       // Tap on floor - walk there
       if (worldPos.y <= 0.1) {
-        // Clamp to room bounds
         worldPos.x = Math.max(-3.5, Math.min(3.5, worldPos.x));
         worldPos.z = Math.max(-3.5, Math.min(3.5, worldPos.z));
         worldPos.y = 0;
         this.character.walkTo(worldPos);
-        // Dust particles at tap point
         this.particles.emitDust(worldPos);
         AudioManager.playSFX('tap');
         this.callbacks.onFloorTap?.(worldPos);
@@ -390,38 +449,95 @@ export class GameEngine {
     }
   }
 
+  /** Start drag from inventory (food, clothes, etc.) */
+  startDrag(objectType: string): void {
+    this.isDragging = true;
+    this.dragObject = objectType;
+  }
+
+  /** End drag at a world position */
+  endDrag(screenX: number, screenY: number, viewWidth: number, viewHeight: number): void {
+    if (!this.isDragging || !this.dragObject) return;
+    this.isDragging = false;
+    const worldPos = this.camera.screenToWorld(screenX, screenY, viewWidth, viewHeight);
+    if (!worldPos) { this.dragObject = null; return; }
+
+    // Check if dropped on character
+    const charPos = this.character.group.position;
+    const dist = new THREE.Vector2(worldPos.x - charPos.x, worldPos.z - charPos.z).length();
+    if (dist < 1.0) {
+      // Apply drag object effect
+      switch (this.dragObject) {
+        case 'food':
+          this.character.setAnimation('eat');
+          this.utilityAI.boostStat('hunger', 20);
+          this.particles.emitHearts(charPos.clone().add(new THREE.Vector3(0, 1, 0)));
+          setTimeout(() => { this.character.setAnimation('happy'); }, 2000);
+          setTimeout(() => { this.character.setAnimation('idle'); }, 3500);
+          break;
+        case 'clothes':
+          this.character.setAnimation('happy');
+          this.utilityAI.boostStat('popularity', 15);
+          this.particles.emitConfetti(charPos.clone().add(new THREE.Vector3(0, 1.5, 0)));
+          setTimeout(() => { this.character.setAnimation('idle'); }, 2000);
+          break;
+        case 'soap':
+          this.character.setAnimation('clean');
+          this.utilityAI.boostStat('cleanliness', 25);
+          this.particles.emitBubbles(charPos.clone().add(new THREE.Vector3(0, 0.5, 0)));
+          setTimeout(() => { this.character.setAnimation('idle'); }, 2500);
+          break;
+        case 'toy':
+          this.character.setAnimation('happy');
+          this.utilityAI.boostStat('fun', 20);
+          this.particles.emitStars(charPos.clone().add(new THREE.Vector3(0, 1, 0)));
+          setTimeout(() => { this.character.setAnimation('idle'); }, 2000);
+          break;
+      }
+      this.camera.shake(0.03, 0.15);
+      AudioManager.playSFX('success');
+    }
+    this.dragObject = null;
+  }
+
   private startInteraction(interactable: InteractableInfo) {
     this.activeInteraction = interactable;
     this.interactionTimer = 0;
 
-    // Face the object
     const dir = new THREE.Vector3().subVectors(interactable.position, this.character.group.position);
     const angle = Math.atan2(dir.x, dir.z);
     this.character.setRotation(angle);
-
-    // Play animation
     this.character.setAnimation(interactable.animOnInteract as CharacterAnim);
 
-    // Camera zoom to interaction
     this.camera.zoomTo(interactable.position);
 
-    // Particles based on category
+    // Particles and stat boosts based on category
     switch (interactable.category) {
       case 'eat':
         this.particles.emitHearts(interactable.position);
+        this.utilityAI.boostStat('hunger', 15);
         break;
       case 'clean':
         this.particles.emitBubbles(interactable.position);
+        this.utilityAI.boostStat('cleanliness', 15);
         break;
       case 'fun':
         this.particles.emitStars(interactable.position);
+        this.utilityAI.boostStat('fun', 15);
         break;
       case 'cook':
+        this.particles.emitSteam(interactable.position);
         this.particles.emitStars(interactable.position);
+        this.utilityAI.boostStat('hunger', 10);
+        this.utilityAI.boostStat('fun', 10);
         break;
       default:
         this.particles.emitStars(interactable.position);
+        this.utilityAI.boostStat('fun', 10);
     }
+
+    // Mark the advertisement as used
+    this.utilityAI.markUsed(interactable.id, Date.now() / 1000);
 
     AudioManager.playSFX('success');
   }
@@ -429,21 +545,16 @@ export class GameEngine {
   private endInteraction() {
     if (!this.activeInteraction) return;
 
-    // Coin particles
     this.particles.emitCoinCollect(this.character.group.position.clone().add(new THREE.Vector3(0, 1, 0)));
 
-    // Callback
     this.callbacks.onInteract?.(this.activeInteraction);
     this.callbacks.onActivityComplete?.(this.activeInteraction.id);
 
-    // Reset
     this.character.setAnimation('happy');
     this.camera.zoomOut();
+    this.camera.shake(0.02, 0.1);
 
-    // Return to idle after celebration
-    setTimeout(() => {
-      this.character.setAnimation('idle');
-    }, 1500);
+    setTimeout(() => { this.character.setAnimation('idle'); }, 1500);
 
     this.activeInteraction = null;
     AudioManager.playSFX('coin_collect');
@@ -453,14 +564,22 @@ export class GameEngine {
     return this.coinMultiplier;
   }
 
+  getStats() {
+    return { ...this.utilityAI.stats };
+  }
+
+  getMood(): string {
+    return this.utilityAI.getMoodEmoji();
+  }
+
   update() {
     const now = Date.now() / 1000;
-    if (this.lastTime === 0) {
-      this.lastTime = now;
-      return;
-    }
-    const dt = Math.min(now - this.lastTime, 0.05); // Cap at 50ms
+    if (this.lastTime === 0) { this.lastTime = now; return; }
+    const dt = Math.min(now - this.lastTime, 0.05);
     this.lastTime = now;
+
+    // Decay stats
+    this.utilityAI.decayStats(dt);
 
     // Update character
     this.character.update(dt);
@@ -488,10 +607,57 @@ export class GameEngine {
     // Animate interactable indicators
     this.updateIndicators(dt);
 
+    // Periodic stat update callback
+    this.statUpdateTimer += dt;
+    if (this.statUpdateTimer >= 1.0) {
+      this.statUpdateTimer = 0;
+      this.callbacks.onStatUpdate?.(this.utilityAI.stats);
+      const mood = this.utilityAI.getMoodEmoji();
+      if (mood !== this.lastMood) {
+        this.lastMood = mood;
+        this.callbacks.onMoodChange?.(mood);
+        // Change character emotion based on mood
+        if (mood === 'starving' || mood === 'exhausted' || mood === 'dirty') {
+          this.character.setEmotion('sad');
+        } else if (mood === 'hungry' || mood === 'tired' || mood === 'bored') {
+          this.character.setEmotion('hungry');
+        } else if (mood === 'thriving') {
+          this.character.setEmotion('excited');
+        } else {
+          this.character.setEmotion('happy');
+        }
+      }
+      // Sleep particles when energy is very low
+      if (this.utilityAI.stats.energy < 20 && !this.activeInteraction) {
+        this.particles.emitZzz(this.character.group.position.clone().add(new THREE.Vector3(0.3, 1.3, 0)));
+      }
+    }
+
+    // Autonomous AI decisions (if idle for a while)
+    this.aiDecisionTimer += dt;
+    if (this.aiDecisionTimer >= this.aiDecisionInterval && !this.activeInteraction && !this.character.isMoving) {
+      this.aiDecisionTimer = 0;
+      this.aiDecisionInterval = 8 + Math.random() * 8;
+      // Use utility AI to pick an autonomous action
+      const action = this.utilityAI.pickBestAction(
+        this.character.group.position.x,
+        this.character.group.position.z,
+        now,
+      );
+      if (action && action.score > 0.3) {
+        // Find the interactable matching this action
+        const target = this.interactables.find((i) => i.id === action.objectId);
+        if (target) {
+          this.character.walkTo(target.walkToOffset, () => {
+            this.startInteraction(target);
+          });
+        }
+      }
+    }
+
     // Render
     if (this.renderer) {
       this.renderer.render(this.scene, this.camera.camera);
-      // Present the frame to the screen (required by expo-gl)
       if (this.gl) {
         this.gl.endFrameEXP();
       }
@@ -503,15 +669,41 @@ export class GameEngine {
     this.animatedObjects.forEach((obj) => {
       switch (obj.type) {
         case 'butterfly': {
-          // Flutter and fly in circles
           obj.mesh.position.x += Math.sin(time * obj.speed) * 0.5 * dt;
           obj.mesh.position.z += Math.cos(time * obj.speed * 0.7) * 0.3 * dt;
           obj.mesh.position.y = 0.8 + Math.sin(time * obj.speed * 1.5) * 0.15;
           obj.mesh.rotation.y = time * obj.speed * 0.5;
-          // Wing flap
           if (obj.mesh.children.length >= 2) {
             obj.mesh.children[0].rotation.y = Math.sin(time * 15) * 0.5;
             obj.mesh.children[1].rotation.y = -Math.sin(time * 15) * 0.5;
+          }
+          break;
+        }
+        case 'cloud': {
+          obj.mesh.position.x += obj.speed * dt;
+          if (obj.mesh.position.x > 5) { obj.mesh.position.x = -5; }
+          break;
+        }
+        case 'dust_mote': {
+          obj.mesh.position.y += Math.sin(time * obj.speed + obj.mesh.position.x) * 0.1 * dt;
+          obj.mesh.position.x += Math.sin(time * 0.3 + obj.mesh.position.z) * 0.05 * dt;
+          break;
+        }
+        case 'plant_sway': {
+          obj.mesh.rotation.z = Math.sin(time * 0.8) * 0.03;
+          obj.mesh.rotation.x = Math.sin(time * 0.5 + 1) * 0.02;
+          break;
+        }
+        case 'steam_emitter': {
+          // Periodically emit steam particles
+          if (Math.random() < 0.02) {
+            this.particles.emitSteam(new THREE.Vector3(0, 0.8, -2));
+          }
+          break;
+        }
+        case 'drip_emitter': {
+          if (Math.random() < 0.01) {
+            this.particles.emitSplash(new THREE.Vector3(1, 0.1, -1.5));
           }
           break;
         }
@@ -524,16 +716,13 @@ export class GameEngine {
     this.scene.traverse((child: THREE.Object3D) => {
       if (child.userData?.isIndicator) {
         if (child.userData.isDot) {
-          // Float up and down
           const baseY = child.position.y;
           child.position.y = baseY + Math.sin(time * 3) * 0.02;
-          // Pulse opacity
           if (child instanceof THREE.Mesh) {
             const mat = child.material as THREE.MeshBasicMaterial;
             mat.opacity = 0.5 + Math.sin(time * 4) * 0.3;
           }
         } else {
-          // Ring pulse
           const scale = 1 + Math.sin(time * 3) * 0.15;
           child.scale.set(scale, scale, 1);
           if (child instanceof THREE.Mesh) {
