@@ -54,6 +54,7 @@ export class GameEngine {
   // Core Three.js
   scene: THREE.Scene;
   renderer: THREE.WebGLRenderer | null = null;
+  private gl: ExpoWebGLRenderingContext | null = null;
   // Subsystems
   character: Character;
   camera: CameraController;
@@ -83,9 +84,13 @@ export class GameEngine {
   }
 
   async init(gl: ExpoWebGLRenderingContext, width: number, height: number) {
+    // Store GL context for endFrameEXP
+    this.gl = gl;
+
     // Renderer
     this.renderer = new Renderer({ gl }) as unknown as THREE.WebGLRenderer;
     this.renderer.setSize(width, height);
+    this.renderer.setClearColor(0xffd4e8, 1);
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -486,6 +491,10 @@ export class GameEngine {
     // Render
     if (this.renderer) {
       this.renderer.render(this.scene, this.camera.camera);
+      // Present the frame to the screen (required by expo-gl)
+      if (this.gl) {
+        this.gl.endFrameEXP();
+      }
     }
   }
 
