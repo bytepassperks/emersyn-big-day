@@ -178,6 +178,45 @@ namespace EmersynBigDay.Core
             new GameObject("DailyEventSystem").AddComponent<DailyEventSystem>();
             new GameObject("RoomManager").AddComponent<Rooms.RoomManager>();
             new GameObject("PostProcessing").AddComponent<PostProcessingSetup>();
+
+            // === Enhancement Systems ===
+            // Visual
+            new GameObject("ToonShading").AddComponent<Visual.ToonShading>();
+            new GameObject("ProceduralParticles").AddComponent<Visual.ProceduralParticles>();
+            new GameObject("DynamicLighting").AddComponent<Visual.DynamicLighting>();
+
+            // Gameplay
+            new GameObject("QuestSystem").AddComponent<Gameplay.QuestSystem>();
+            new GameObject("CollectionSystem").AddComponent<Gameplay.CollectionSystem>();
+            new GameObject("CharacterCustomization").AddComponent<Gameplay.CharacterCustomization>();
+            new GameObject("MiniGameLauncher").AddComponent<Gameplay.MiniGameLauncher>();
+            new GameObject("RoomDecorator").AddComponent<Gameplay.RoomDecorator>();
+            new GameObject("PhotoMode").AddComponent<Gameplay.PhotoMode>();
+
+            // Audio
+            new GameObject("AdaptiveMusicSystem").AddComponent<Audio.AdaptiveMusicSystem>();
+            new GameObject("CharacterVoiceSystem").AddComponent<Audio.CharacterVoiceSystem>();
+            new GameObject("SpatialAudioSystem").AddComponent<Audio.SpatialAudioSystem>();
+
+            // Animation
+            new GameObject("EmotionalAnimator").AddComponent<Animation.EmotionalAnimator>();
+            new GameObject("ActivityAnimations").AddComponent<Animation.ActivityAnimations>();
+
+            // Performance
+            new GameObject("LODManager").AddComponent<Performance.LODManager>();
+            new GameObject("ObjectPoolManager").AddComponent<Performance.ObjectPoolManager>();
+            new GameObject("PerformanceOptimizer").AddComponent<Performance.PerformanceOptimizer>();
+
+            // Systems
+            new GameObject("TutorialSystem").AddComponent<Systems.TutorialSystem>();
+            new GameObject("RoomProgressionSystem").AddComponent<Systems.RoomProgressionSystem>();
+            new GameObject("AnalyticsManager").AddComponent<Systems.AnalyticsManager>();
+            new GameObject("SocialSystem").AddComponent<Systems.SocialSystem>();
+            new GameObject("ParentGate").AddComponent<Systems.ParentGate>();
+            new GameObject("AccessibilityManager").AddComponent<Systems.AccessibilityManager>();
+            new GameObject("AdIntegration").AddComponent<Systems.AdIntegration>();
+            new GameObject("CosmeticPackSystem").AddComponent<Systems.CosmeticPackSystem>();
+            new GameObject("DailyRewardSystem").AddComponent<Systems.DailyRewardSystem>();
         }
 
         private AudioSource MakeChildAudio(GameObject parent, string name)
@@ -637,6 +676,45 @@ namespace EmersynBigDay.Core
             }
             if (GameManager.Instance != null)
                 GameManager.Instance.ChangeState(GameState.Playing);
+
+            // Wire enhancement systems
+            // Apply toon shading to the initial scene
+            if (Visual.ToonShading.Instance != null)
+                Visual.ToonShading.Instance.ApplyToonShadingToScene();
+
+            // Set initial room theme for adaptive music
+            if (Audio.AdaptiveMusicSystem.Instance != null)
+                Audio.AdaptiveMusicSystem.Instance.SetRoomTheme(RoomNames[currentRoomIndex]);
+
+            // Set initial room lighting
+            if (Visual.DynamicLighting.Instance != null)
+                Visual.DynamicLighting.Instance.SetRoomLighting(currentRoomIndex, currentRoomIndex == 3 || currentRoomIndex == 8);
+
+            // Apply customization colors to Emersyn
+            if (Gameplay.CharacterCustomization.Instance != null && emersynObj != null)
+                Gameplay.CharacterCustomization.Instance.ApplyToCharacter(emersynObj);
+
+            // Batch static objects for performance
+            if (Performance.PerformanceOptimizer.Instance != null)
+            {
+                Performance.PerformanceOptimizer.Instance.OptimizeTextures();
+                Performance.PerformanceOptimizer.Instance.BatchStaticObjects();
+            }
+
+            // Register room objects with LOD manager
+            if (Performance.LODManager.Instance != null)
+            {
+                foreach (Transform child in roomContainer)
+                    Performance.LODManager.Instance.Register(child.gameObject);
+            }
+
+            // Track room visit
+            if (Systems.AnalyticsManager.Instance != null)
+                Systems.AnalyticsManager.Instance.TrackRoomVisit(RoomNames[currentRoomIndex]);
+
+            // Claim daily reward on first load
+            if (Systems.DailyRewardSystem.Instance != null)
+                Systems.DailyRewardSystem.Instance.ClaimDailyReward();
         }
 
         // Fix #29: Cache NeedSystem reference instead of FindFirstObjectByType every frame
@@ -689,6 +767,18 @@ namespace EmersynBigDay.Core
             if (bob != null) bob.TriggerSquash();
             if (RewardSystem.Instance != null)
                 RewardSystem.Instance.GrantInteractionReward("poke");
+
+            // Enhancement integrations
+            if (Systems.AnalyticsManager.Instance != null)
+                Systems.AnalyticsManager.Instance.TrackTap();
+            if (Audio.CharacterVoiceSystem.Instance != null)
+                Audio.CharacterVoiceSystem.Instance.PlayTouchReaction(obj.name, true);
+            if (Visual.ProceduralParticles.Instance != null)
+                Visual.ProceduralParticles.Instance.SpawnSparkles(obj.transform.position + Vector3.up);
+            if (Systems.TutorialSystem.Instance != null)
+                Systems.TutorialSystem.Instance.ReportInteraction("tap");
+            if (Systems.AccessibilityManager.Instance != null)
+                Systems.AccessibilityManager.Instance.TriggerHaptic();
         }
 
         private void OnDragHandler(Vector2 pos, Vector2 delta)
@@ -707,23 +797,78 @@ namespace EmersynBigDay.Core
                 cachedNeedSystem = FindFirstObjectByType<NeedSystem>();
             var ns = cachedNeedSystem;
             if (ns == null) return;
+            string activityName = "";
             switch (idx)
             {
-                case 0: ns.SatisfyNeed("Hunger", 30f); break;
-                case 1: ns.SatisfyNeed("Fun", 25f); ns.SatisfyNeed("Social", 15f); break;
-                case 2: ns.SatisfyNeed("Hygiene", 35f); break;
-                case 3: ns.SatisfyNeed("Energy", 40f); ns.SatisfyNeed("Comfort", 20f); break;
-                case 4: break;
-                case 5: ns.SatisfyNeed("Fun", 20f); ns.SatisfyNeed("Creativity", 15f); break;
+                case 0: ns.SatisfyNeed("Hunger", 30f); activityName = "eat"; break;
+                case 1: ns.SatisfyNeed("Fun", 25f); ns.SatisfyNeed("Social", 15f); activityName = "dance"; break;
+                case 2: ns.SatisfyNeed("Hygiene", 35f); activityName = "bathe"; break;
+                case 3: ns.SatisfyNeed("Energy", 40f); ns.SatisfyNeed("Comfort", 20f); activityName = "sleep"; break;
+                case 4: activityName = "shop"; break;
+                case 5: ns.SatisfyNeed("Fun", 20f); ns.SatisfyNeed("Creativity", 15f); activityName = "draw"; break;
             }
             if (RewardSystem.Instance != null)
                 RewardSystem.Instance.GrantInteractionReward("action");
+
+            // Trigger activity animation
+            if (Animation.ActivityAnimations.Instance != null && !string.IsNullOrEmpty(activityName))
+                Animation.ActivityAnimations.Instance.StartActivity(activityName, emersynObj != null ? emersynObj.transform : null);
+
+            // Quest integration
+            if (Gameplay.QuestSystem.Instance != null)
+            {
+                if (activityName == "eat") Gameplay.QuestSystem.Instance.ReportProgress("feed");
+                if (activityName == "bathe") Gameplay.QuestSystem.Instance.ReportProgress("clean");
+                if (activityName == "dance") Gameplay.QuestSystem.Instance.ReportProgress("create");
+            }
+
+            // Tutorial integration
+            if (Systems.TutorialSystem.Instance != null)
+                Systems.TutorialSystem.Instance.ReportInteraction(activityName);
         }
 
         private void ChangeRoom(int dir)
         {
             int next = (currentRoomIndex + dir + RoomNames.Length) % RoomNames.Length;
+
+            // Check room progression unlock
+            if (Systems.RoomProgressionSystem.Instance != null &&
+                !Systems.RoomProgressionSystem.Instance.IsRoomUnlocked(RoomNames[next]))
+            {
+                // Show unlock prompt or skip to next unlocked room
+                if (Audio.AudioManager.Instance != null)
+                    Audio.AudioManager.Instance.PlaySFX("error");
+                return;
+            }
+
+            // Performance: GC during transition
+            if (Performance.PerformanceOptimizer.Instance != null)
+                Performance.PerformanceOptimizer.Instance.SafeGarbageCollect();
+
             BuildRoom(next);
+
+            // Update enhancement systems on room change
+            if (Audio.AdaptiveMusicSystem.Instance != null)
+                Audio.AdaptiveMusicSystem.Instance.SetRoomTheme(RoomNames[next]);
+            if (Visual.DynamicLighting.Instance != null)
+                Visual.DynamicLighting.Instance.SetRoomLighting(next, next == 3 || next == 8);
+            if (Visual.ToonShading.Instance != null)
+                Visual.ToonShading.Instance.ApplyToonShadingToScene();
+            if (Systems.AnalyticsManager.Instance != null)
+                Systems.AnalyticsManager.Instance.TrackRoomVisit(RoomNames[next]);
+            if (Gameplay.QuestSystem.Instance != null)
+                Gameplay.QuestSystem.Instance.ReportProgress("visit_room");
+            if (Systems.TutorialSystem.Instance != null)
+                Systems.TutorialSystem.Instance.ReportInteraction("change_room");
+
+            // Register new room objects with LOD
+            if (Performance.LODManager.Instance != null)
+                foreach (Transform child in roomContainer)
+                    Performance.LODManager.Instance.Register(child.gameObject);
+
+            // Interstitial ad between rooms (respects cooldown)
+            if (Systems.AdIntegration.Instance != null)
+                Systems.AdIntegration.Instance.ShowInterstitial();
         }
 
         // Fix #12: NavMesh baking for character pathfinding
