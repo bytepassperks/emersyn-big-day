@@ -285,9 +285,24 @@ public class BuildScript
         Debug.Log("[BUILD] Phase 6/8: Starting BuildPipeline.BuildPlayer...");
         Debug.Log("[BUILD]   This phase includes: shader compilation, IL2CPP C++ compilation, Gradle APK packaging");
         Debug.Log("[BUILD]   Expected duration: 8-15 minutes");
+
+        // CRITICAL FIX: Suppress stack traces for warnings/logs during build.
+        // URP shader stripping in batch mode generates 100K+ "Failed to write file" warnings,
+        // each with a full C# stack trace. This logging overhead adds 20+ min to the build.
+        // Suppressing stack traces keeps the warnings but removes the expensive trace generation.
+        var prevWarningTrace = Application.GetStackTraceLogType(LogType.Warning);
+        var prevLogTrace = Application.GetStackTraceLogType(LogType.Log);
+        Application.SetStackTraceLogType(LogType.Warning, StackTraceLogType.None);
+        Application.SetStackTraceLogType(LogType.Log, StackTraceLogType.None);
+        Debug.Log("[BUILD]   Stack trace logging suppressed for shader compilation phase");
+
         try
         {
             BuildReport report = BuildPipeline.BuildPlayer(buildPlayerOptions);
+
+            // Restore stack trace logging after build
+            Application.SetStackTraceLogType(LogType.Warning, prevWarningTrace);
+            Application.SetStackTraceLogType(LogType.Log, prevLogTrace);
             BuildSummary summary = report.summary;
             Debug.Log($"[BUILD] Phase 6/8 DONE ({(DateTime.Now - buildStartTime).TotalSeconds:F1}s elapsed)");
 
