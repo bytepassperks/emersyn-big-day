@@ -1,5 +1,6 @@
 using UnityEngine;
 using System;
+using EmersynBigDay.Audio;
 
 namespace EmersynBigDay.Animation
 {
@@ -52,8 +53,8 @@ namespace EmersynBigDay.Animation
             if (cachedNeedSystem == null) return;
             var needSystem = cachedNeedSystem;
 
-            string moodState = needSystem.GetMoodState();
-            float overallMood = needSystem.GetOverallMood();
+            string moodState = needSystem.CurrentMood.ToString();
+            float overallMood = needSystem.OverallMood;
 
             EmotionalState newState;
             float newIntensity;
@@ -144,20 +145,20 @@ namespace EmersynBigDay.Animation
             {
                 case EmotionalState.Happy:
                 case EmotionalState.Ecstatic:
-                    if (Random.value < 0.3f) TriggerIdleAnimation("happy_bounce");
+                    if (UnityEngine.Random.value < 0.3f) TriggerIdleAnimation("happy_bounce");
                     break;
                 case EmotionalState.Sad:
                 case EmotionalState.Miserable:
-                    if (Random.value < 0.2f) TriggerIdleAnimation("sad_sigh");
+                    if (UnityEngine.Random.value < 0.2f) TriggerIdleAnimation("sad_sigh");
                     break;
                 case EmotionalState.Sleepy:
-                    if (Random.value < 0.4f) TriggerIdleAnimation("yawn");
+                    if (UnityEngine.Random.value < 0.4f) TriggerIdleAnimation("yawn");
                     break;
                 case EmotionalState.Hungry:
-                    if (Random.value < 0.3f) TriggerIdleAnimation("stomach_growl");
+                    if (UnityEngine.Random.value < 0.3f) TriggerIdleAnimation("stomach_growl");
                     break;
                 case EmotionalState.Bored:
-                    if (Random.value < 0.3f) TriggerIdleAnimation("look_around");
+                    if (UnityEngine.Random.value < 0.3f) TriggerIdleAnimation("look_around");
                     break;
             }
         }

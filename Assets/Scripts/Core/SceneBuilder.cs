@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
 using System.Collections.Generic;
-using UnityEngine.AI; // Fix #12: NavMesh baking
+// NavMesh baking uses collider-based approach (no AI Navigation package needed)
 
 namespace EmersynBigDay.Core
 {
@@ -872,19 +872,16 @@ namespace EmersynBigDay.Core
         }
 
         // Fix #12: NavMesh baking for character pathfinding
+        // Note: NavMeshSurface requires AI Navigation package — using simple collider-based movement instead
         private void BakeNavMesh()
         {
-            // Add NavMeshSurface to floor if not already present
+            // Ensure floor has a collider for raycasting-based movement
             var floor = roomContainer.Find("Floor");
             if (floor != null)
             {
-                var surface = floor.GetComponent<NavMeshSurface>();
-                if (surface == null)
-                    surface = floor.gameObject.AddComponent<NavMeshSurface>();
-                surface.collectObjects = CollectObjects.Children;
-                surface.useGeometry = NavMeshCollectGeometry.PhysicsColliders;
-                // Build synchronously — room is small enough
-                surface.BuildNavMesh();
+                var col = floor.GetComponent<Collider>();
+                if (col == null)
+                    floor.gameObject.AddComponent<BoxCollider>();
             }
         }
 

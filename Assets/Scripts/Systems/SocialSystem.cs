@@ -106,11 +106,11 @@ namespace EmersynBigDay.Systems
             }
 
             // Need satisfaction
-            var needSystem = FindFirstObjectByType<Core.NeedSystem>();
+            var needSystem = FindObjectOfType<Core.NeedSystem>();
             if (needSystem != null)
             {
-                needSystem.ModifyNeed("Social", friendshipGain * 3f);
-                needSystem.ModifyNeed("Fun", friendshipGain * 2f);
+                needSystem.SatisfyNeed("Social", friendshipGain * 3f);
+                needSystem.SatisfyNeed("Fun", friendshipGain * 2f);
             }
 
             // Analytics

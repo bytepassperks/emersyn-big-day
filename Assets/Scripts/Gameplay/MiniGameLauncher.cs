@@ -124,13 +124,13 @@ namespace EmersynBigDay.Gameplay
             if (won) totalGamesWon++;
 
             // Apply need effects
-            var needSystem = FindFirstObjectByType<Core.NeedSystem>();
+            var needSystem = FindObjectOfType<Core.NeedSystem>();
             if (needSystem != null)
             {
                 if (!string.IsNullOrEmpty(game.PrimaryNeed))
-                    needSystem.ModifyNeed(game.PrimaryNeed, game.PrimaryNeedDelta);
+                    needSystem.SatisfyNeed(game.PrimaryNeed, game.PrimaryNeedDelta);
                 if (!string.IsNullOrEmpty(game.SecondaryNeed))
-                    needSystem.ModifyNeed(game.SecondaryNeed, game.SecondaryNeedDelta);
+                    needSystem.SatisfyNeed(game.SecondaryNeed, game.SecondaryNeedDelta);
             }
 
             // Grant rewards

@@ -150,7 +150,7 @@ namespace EmersynBigDay.Animation
             var needSystem = FindObjectOfType<Core.NeedSystem>();
             if (needSystem != null && !string.IsNullOrEmpty(anim.NeedAffected))
             {
-                needSystem.ModifyNeed(anim.NeedAffected, anim.NeedDelta);
+                needSystem.SatisfyNeed(anim.NeedAffected, anim.NeedDelta);
             }
 
             // Completion effects
