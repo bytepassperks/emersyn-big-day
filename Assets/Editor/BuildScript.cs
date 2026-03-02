@@ -103,6 +103,10 @@ public class BuildScript
         // Phase 1: Apply Unity 6 headless workaround
         EnsureCompileScriptsOutputDirectory();
 
+        // Phase 1b: Force asset reimport after pipeline switch (per Claude expert guidance)
+        AssetDatabase.Refresh(ImportAssetOptions.ForceUpdate);
+        Debug.Log("[BUILD] AssetDatabase.Refresh(ForceUpdate) completed");
+
         string projectRoot = Path.GetFullPath(Path.Combine(Application.dataPath, ".."));
         string buildDir = Path.Combine(projectRoot, "Builds");
         string buildPath = Path.Combine(buildDir, "EmersynsBigDay.apk");
