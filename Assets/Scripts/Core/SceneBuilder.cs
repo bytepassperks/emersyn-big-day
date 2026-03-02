@@ -97,6 +97,16 @@ namespace EmersynBigDay.Core
 
         private void Awake()
         {
+            // Claude Bedrock fix #4: FORCE mobile-safe quality settings on Android BEFORE anything else
+            #if UNITY_ANDROID && !UNITY_EDITOR
+            QualitySettings.SetQualityLevel(1, true); // Medium quality
+            QualitySettings.antiAliasing = 0; // Disable MSAA - causes GPU failure
+            QualitySettings.shadows = ShadowQuality.HardOnly;
+            QualitySettings.shadowResolution = ShadowResolution.Low;
+            QualitySettings.softParticles = false;
+            Debug.Log("[SceneBuilder] Android quality settings forced to Medium/safe");
+            #endif
+
             if (isInitialized) return;
             isInitialized = true;
 
@@ -112,6 +122,14 @@ namespace EmersynBigDay.Core
             Application.targetFrameRate = 60;
             Screen.sleepTimeout = SleepTimeout.NeverSleep;
             QualitySettings.vSyncCount = 0;
+
+            // Claude Bedrock fix #5: Log graphics API for debugging
+            #if UNITY_ANDROID && !UNITY_EDITOR
+            Debug.Log($"[SceneBuilder] Graphics API: {SystemInfo.graphicsDeviceType}");
+            Debug.Log($"[SceneBuilder] Graphics device: {SystemInfo.graphicsDeviceName}");
+            Debug.Log($"[SceneBuilder] Color space: {QualitySettings.activeColorSpace}");
+            #endif
+
             Debug.Log("[SceneBuilder] Starting programmatic scene construction...");
 
             // CRITICAL: Each phase is independently try-caught so a failure in one
@@ -281,6 +299,12 @@ namespace EmersynBigDay.Core
             mainCamera.fieldOfView = 50f;
             mainCamera.nearClipPlane = 0.1f;
             mainCamera.farClipPlane = 100f;
+            // Claude Bedrock fix #1: FORCE Forward rendering - Deferred fails silently on Android GPUs
+            mainCamera.renderingPath = RenderingPath.Forward;
+            // Claude Bedrock fix #1b: Disable HDR and MSAA on camera for mobile compatibility
+            mainCamera.allowHDR = false;
+            mainCamera.allowMSAA = false;
+            Debug.Log($"[SceneBuilder] Camera rendering path: {mainCamera.renderingPath}, HDR: {mainCamera.allowHDR}, MSAA: {mainCamera.allowMSAA}");
             if (mainCamera.GetComponent<CameraSystem.CameraController>() == null)
             {
                 var ctrl = mainCamera.gameObject.AddComponent<CameraSystem.CameraController>();
@@ -398,13 +422,13 @@ namespace EmersynBigDay.Core
 
         private void SetupLighting()
         {
-            // Remove existing lights from the scene to avoid duplicates
-            foreach (var existing in FindObjectsByType<Light>(FindObjectsSortMode.None))
-                Destroy(existing.gameObject);
+            // Claude Bedrock fix #3: Apply RenderSettings IMMEDIATELY (not deferred)
+            // Using Flat ambient mode for maximum compatibility on Android
+            RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
+            RenderSettings.ambientLight = new Color(0.85f, 0.88f, 0.92f);
+            RenderSettings.ambientIntensity = 1.1f;
 
-            // Apply RenderSettings (Built-in Pipeline - no deferred init needed)
-            StartCoroutine(SetupRenderSettingsDeferred());
-
+            // Claude Bedrock fix #3: Create new lights BEFORE destroying old ones
             var lo = new GameObject("MainDirectionalLight");
             var ml = lo.AddComponent<Light>();
             ml.type = LightType.Directional;
@@ -432,15 +456,22 @@ namespace EmersynBigDay.Core
             rl.shadows = LightShadows.None;
             ro.transform.rotation = Quaternion.Euler(-20f, 180f, 0f);
             rl.cullingMask = ~0;
+
+            // NOW destroy old lights (keep new ones intact)
+            var allLights = FindObjectsByType<Light>(FindObjectsSortMode.None);
+            foreach (var existing in allLights)
+            {
+                if (existing != ml && existing != fl && existing != rl)
+                    Destroy(existing.gameObject);
+            }
+            Debug.Log($"[SceneBuilder] Lighting setup complete: {FindObjectsByType<Light>(FindObjectsSortMode.None).Length} lights active");
         }
 
-        // Apply RenderSettings after frame renders
+        // Claude Bedrock fix #3: RenderSettings now applied immediately in SetupLighting()
+        // Keeping this as a no-op in case any coroutine references it
         private IEnumerator SetupRenderSettingsDeferred()
         {
-            yield return new WaitForEndOfFrame();
-            RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
-            RenderSettings.ambientLight = new Color(0.85f, 0.88f, 0.92f);
-            RenderSettings.ambientIntensity = 1.1f;
+            yield return null; // No-op - settings applied immediately now
         }
 
         private void CreateRoomContainer()
