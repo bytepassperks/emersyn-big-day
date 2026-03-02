@@ -1171,7 +1171,6 @@ namespace EmersynBigDay.Core
             glbObj.transform.position = savedPos;
             glbObj.transform.rotation = savedRot;
             glbObj.transform.localScale = savedScale;
-            #endif
 
             // Convert glTF materials to Standard shader for Built-in Pipeline
             ConvertGLTFMaterials(glbObj);
@@ -1195,6 +1194,7 @@ namespace EmersynBigDay.Core
             // Destroy primitive version
             Destroy(existing.gameObject);
             Debug.Log($"[SceneBuilder] Replaced {charName} with GLB model!");
+            #endif
         }
 
         private IEnumerator LoadSingleGLBPet(string glbFileName, string petName)
@@ -1217,7 +1217,6 @@ namespace EmersynBigDay.Core
             glbObj.transform.SetParent(savedParent, false);
             glbObj.transform.position = savedPos;
             glbObj.transform.localScale = Vector3.one * 0.5f;
-            #endif
 
             ConvertGLTFMaterials(glbObj);
             var col = glbObj.AddComponent<BoxCollider>();
@@ -1227,6 +1226,7 @@ namespace EmersynBigDay.Core
 
             Destroy(existing.gameObject);
             Debug.Log($"[SceneBuilder] Replaced pet {petName} with GLB model!");
+            #endif
         }
 
         private void ConvertGLTFMaterials(GameObject obj)
