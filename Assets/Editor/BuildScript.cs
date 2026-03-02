@@ -143,6 +143,11 @@ public class BuildScript
         PlayerSettings.SetScriptingBackend(
             UnityEditor.Build.NamedBuildTarget.Android, ScriptingImplementation.Mono2x);
 
+        // CRITICAL: Target ARM64 (required by modern Android phones)
+        // Mono supports both ARMv7 and ARM64 - include both for max compatibility
+        PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64 | AndroidArchitecture.ARMv7;
+        Debug.Log($"[BUILD] Target architectures: {PlayerSettings.Android.targetArchitectures}");
+
         // Suppress stack traces during build to avoid massive log overhead from URP shader warnings
         var prevWarningTrace = Application.GetStackTraceLogType(LogType.Warning);
         var prevLogTrace = Application.GetStackTraceLogType(LogType.Log);
