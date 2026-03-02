@@ -25,7 +25,7 @@ namespace EmersynBigDay.MiniGames
         [Header("UI")]
         public GameObject PadPrefab;
         public Transform PadContainer;
-        public TMPro.TextMeshProUGUI StatusText;
+        public UnityEngine.UI.Text StatusText;
         public UnityEngine.UI.Button PlayButton;
         public UnityEngine.UI.Button RecordButton;
 

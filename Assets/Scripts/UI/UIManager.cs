@@ -2,7 +2,6 @@ using UnityEngine;
 using UnityEngine.UI;
 using System;
 using System.Collections.Generic;
-using TMPro;
 
 namespace EmersynBigDay.UI
 {
@@ -16,10 +15,10 @@ namespace EmersynBigDay.UI
 
         [Header("HUD Elements")]
         public GameObject HUDPanel;
-        public TextMeshProUGUI CoinText;
-        public TextMeshProUGUI StarText;
-        public TextMeshProUGUI LevelText;
-        public TextMeshProUGUI DayText;
+        public Text CoinText;
+        public Text StarText;
+        public Text LevelText;
+        public Text DayText;
         public Slider XPBar;
         public Image MoodIcon;
 
@@ -29,7 +28,7 @@ namespace EmersynBigDay.UI
         [Header("Room Navigation")]
         public Button NextRoomButton;
         public Button PrevRoomButton;
-        public TextMeshProUGUI RoomNameText;
+        public Text RoomNameText;
         public Image RoomIcon;
 
         [Header("Menus")]
@@ -228,7 +227,7 @@ namespace EmersynBigDay.UI
             if (popup == null) { isShowingPopup = false; yield break; }
 
             // Set popup content
-            var titleText = popup.GetComponentInChildren<TextMeshProUGUI>();
+            var titleText = popup.GetComponentInChildren<Text>();
             if (titleText != null) titleText.text = data.Title;
 
             // Animate in (scale from 0 to 1)

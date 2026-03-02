@@ -20,9 +20,9 @@ namespace EmersynBigDay.MiniGames
         [Header("UI")]
         public UnityEngine.UI.Image TargetColorDisplay;
         public UnityEngine.UI.Image MixedColorDisplay;
-        public TMPro.TextMeshProUGUI RoundText;
-        public TMPro.TextMeshProUGUI AccuracyText;
-        public TMPro.TextMeshProUGUI TimerText;
+        public UnityEngine.UI.Text RoundText;
+        public UnityEngine.UI.Text AccuracyText;
+        public UnityEngine.UI.Text TimerText;
         public UnityEngine.UI.Button SubmitButton;
         public UnityEngine.UI.Button ResetMixButton;
 

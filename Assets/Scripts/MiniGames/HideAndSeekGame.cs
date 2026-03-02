@@ -22,8 +22,8 @@ namespace EmersynBigDay.MiniGames
         public GameObject HintArrowPrefab;
 
         [Header("UI")]
-        public TMPro.TextMeshProUGUI FoundCountText;
-        public TMPro.TextMeshProUGUI TimerText;
+        public UnityEngine.UI.Text FoundCountText;
+        public UnityEngine.UI.Text TimerText;
         public UnityEngine.UI.Button HintButton;
 
         private List<HiddenObject> hiddenObjects = new List<HiddenObject>();

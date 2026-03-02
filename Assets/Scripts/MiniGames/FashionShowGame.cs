@@ -24,9 +24,9 @@ namespace EmersynBigDay.MiniGames
         [Header("UI")]
         public Transform ClothingScrollContainer;
         public GameObject ClothingButtonPrefab;
-        public TMPro.TextMeshProUGUI ThemeText;
-        public TMPro.TextMeshProUGUI TimerText;
-        public TMPro.TextMeshProUGUI ScoreText;
+        public UnityEngine.UI.Text ThemeText;
+        public UnityEngine.UI.Text TimerText;
+        public UnityEngine.UI.Text ScoreText;
 
         private List<ClothingItem> currentOutfit = new List<ClothingItem>();
         private float gameTimer;
@@ -83,7 +83,7 @@ namespace EmersynBigDay.MiniGames
             {
                 var item = shuffled[i];
                 var btn = Instantiate(ClothingButtonPrefab, ClothingScrollContainer);
-                var text = btn.GetComponentInChildren<TMPro.TextMeshProUGUI>();
+                var text = btn.GetComponentInChildren<UnityEngine.UI.Text>();
                 if (text != null) text.text = item.Name;
                 var image = btn.GetComponentInChildren<UnityEngine.UI.Image>();
                 if (image != null && item.Icon != null) image.sprite = item.Icon;

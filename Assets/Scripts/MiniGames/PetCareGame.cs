@@ -24,7 +24,7 @@ namespace EmersynBigDay.MiniGames
         public GameObject BrushPrefab;
 
         [Header("UI")]
-        public TMPro.TextMeshProUGUI TaskText;
+        public UnityEngine.UI.Text TaskText;
         public UnityEngine.UI.Slider PetHappinessBar;
 
         private PetTask currentTask;

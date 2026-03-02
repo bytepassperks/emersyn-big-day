@@ -21,8 +21,8 @@ namespace EmersynBigDay.MiniGames
         public Transform IngredientContainer;
         public GameObject IngredientButtonPrefab;
         public UnityEngine.UI.Image CurrentStepImage;
-        public TMPro.TextMeshProUGUI StepText;
-        public TMPro.TextMeshProUGUI ScoreText;
+        public UnityEngine.UI.Text StepText;
+        public UnityEngine.UI.Text ScoreText;
         public UnityEngine.UI.Slider TimerBar;
 
         private RecipeData currentRecipe;
@@ -98,7 +98,7 @@ namespace EmersynBigDay.MiniGames
                 if (IngredientButtonPrefab != null && IngredientContainer != null)
                 {
                     var btn = Instantiate(IngredientButtonPrefab, IngredientContainer);
-                    var text = btn.GetComponentInChildren<TMPro.TextMeshProUGUI>();
+                    var text = btn.GetComponentInChildren<UnityEngine.UI.Text>();
                     if (text != null) text.text = opt;
                     string captured = opt;
                     btn.GetComponent<UnityEngine.UI.Button>()?.onClick.AddListener(() => OnIngredientSelected(captured));

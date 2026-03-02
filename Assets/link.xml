@@ -1,4 +1,3 @@
 <linker>
-  <assembly fullname="Unity.TextMeshPro" preserve="all"/>
-  <type fullname="TMPro.TMP_Settings/LineBreakingTable" preserve="all"/>
+  <assembly fullname="UnityEngine.UI" preserve="all"/>
 </linker>

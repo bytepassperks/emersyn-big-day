@@ -21,9 +21,9 @@ namespace EmersynBigDay.MiniGames
         [Header("UI")]
         public Transform ItemContainer;
         public GameObject ItemCardPrefab;
-        public TMPro.TextMeshProUGUI BudgetText;
-        public TMPro.TextMeshProUGUI CartValueText;
-        public TMPro.TextMeshProUGUI TimerText;
+        public UnityEngine.UI.Text BudgetText;
+        public UnityEngine.UI.Text CartValueText;
+        public UnityEngine.UI.Text TimerText;
 
         private List<ShopItem> cart = new List<ShopItem>();
         private int spent = 0;
@@ -69,7 +69,7 @@ namespace EmersynBigDay.MiniGames
             {
                 var item = shuffled[i];
                 var card = Instantiate(ItemCardPrefab, ItemContainer);
-                var text = card.GetComponentInChildren<TMPro.TextMeshProUGUI>();
+                var text = card.GetComponentInChildren<UnityEngine.UI.Text>();
                 if (text != null) text.text = $"{item.Name}\n${item.Price}";
 
                 var capturedItem = item;
