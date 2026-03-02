@@ -1,0 +1,19 @@
+{
+  "name": "EmersynsBigDay",
+  "rootNamespace": "EmersynsBigDay",
+  "references": [
+    "Unity.TextMeshPro",
+    "Unity.InputSystem",
+    "Unity.Mathematics",
+    "Newtonsoft.Json"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}
