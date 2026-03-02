@@ -1167,6 +1167,56 @@ namespace EmersynBigDay.Core
             }
 
             Debug.Log($"[SceneBuilder] PBR textures applied to room {RoomNames[roomIndex]}");
+
+            // Load and apply baked lightmaps from Modal GPU pipeline
+            yield return StartCoroutine(SafeCoroutine(LoadAndApplyLightmaps(roomIndex)));
+        }
+
+        // === Lightmap Loading from Modal GPU Baked Output ===
+        private IEnumerator LoadAndApplyLightmaps(int roomIndex)
+        {
+            string roomName = RoomNames[roomIndex].ToLower();
+            string[] surfaces = (roomIndex == 3 || roomIndex == 8)
+                ? new[] { "Floor" }  // Outdoor rooms only have floor
+                : new[] { "Floor", "BackWall", "LeftWall", "RightWall" };
+
+            foreach (string surface in surfaces)
+            {
+                string lightmapFile = $"{roomName}_{surface}_lightmap.png";
+                string lightmapPath = Path.Combine(Application.streamingAssetsPath, "Lightmaps", lightmapFile);
+
+                using (var request = UnityWebRequestTexture.GetTexture(lightmapPath))
+                {
+                    yield return request.SendWebRequest();
+                    if (request.result == UnityWebRequest.Result.Success)
+                    {
+                        var lightmapTex = DownloadHandlerTexture.GetContent(request);
+                        lightmapTex.filterMode = FilterMode.Bilinear;
+                        lightmapTex.wrapMode = TextureWrapMode.Clamp;
+
+                        // Apply lightmap as emission/detail texture on the surface material
+                        Transform surfaceObj = roomContainer.Find(surface);
+                        if (surfaceObj != null)
+                        {
+                            var renderer = surfaceObj.GetComponent<Renderer>();
+                            if (renderer != null && renderer.material != null)
+                            {
+                                // Use detail albedo for lightmap blending on Standard shader
+                                renderer.material.SetTexture("_DetailAlbedoMap", lightmapTex);
+                                renderer.material.SetTextureScale("_DetailAlbedoMap", Vector2.one);
+                                renderer.material.EnableKeyword("_DETAIL_MULX2");
+                                renderer.material.SetFloat("_DetailNormalMapScale", 1.0f);
+                                Debug.Log($"[SceneBuilder] Lightmap applied: {lightmapFile}");
+                            }
+                        }
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"[SceneBuilder] Lightmap not found: {lightmapFile}");
+                    }
+                }
+            }
+            Debug.Log($"[SceneBuilder] Lightmaps applied to room {RoomNames[roomIndex]}");
         }
 
         private IEnumerator LoadTextureFromStreamingAssets(string relativePath, System.Action<Texture2D> callback)
