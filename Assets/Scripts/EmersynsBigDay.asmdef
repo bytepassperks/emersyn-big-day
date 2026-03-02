@@ -2,12 +2,9 @@
   "name": "EmersynsBigDay",
   "rootNamespace": "EmersynsBigDay",
   "references": [
-    "Unity.TextMeshPro",
-    "Unity.InputSystem",
+    "glTFast",
     "Unity.Mathematics",
-    "Newtonsoft.Json",
-    "Unity.RenderPipelines.Core.Runtime",
-    "Unity.RenderPipelines.Universal.Runtime"
+    "Newtonsoft.Json"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],

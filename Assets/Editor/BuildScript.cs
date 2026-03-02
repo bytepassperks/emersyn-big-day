@@ -14,28 +14,8 @@ public class BuildScript
     [MenuItem("Build/Build Android APK")]
     public static void BuildAndroid()
     {
-        Debug.Log("[BUILD] BuildAndroid called - waiting for editor to stabilize...");
-        _frameCount = 0;
-        _buildStarted = false;
-        EditorApplication.update += WaitAndBuild;
-    }
-
-    private static void WaitAndBuild()
-    {
-        _frameCount++;
-        if (_frameCount >= 30 && !_buildStarted)
-        {
-            _buildStarted = true;
-            EditorApplication.update -= WaitAndBuild;
-            Debug.Log($"[BUILD] Editor stabilized after {_frameCount} frames, starting build...");
-            ExecuteBuild();
-        }
-        if (_frameCount > 600 && !_buildStarted)
-        {
-            EditorApplication.update -= WaitAndBuild;
-            Debug.LogError("[BUILD] Timeout waiting for editor to stabilize");
-            EditorApplication.Exit(1);
-        }
+        Debug.Log("[BUILD] BuildAndroid called - building synchronously...");
+        ExecuteBuild();
     }
 
     /// <summary>
