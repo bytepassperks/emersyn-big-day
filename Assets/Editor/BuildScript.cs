@@ -150,7 +150,11 @@ public class BuildScript
 
         // ARM64 only (ARMv7 deprecated, IL2CPP + ARM64 is Google Play standard)
         PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
-        Debug.Log($"[BUILD] Backend: IL2CPP, Target arch: ARM64");
+
+        // Enable unsafe code (required for IL2CPP with pointer fields in InputSystem/TMP)
+        PlayerSettings.allowUnsafeCode = true;
+
+        Debug.Log($"[BUILD] Backend: IL2CPP, Target arch: ARM64, allowUnsafeCode: true");
 
         // Suppress stack traces during build to avoid massive log overhead from URP shader warnings
         var prevWarningTrace = Application.GetStackTraceLogType(LogType.Warning);
@@ -165,7 +169,10 @@ public class BuildScript
                 scenes = scenes,
                 locationPathName = buildPath,
                 target = BuildTarget.Android,
-                options = BuildOptions.None
+                options = BuildOptions.None,
+                // Unity 6 IL2CPP workaround: disable determinism consistency checks
+                // that produce false positives for Nullable<T>, void*, HashSet<T> fields
+                extraScriptingDefines = new[] { "IL2CPP_DISABLE_CONSISTENCY_CHECKS" }
             };
 
             Debug.Log("[BUILD] Calling BuildPipeline.BuildPlayer...");
