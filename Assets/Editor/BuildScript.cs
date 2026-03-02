@@ -143,18 +143,22 @@ public class BuildScript
         PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel25;
         PlayerSettings.Android.targetSdkVersion = AndroidSdkVersions.AndroidApiLevel34;
 
-        // Use IL2CPP backend per Claude guidance - Mono has known 'script class layout incompatible' bug
-        // IL2CPP is required for Google Play 64-bit, better performance, fixes all serialization issues
+        // Switch to Mono backend per Claude 5th analysis:
+        // TMP is a Unity 6 BUILT-IN package that can't be removed.
+        // IL2CPP's serialization validator has false positives for HashSet<uint> in TMP_Settings.
+        // Mono doesn't have this validator issue. Mono supports both ARM64+ARMv7.
         PlayerSettings.SetScriptingBackend(
-            UnityEditor.Build.NamedBuildTarget.Android, ScriptingImplementation.IL2CPP);
+            UnityEditor.Build.NamedBuildTarget.Android, ScriptingImplementation.Mono2x);
 
-        // ARM64 only (ARMv7 deprecated, IL2CPP + ARM64 is Google Play standard)
-        PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
+        // Mono supports both architectures
+        PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64 | AndroidArchitecture.ARMv7;
 
-        // Enable unsafe code (required for IL2CPP with pointer fields in InputSystem/TMP)
-        PlayerSettings.allowUnsafeCode = true;
+        // Disable managed stripping to prevent any code stripping issues
+        PlayerSettings.SetManagedStrippingLevel(
+            UnityEditor.Build.NamedBuildTarget.Android, ManagedStrippingLevel.Disabled);
+        PlayerSettings.stripEngineCode = false;
 
-        Debug.Log($"[BUILD] Backend: IL2CPP, Target arch: ARM64, allowUnsafeCode: true");
+        Debug.Log($"[BUILD] Backend: Mono, Target arch: ARM64+ARMv7, Stripping: Disabled");
 
         // Suppress stack traces during build to avoid massive log overhead from URP shader warnings
         var prevWarningTrace = Application.GetStackTraceLogType(LogType.Warning);
@@ -169,10 +173,7 @@ public class BuildScript
                 scenes = scenes,
                 locationPathName = buildPath,
                 target = BuildTarget.Android,
-                options = BuildOptions.None,
-                // Unity 6 IL2CPP workaround: disable determinism consistency checks
-                // that produce false positives for Nullable<T>, void*, HashSet<T> fields
-                extraScriptingDefines = new[] { "IL2CPP_DISABLE_CONSISTENCY_CHECKS" }
+                options = BuildOptions.None
             };
 
             Debug.Log("[BUILD] Calling BuildPipeline.BuildPlayer...");
