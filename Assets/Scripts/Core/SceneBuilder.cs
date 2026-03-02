@@ -86,8 +86,7 @@ namespace EmersynBigDay.Core
 
         private Material CreateBaseMaterial()
         {
-            Shader shader = Shader.Find("Universal Render Pipeline/Lit");
-            if (shader == null) shader = Shader.Find("Standard");
+            Shader shader = Shader.Find("Standard");
             if (shader == null) shader = Shader.Find("Diffuse");
             return new Material(shader);
         }
