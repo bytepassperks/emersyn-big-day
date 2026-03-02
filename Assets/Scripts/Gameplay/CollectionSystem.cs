@@ -173,6 +173,26 @@ namespace EmersynBigDay.Gameplay
         public string CategoryId;
         public string DisplayName;
         public int TotalItems;
-        public HashSet<string> CollectedItems;
+
+        // HashSet<string> is not serializable in Unity player builds (causes class layout incompatibility).
+        // Use List<string> for serialization + runtime HashSet for O(1) lookups per Claude guidance.
+        [SerializeField] private List<string> collectedItemsList = new List<string>();
+        [NonSerialized] private HashSet<string> _collectedItemsSet;
+
+        public HashSet<string> CollectedItems
+        {
+            get
+            {
+                if (_collectedItemsSet == null)
+                    _collectedItemsSet = new HashSet<string>(collectedItemsList);
+                return _collectedItemsSet;
+            }
+        }
+
+        public void SyncListFromSet()
+        {
+            if (_collectedItemsSet != null)
+                collectedItemsList = new List<string>(_collectedItemsSet);
+        }
     }
 }
