@@ -92,11 +92,11 @@ namespace EmersynBigDay.Visual
         /// </summary>
         public Material CreateToonMaterial(Color baseColor)
         {
-            Shader shader = Shader.Find("Universal Render Pipeline/Lit");
-            if (shader == null) shader = Shader.Find("Standard");
-            if (shader == null) shader = Shader.Find("Diffuse");
-
-            var mat = new Material(shader);
+            // Get shader from primitive's default material (survives IL2CPP shader stripping)
+            var tempPrim = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            var defaultMat = tempPrim.GetComponent<Renderer>().sharedMaterial;
+            var mat = new Material(defaultMat);
+            Destroy(tempPrim);
 
             if (mat.HasProperty("_BaseColor"))
                 mat.SetColor("_BaseColor", baseColor);

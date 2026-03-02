@@ -88,17 +88,22 @@ namespace EmersynBigDay.Core
 
         private Material CreateBaseMaterial()
         {
-            Shader shader = Shader.Find("Universal Render Pipeline/Lit");
-            if (shader == null) shader = Shader.Find("Standard");
-            if (shader == null) shader = Shader.Find("Diffuse");
-            var mat = new Material(shader);
-            // Fix #7: Enable URP material keywords
-            if (shader != null && shader.name.Contains("Universal"))
+            // CRITICAL FIX: Get shader from a primitive's default material.
+            // Shader.Find() fails in IL2CPP builds because URP shaders get stripped
+            // when no material asset references them. Primitives always have valid materials.
+            var tempPrimitive = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            var defaultMat = tempPrimitive.GetComponent<Renderer>().sharedMaterial;
+            var mat = new Material(defaultMat);
+            Destroy(tempPrimitive);
+
+            // Enable URP keywords if available
+            if (mat.shader != null && mat.shader.name.Contains("Universal"))
             {
                 mat.EnableKeyword("_SURFACE_TYPE_OPAQUE");
                 mat.SetFloat("_Surface", 0); // Opaque
                 mat.SetFloat("_Blend", 0);
             }
+            Debug.Log($"[SceneBuilder] Base material shader: {mat.shader?.name ?? "NULL"}");
             return mat;
         }
 
@@ -440,7 +445,8 @@ namespace EmersynBigDay.Core
             root.transform.position = pos;
             // Fix #11: Characters scaled up 30% to be visible relative to rooms
             root.transform.localScale = Vector3.one * scale * 1.3f;
-            Color skin = new Color(1f, 0.88f, 0.78f);
+            // Emersyn's actual skin color: brown skin (age 6)
+            Color skin = isMain ? new Color(0.55f, 0.38f, 0.28f) : new Color(1f, 0.88f, 0.78f);
 
             var body = GameObject.CreatePrimitive(PrimitiveType.Capsule);
             body.name = "Body";
@@ -579,19 +585,21 @@ namespace EmersynBigDay.Core
             SetPanelColor(xpBg, new Color(0.2f, 0.2f, 0.2f, 0.6f));
             xpBar = MakeSlider("XPBar", xpBg.transform, Vector2.zero, new Vector2(880, 12), new Color(0.3f, 0.9f, 0.3f));
 
-            // Fix #6: Increase spacing between room name and mood text (was 35px, now 50px)
-            roomNameText = UIText("RoomName", co.transform, new Vector2(0, -110), "Bedroom", 36, Color.white);
+            // Room name and mood text with proper spacing to prevent overlap
+            roomNameText = UIText("RoomName", co.transform, new Vector2(0, -115), "Bedroom", 30, Color.white);
             var rnRect = roomNameText.GetComponent<RectTransform>();
             rnRect.anchorMin = new Vector2(0.5f, 1);
             rnRect.anchorMax = new Vector2(0.5f, 1);
             rnRect.pivot = new Vector2(0.5f, 1);
-            rnRect.anchoredPosition = new Vector2(0, -110);
-            moodText = UIText("Mood", co.transform, new Vector2(0, -160), "Mood: Happy", 24, new Color(1f, 0.9f, 0.3f));
+            rnRect.anchoredPosition = new Vector2(0, -115);
+            rnRect.sizeDelta = new Vector2(400, 40);
+            moodText = UIText("Mood", co.transform, new Vector2(0, -155), "Mood: Happy", 22, new Color(1f, 0.9f, 0.3f));
             var mRect = moodText.GetComponent<RectTransform>();
             mRect.anchorMin = new Vector2(0.5f, 1);
             mRect.anchorMax = new Vector2(0.5f, 1);
             mRect.pivot = new Vector2(0.5f, 1);
-            mRect.anchoredPosition = new Vector2(0, -160);
+            mRect.anchoredPosition = new Vector2(0, -155);
+            mRect.sizeDelta = new Vector2(400, 36);
 
             CreateNeedBars(co.transform);
             CreateActionButtons(co.transform);

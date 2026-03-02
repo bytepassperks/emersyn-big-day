@@ -192,8 +192,8 @@ namespace EmersynBigDay.Systems
             var renderer = pointerObject.GetComponent<Renderer>();
             if (renderer != null)
             {
-                var mat = new Material(Shader.Find("Universal Render Pipeline/Lit") ??
-                                      Shader.Find("Standard") ?? Shader.Find("Diffuse"));
+                // Use primitive's default material shader (survives IL2CPP shader stripping)
+                var mat = new Material(renderer.sharedMaterial);
                 mat.color = new Color(1f, 0.8f, 0f, 1f); // Gold
                 if (mat.HasProperty("_BaseColor"))
                     mat.SetColor("_BaseColor", new Color(1f, 0.8f, 0f, 1f));
