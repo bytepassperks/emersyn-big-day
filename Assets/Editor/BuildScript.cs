@@ -1,60 +1,199 @@
 using UnityEditor;
+using UnityEditor.Build.Reporting;
 using UnityEngine;
+using System;
 using System.IO;
+using System.Linq;
+using System.Reflection;
 
 public class BuildScript
 {
+    private static int _frameCount = 0;
+    private static bool _buildStarted = false;
+
     [MenuItem("Build/Build Android APK")]
     public static void BuildAndroid()
     {
-        string buildPath = "Builds/EmersynsBigDay.apk";
-        
-        // Ensure build directory exists
-        string dir = Path.GetDirectoryName(buildPath);
-        if (!Directory.Exists(dir))
-            Directory.CreateDirectory(dir);
+        Debug.Log("[BUILD] BuildAndroid called - waiting for editor to stabilize...");
+        _frameCount = 0;
+        _buildStarted = false;
+        EditorApplication.update += WaitAndBuild;
+    }
 
-        // Get all scenes in build settings, or use MainScene
-        string[] scenes = new string[] { "Assets/Scenes/MainScene.unity" };
-        
-        // Check if scene file exists
-        if (!File.Exists(scenes[0]))
+    private static void WaitAndBuild()
+    {
+        _frameCount++;
+        if (_frameCount >= 30 && !_buildStarted)
         {
-            Debug.Log("[BuildScript] MainScene.unity not found, creating empty scene list");
-            scenes = new string[0];
+            _buildStarted = true;
+            EditorApplication.update -= WaitAndBuild;
+            Debug.Log($"[BUILD] Editor stabilized after {_frameCount} frames, starting build...");
+            ExecuteBuild();
         }
-
-        BuildPlayerOptions buildPlayerOptions = new BuildPlayerOptions();
-        buildPlayerOptions.scenes = scenes;
-        buildPlayerOptions.locationPathName = buildPath;
-        buildPlayerOptions.target = BuildTarget.Android;
-        buildPlayerOptions.options = BuildOptions.None;
-
-        // Set Android settings
-        PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel24;
-        PlayerSettings.Android.targetSdkVersion = AndroidSdkVersions.AndroidApiLevel33;
-        // Use Mono backend - IL2CPP crashes in headless batch mode on Unity 6
-        PlayerSettings.SetScriptingBackend(BuildTargetGroup.Android, ScriptingImplementation.Mono2x);
-        PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARMv7 | AndroidArchitecture.ARM64;
-        
-        Debug.Log("[BuildScript] Starting Android APK build...");
-        var report = BuildPipeline.BuildPlayer(buildPlayerOptions);
-        
-        if (report.summary.result == UnityEditor.Build.Reporting.BuildResult.Succeeded)
+        if (_frameCount > 600 && !_buildStarted)
         {
-            Debug.Log($"[BuildScript] Build succeeded! APK at: {buildPath} ({report.summary.totalSize / (1024*1024)} MB)");
+            EditorApplication.update -= WaitAndBuild;
+            Debug.LogError("[BUILD] Timeout waiting for editor to stabilize");
+            EditorApplication.Exit(1);
         }
-        else
+    }
+
+    /// <summary>
+    /// Unity 6 headless batch mode workaround: ensure the ScriptAssemblies
+    /// output directory is set before BuildPipeline runs, preventing the
+    /// segfault in BuildPipeline::AppendTargetAssembliesFromManagedAssemblies.
+    /// </summary>
+    private static void EnsureCompileScriptsOutputDirectory()
+    {
+        string projectRoot = Path.GetFullPath(Path.Combine(Application.dataPath, ".."));
+        string outputDir = Path.Combine(projectRoot, "Library", "ScriptAssemblies");
+        if (!Directory.Exists(outputDir))
+            Directory.CreateDirectory(outputDir);
+
+        try
         {
-            Debug.LogError($"[BuildScript] Build FAILED: {report.summary.totalErrors} errors");
-            foreach (var step in report.steps)
+            // Try to call EditorCompilationInterface.SetCompileScriptsOutputDirectory via reflection
+            Type editorCompType = typeof(Editor).Assembly.GetType(
+                "UnityEditor.Scripting.ScriptCompilation.EditorCompilationInterface");
+            if (editorCompType == null)
             {
-                foreach (var msg in step.messages)
+                Debug.Log("[BUILD] EditorCompilationInterface not found, skipping workaround");
+                return;
+            }
+
+            MethodInfo setDirMethod = editorCompType.GetMethod(
+                "SetCompileScriptsOutputDirectory",
+                BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+            if (setDirMethod != null)
+            {
+                setDirMethod.Invoke(null, new object[] { outputDir });
+                Debug.Log($"[BUILD] SetCompileScriptsOutputDirectory({outputDir}) called successfully");
+                return;
+            }
+
+            // Fallback: try instance method
+            PropertyInfo instanceProp = editorCompType.GetProperty(
+                "Instance", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+            if (instanceProp != null)
+            {
+                object instance = instanceProp.GetValue(null);
+                if (instance != null)
                 {
-                    if (msg.type == LogType.Error)
-                        Debug.LogError($"  {msg.content}");
+                    MethodInfo instMethod = instance.GetType().GetMethod(
+                        "SetCompileScriptsOutputDirectory",
+                        BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                    if (instMethod != null)
+                    {
+                        instMethod.Invoke(instance, new object[] { outputDir });
+                        Debug.Log($"[BUILD] Instance SetCompileScriptsOutputDirectory called");
+                    }
                 }
             }
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning($"[BUILD] EnsureCompileScriptsOutputDirectory warning: {ex.Message}");
+        }
+    }
+
+    private static void ExecuteBuild()
+    {
+        var startTime = DateTime.Now;
+
+        // Phase 1: Apply Unity 6 headless workaround
+        EnsureCompileScriptsOutputDirectory();
+
+        string projectRoot = Path.GetFullPath(Path.Combine(Application.dataPath, ".."));
+        string buildDir = Path.Combine(projectRoot, "Builds");
+        string buildPath = Path.Combine(buildDir, "EmersynsBigDay.apk");
+        if (!Directory.Exists(buildDir))
+            Directory.CreateDirectory(buildDir);
+
+        // Discover scenes
+        string[] scenes = EditorBuildSettings.scenes
+            .Where(s => s.enabled).Select(s => s.path).ToArray();
+        if (scenes.Length == 0)
+        {
+            string[] candidates = {
+                "Assets/Scenes/MainScene.unity",
+                "Assets/Scenes/LoadingScene.unity"
+            };
+            scenes = candidates.Where(s =>
+                File.Exists(Path.Combine(projectRoot, s))).ToArray();
+        }
+        if (scenes.Length == 0)
+        {
+            Debug.LogError("[BUILD] No scenes found! Aborting.");
+            EditorApplication.Exit(1);
+            return;
+        }
+        Debug.Log($"[BUILD] Scenes: {string.Join(", ", scenes)}");
+
+        // Configure Android settings
+        PlayerSettings.SetApplicationIdentifier(
+            UnityEditor.Build.NamedBuildTarget.Android, "com.bytepassperks.emersynsbigday");
+        PlayerSettings.companyName = "BytePassPerks";
+        PlayerSettings.productName = "Emersyn's Big Day";
+        PlayerSettings.bundleVersion = "1.0.0";
+        PlayerSettings.Android.bundleVersionCode = 1;
+        PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel25;
+        PlayerSettings.Android.targetSdkVersion = AndroidSdkVersions.AndroidApiLevel34;
+
+        // Use Mono backend - IL2CPP crashes in Unity 6 headless batch mode
+        PlayerSettings.SetScriptingBackend(
+            UnityEditor.Build.NamedBuildTarget.Android, ScriptingImplementation.Mono2x);
+
+        // Suppress stack traces during build to avoid massive log overhead from URP shader warnings
+        var prevWarningTrace = Application.GetStackTraceLogType(LogType.Warning);
+        var prevLogTrace = Application.GetStackTraceLogType(LogType.Log);
+        Application.SetStackTraceLogType(LogType.Warning, StackTraceLogType.None);
+        Application.SetStackTraceLogType(LogType.Log, StackTraceLogType.None);
+
+        try
+        {
+            BuildPlayerOptions opts = new BuildPlayerOptions
+            {
+                scenes = scenes,
+                locationPathName = buildPath,
+                target = BuildTarget.Android,
+                options = BuildOptions.None
+            };
+
+            Debug.Log("[BUILD] Calling BuildPipeline.BuildPlayer...");
+            BuildReport report = BuildPipeline.BuildPlayer(opts);
+
+            // Restore stack trace settings
+            Application.SetStackTraceLogType(LogType.Warning, prevWarningTrace);
+            Application.SetStackTraceLogType(LogType.Log, prevLogTrace);
+
+            BuildSummary summary = report.summary;
+            double minutes = (DateTime.Now - startTime).TotalMinutes;
+
+            Debug.Log($"[BUILD] Result: {summary.result}");
+            Debug.Log($"[BUILD] Size: {summary.totalSize / (1024 * 1024)} MB");
+            Debug.Log($"[BUILD] Errors: {summary.totalErrors}");
+            Debug.Log($"[BUILD] Time: {minutes:F1} min");
+
+            if (summary.result == BuildResult.Succeeded)
+            {
+                Debug.Log($"[BUILD] SUCCESS - APK at: {buildPath}");
+                EditorApplication.Exit(0);
+            }
+            else
+            {
+                Debug.LogError($"[BUILD] FAILED with {summary.totalErrors} errors");
+                foreach (var step in report.steps)
+                    foreach (var msg in step.messages)
+                        if (msg.type == LogType.Error)
+                            Debug.LogError($"  {msg.content}");
+                EditorApplication.Exit(1);
+            }
+        }
+        catch (Exception ex)
+        {
+            Application.SetStackTraceLogType(LogType.Warning, prevWarningTrace);
+            Application.SetStackTraceLogType(LogType.Log, prevLogTrace);
+            Debug.LogError($"[BUILD] EXCEPTION: {ex.Message}\n{ex.StackTrace}");
             EditorApplication.Exit(1);
         }
     }
