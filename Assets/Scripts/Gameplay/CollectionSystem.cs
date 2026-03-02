@@ -71,13 +71,7 @@ namespace EmersynBigDay.Gameplay
 
         private void AddCategory(string id, string name, int totalItems)
         {
-            categories[id] = new CollectionCategory
-            {
-                CategoryId = id,
-                DisplayName = name,
-                TotalItems = totalItems,
-                CollectedItems = new HashSet<string>()
-            };
+            categories[id] = new CollectionCategory(id, name, totalItems);
         }
 
         private void CountTotals()
@@ -178,6 +172,15 @@ namespace EmersynBigDay.Gameplay
         // Use List<string> for serialization + runtime HashSet for O(1) lookups per Claude guidance.
         [SerializeField] private List<string> collectedItemsList = new List<string>();
         [NonSerialized] private HashSet<string> _collectedItemsSet;
+
+        public CollectionCategory(string id, string name, int totalItems)
+        {
+            CategoryId = id;
+            DisplayName = name;
+            TotalItems = totalItems;
+            collectedItemsList = new List<string>();
+            _collectedItemsSet = null;
+        }
 
         public HashSet<string> CollectedItems
         {
