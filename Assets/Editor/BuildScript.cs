@@ -33,8 +33,9 @@ public class BuildScript
         // Set Android settings
         PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel24;
         PlayerSettings.Android.targetSdkVersion = AndroidSdkVersions.AndroidApiLevel33;
-        PlayerSettings.SetScriptingBackend(BuildTargetGroup.Android, ScriptingImplementation.IL2CPP);
-        PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
+        // Use Mono backend - IL2CPP crashes in headless batch mode on Unity 6
+        PlayerSettings.SetScriptingBackend(BuildTargetGroup.Android, ScriptingImplementation.Mono2x);
+        PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARMv7 | AndroidArchitecture.ARM64;
         
         Debug.Log("[BuildScript] Starting Android APK build...");
         var report = BuildPipeline.BuildPlayer(buildPlayerOptions);
