@@ -1,0 +1,1499 @@
+[
+  {
+    "id": "seasonal_new_year",
+    "month": 1,
+    "title": "New Year Celebration",
+    "description": "Ring in the new year with Emersyn and friends! Watch fireworks on TV, make resolutions, and enjoy a special midnight countdown party with Frooti and popcorn chicken.",
+    "type": "holiday",
+    "duration_days": 2,
+    "activities": [
+      {
+        "name": "Countdown Party",
+        "description": "Host a pajama party with Ava and Mia, watch fireworks from the garden",
+        "rewards": {
+          "coins": 100,
+          "xp": 150
+        }
+      },
+      {
+        "name": "Resolution Reel",
+        "description": "Record a fun New Year resolution video to share with friends",
+        "rewards": {
+          "coins": 75,
+          "xp": 100
+        }
+      }
+    ],
+    "special_items": [
+      {
+        "name": "Sparkly 2025 Tiara",
+        "description": "A glittery tiara with the new year numbers",
+        "rarity": "rare"
+      }
+    ],
+    "decorations": [
+      "party streamers",
+      "balloon arch",
+      "happy new year banner",
+      "confetti poppers"
+    ]
+  },
+  {
+    "id": "seasonal_makar_sankranti",
+    "month": 1,
+    "title": "Makar Sankranti Kite Festival",
+    "description": "The sky fills with colorful kites! Emersyn joins the rooftop kite-flying fun with her family. Enjoy til-gul sweets and watch kites dance in the wind.",
+    "type": "festival",
+    "duration_days": 3,
+    "activities": [
+      {
+        "name": "Kite Flying Competition",
+        "description": "Fly your decorated kite from the garden and try to stay airborne longest",
+        "rewards": {
+          "coins": 120,
+          "xp": 180
+        }
+      },
+      {
+        "name": "Til-Gul Exchange",
+        "description": "Share sweet sesame treats with Ava, Mia, and Leo saying 'Til-gul ghya, god god bola'",
+        "rewards": {
+          "coins": 60,
+          "xp": 80
+        }
+      }
+    ],
+    "special_items": [
+      {
+        "name": "Rainbow Patang Kite",
+        "description": "A beautiful handcrafted kite with rainbow colors",
+        "rarity": "rare"
+      }
+    ],
+    "decorations": [
+      "colorful kites",
+      "manja string spools",
+      "rooftop cushions",
+      "til-gul bowls"
+    ]
+  },
+  {
+    "id": "seasonal_republic_day",
+    "month": 1,
+    "title": "Republic Day Parade",
+    "description": "Celebrate India's Republic Day with pride! Emersyn watches the parade on TV, dresses in tricolor, and performs a patriotic dance at school.",
+    "type": "holiday",
+    "duration_days": 1,
+    "activities": [
+      {
+        "name": "Tricolor Dance Performance",
+        "description": "Learn and perform a patriotic dance routine at school with Teacher",
+        "rewards": {
+          "coins": 100,
+          "xp": 150
+        }
+      },
+      {
+        "name": "Flag Badge Making",
+        "description": "Create tricolor badges and ribbons with Mia's artistic help",
+        "rewards": {
+          "coins": 50,
+          "xp": 75
+        }
+      }
+    ],
+    "special_items": [
+      {
+        "name": "Tricolor Hair Bow",
+        "description": "A saffron, white, and green ribbon bow for hair",
+        "rarity": "uncommon"
+      }
+    ],
+    "decorations": [
+      "indian flags",
+      "tricolor streamers",
+      "ashoka chakra cutouts",
+      "patriotic posters"
+    ]
+  },
+  {
+    "id": "seasonal_valentines_day",
+    "month": 2,
+    "title": "Friendship Valentine's Day",
+    "description": "Spread love and friendship! Emersyn makes cute valentine cards for her besties Ava and Mia, and shares heart-shaped candies with everyone.",
+    "type": "holiday",
+    "duration_days": 1,
+    "activities": [
+      {
+        "name": "Valentine Card Crafting",
+        "description": "Design glittery friendship cards with Mia for all your friends",
+        "rewards": {
+          "coins": 80,
+          "xp": 100
+        }
+      },
+      {
+        "name": "Friendship Reel",
+        "description": "Create a fun dance reel with Ava celebrating best friend love",
+        "rewards": {
+          "coins": 90,
+          "xp": 120
+        }
+      }
+    ],
+    "special_items": [
+      {
+        "name": "Heart Shaped Sunglasses",
+        "description": "Adorable pink heart-shaped glasses for photos",
+        "rarity": "uncommon"
+      }
+    ],
+    "decorations": [
+      "paper hearts",
+      "pink balloons",
+      "friendship banner",
+      "heart fairy lights"
+    ]
+  },
+  {
+    "id": "seasonal_winter_carnival",
+    "month": 2,
+    "title": "Winter Carnival Fun",
+    "description": "The amusement park hosts a special winter carnival! Bundle up and enjoy hot chocolate, carnival games, and a magical ferris wheel ride under twinkling lights.",
+    "type": "special",
+    "duration_days": 5,
+    "activities": [
+      {
+        "name": "Ferris Wheel Light Show",
+        "description": "Ride the ferris wheel decorated with winter lights at the amusement park",
+        "rewards": {
+          "coins": 100,
+          "xp": 130
+        }
+      },
+      {
+        "name": "Carnival Game Champion",
+        "description": "Win prizes at special winter-themed carnival games",
+        "rewards": {
+          "coins": 150,
+          "xp": 200
+        }
+      }
+    ],
+    "special_items": [
+      {
+        "name": "Fuzzy Earmuffs",
+        "description": "Sparkly pink earmuffs with bunny ears",
+        "rarity": "rare"
+      }
+    ],
+    "decorations": [
+      "winter lights",
+      "snowflake cutouts",
+      "hot cocoa stand",
+      "cozy blankets"
+    ]
+  },
+  {
+    "id": "seasonal_basant_panchami",
+    "month": 2,
+    "title": "Basant Panchami",
+    "description": "Welcome spring in yellow! Emersyn wears her prettiest yellow outfit, offers prayers to Saraswati, and enjoys sweet yellow rice with her family.",
+    "type": "festival",
+    "duration_days": 1,
+    "activities": [
+      {
+        "name": "Yellow Dress Up",
+        "description": "Dress in beautiful yellow clothes and do matching yellow makeup",
+        "rewards": {
+          "coins": 70,
+          "xp": 90
+        }
+      },
+      {
+        "name": "Saraswati Puja",
+        "description": "Decorate books and art supplies to honor the goddess of learning",
+        "rewards": {
+          "coins": 80,
+          "xp": 120
+        }
+      }
+    ],
+    "special_items": [
+      {
+        "name": "Yellow Marigold Crown",
+        "description": "A beautiful crown made of yellow marigold flowers",
+        "rarity": "uncommon"
+      }
+    ],
+    "decorations": [
+      "yellow flowers",
+      "saraswati idol",
+      "yellow drapes",
+      "marigold garlands"
+    ]
+  },
+  {
+    "id": "seasonal_holi",
+    "month": 3,
+    "title": "Holi Color Festival",
+    "description": "The most colorful day of the year! Emersyn plays with gulal, throws water balloons with Ava, and enjoys delicious gujiya sweets and refreshing thandai.",
+    "type": "festival",
+    "duration_days": 2,
+    "activities": [
+      {
+        "name": "Color Splash Party",
+        "description": "Play with colors in the garden with Ava, Mia, Leo, and the pets",
+        "rewards": {
+          "coins": 150,
+          "xp": 200
+        }
+      },
+      {
+        "name": "Holi Dance Reel",
+        "description": "Record an amazing colorful dance video to trending Holi songs",
+        "rewards": {
+          "coins": 120,
+          "xp": 180
+        }
+      },
+      {
+        "name": "Water Balloon Fun",
+        "description": "Fill and throw colorful water balloons at the playground",
+        "rewards": {
+          "coins": 80,
+          "xp": 100
+        }
+      }
+    ],
+    "special_items": [
+      {
+        "name": "Rainbow Gulal Set",
+        "description": "A special box of organic rainbow-colored gulal powder",
+        "rarity": "rare"
+      },
+      {
+        "name": "White Holi Kurta",
+        "description": "A beautiful white kurta perfect for showing off colors",
+        "rarity": "uncommon"
+      }
+    ],
+    "decorations": [
+      "color powder bowls",
+      "pichkari water guns",
+      "colorful rangoli",
+      "flower petals"
+    ]
+  },
+  {
+    "id": "seasonal_spring_flower_festival",
+    "month": 3,
+    "title": "Spring Flower Festival",
+    "description": "The garden blooms with beautiful flowers! Emersyn plants seeds, makes flower crowns, and enjoys a lovely picnic in the park with her friends and pets.",
+    "type": "weather",
+    "duration_days": 4,
+    "activities": [
+      {
+        "name": "Garden Planting",
+        "description": "Plant colorful flower seeds in the garden with Cotton the bunny",
+        "rewards": {
+          "coins": 70,
+          "xp": 100
+        }
+      },
+      {
+        "name": "Flower Crown Making",
+        "description": "Create beautiful flower crowns with Mia's artistic guidance",
+        "rewards": {
+          "coins": 60,
+          "xp": 80
+        }
+      }
+    ],
+    "special_items": [
+      {
+        "name": "Butterfly Hair Clips",
+        "description": "Sparkling butterfly clips that look like real butterflies",
+        "rarity": "uncommon"
+      }
+    ],
+    "decorations": [
+      "blooming flowers",
+      "butterfly decorations",
+      "garden arch",
+      "flower pots"
+    ]
+  },
+  {
+    "id": "seasonal_womens_day",
+    "month": 3,
+    "title": "International Women's Day",
+    "description": "Celebrate girl power! Emersyn learns about amazing women, does a special karate demonstration, and makes thank-you cards for the wonderful women in her life.",
+    "type": "special",
+    "duration_days": 1,
+    "activities": [
+      {
+        "name": "Girl Power Karate Show",
+        "description": "Perform your best kata moves at a special school assembly",
+        "rewards": {
+          "coins": 100,
+          "xp": 150
+        }
+      },
+      {
+        "name": "Thank You Cards",
+        "description": "Make beautiful cards for mom, teacher, and other special women",
+        "rewards": {
+          "coins": 60,
+          "xp": 80
+        }
+      }
+    ],
+    "special_items": [
+      {
+        "name": "Girl Power Sash",
+        "description": "A purple sash with 'Girl Power' written in glitter",
+        "rarity": "rare"
+      }
+    ],
+    "decorations": [
+      "purple banners",
+      "inspiring quotes",
+      "flower bouquets",
+      "girl power posters"
+    ]
+  },
+  {
+    "id": "seasonal_easter",
+    "month": 4,
+    "title": "Easter Egg Hunt",
+    "description": "Hop into Easter fun! Emersyn hunts for colorful eggs in the garden, decorates eggs with Mia, and enjoys chocolate bunnies with her friends.",
+    "type": "holiday",
+    "duration_days": 2,
+    "activities": [
+      {
+        "name": "Garden Egg Hunt",
+        "description": "Find hidden eggs in the garden with Ava while Buddy and Cotton help",
+        "rewards": {
+          "coins": 120,
+          "xp": 150
+        }
+      },
+      {
+        "name": "Egg Decorating",
+        "description": "Paint beautiful designs on eggs with Mia's artistic tips",
+        "rewards": {
+          "coins": 80,
+          "xp": 100
+        }
+      }
+    ],
+    "special_items": [
+      {
+        "name": "Bunny Ears Headband",
+        "description": "Fluffy pink bunny ears with a sparkly bow",
+        "rarity": "uncommon"
+      }
+    ],
+    "decorations": [
+      "easter eggs",
+      "bunny cutouts",
+      "spring flowers",
+      "pastel streamers"
+    ]
+  },
+  {
+    "id": "seasonal_baisakhi",
+    "month": 4,
+    "title": "Baisakhi Harvest Festival",
+    "description": "Celebrate the harvest season with bhangra beats! Emersyn learns Punjabi dance moves, enjoys yummy food at a mela, and flies kites in the park.",
+    "type": "festival",
+    "duration_days": 2,
+    "activities": [
+      {
+        "name": "Bhangra Dance",
+        "description": "Learn energetic bhangra moves and record a festive reel",
+        "rewards": {
+          "coins": 110,
+          "xp": 140
+        }
+      },
+      {
+        "name": "Mela Visit",
+        "description": "Enjoy rides and gol gappe at the special Baisakhi fair",
+        "rewards": {
+          "coins": 90,
+          "xp": 120
+        }
+      }
+    ],
+    "special_items": [
+      {
+        "name": "Colorful Paranda",
+        "description": "Traditional colorful hair accessory with pom poms",
+        "rarity": "rare"
+      }
+    ],
+    "decorations": [
+      "wheat bundles",
+      "dhol drums",
+      "colorful dupattas",
+      "mela lights"
+    ]
+  },
+  {
+    "id": "seasonal_earth_day",
+    "month": 4,
+    "title": "Earth Day Celebration",
+    "description": "Go green for Earth Day! Emersyn plants trees in the garden, learns about recycling, and makes eco-friendly crafts with her friends.",
+    "type": "special",
+    "duration_days": 1,
+    "activities": [
+      {
+        "name": "Tree Planting",
+        "description": "Plant a sapling in the garden and promise to care for it",
+        "rewards": {
+          "coins": 80,
+          "xp": 120
+        }
+      },
+      {
+        "name": "Eco Craft Making",
+        "description": "Create beautiful crafts from recycled materials with Mia",
+        "rewards": {
+          "coins": 60,
+          "xp": 90
+        }
+      }
+    ],
+    "special_items": [
+      {
+        "name": "Flower Seed Bracelet",
+        "description": "A plantable bracelet that grows into flowers",
+        "rarity": "rare"
+      }
+    ],
+    "decorations": [
+      "potted plants",
+      "earth posters",
+      "recycling bins",
+      "nature artwork"
+    ]
+  },
+  {
+    "id": "seasonal_summer_begins",
+    "month": 5,
+    "title": "Summer Vacation Kickoff",
+    "description": "School's out for summer! Emersyn celebrates with a mall trip, loads of Frooti, and plans exciting adventures with Ava and Mia for the holidays.",
+    "type": "weather",
+    "duration_days": 3,
+    "activities": [
+      {
+        "name": "Mall Shopping Spree",
+        "description": "Window shop for summer outfits and ride escalators at the mall",
+        "rewards": {
+          "coins": 100,
+          "xp": 130
+        }
+      },
+      {
+        "name": "Summer Bucket List",
+        "description": "Plan fun summer activities with Ava and Mia at a sleepover",
+        "rewards": {
+          "coins": 70,
+          "xp": 90
+        }
+      }
+    ],
+    "special_items": [
+      {
+        "name": "Cool Summer Shades",
+        "description": "Trendy sunglasses with rainbow gradient lenses",
+        "rarity": "uncommon"
+      }
+    ],
+    "decorations": [
+      "sun cutouts",
+      "beach balls",
+      "summer posters",
+      "palm tree props"
+    ]
+  },
+  {
+    "id": "seasonal_mothers_day",
+    "month": 5,
+    "title": "Mother's Day Surprise",
+    "description": "Make Mom feel special! Emersyn prepares breakfast, does a sweet makeup session with mom, and creates a heartfelt video message full of love.",
+    "type": "holiday",
+    "duration_days": 1,
+    "activities": [
+      {
+        "name": "Breakfast in Bed",
+        "description": "Prepare a special breakfast tray in the kitchen for mom",
+        "rewards": {
+          "coins": 90,
+          "xp": 120
+        }
+      },
+      {
+        "name": "Mom & Me Reel",
+        "description": "Create a loving dance reel with mom to her favorite song",
+        "rewards": {
+          "coins": 100,
+          "xp": 150
+        }
+      }
+    ],
+    "special_items": [
+      {
+        "name": "Mom & Me Matching Bangles",
+        "description": "Beautiful matching bangle set for mother and daughter",
+        "rarity": "rare"
+      }
+    ],
+    "decorations": [
+      "heart balloons",
+      "i love mom banner",
+      "flower vase",
+      "photo collage"
+    ]
+  },
+  {
+    "id": "seasonal_arcade_tournament",
+    "month": 5,
+    "title": "Arcade Championship Week",
+    "description": "The arcade hosts a special tournament! Emersyn competes in claw machine challenges, collects bonus tickets, and aims for the grand prize.",
+    "type": "special",
+    "duration_days": 7,
+    "activities": [
+      {
+        "name": "Claw Machine Master",
+        "description": "Win special limited-edition toys from the golden claw machine",
+        "rewards": {
+          "coins": 150,
+          "xp": 200
+        }
+      },
+      {
+        "name": "Ticket Bonanza",
+        "description": "Collect double tickets from all arcade games",
+        "rewards": {
+          "coins": 120,
+          "xp": 160
+        }
+      }
+    ],
+    "special_items": [
+      {
+        "name": "Golden Game Token",
+        "description": "A special token that gives extra plays at any machine",
+        "rarity": "legendary"
+      }
+    ],
+    "decorations": [
+      "neon lights",
+      "trophy display",
+      "ticket streamers",
+      "game posters"
+    ]
+  },
+  {
+    "id": "seasonal_summer_beach_party",
+    "month": 6,
+    "title": "Summer Beach Party",
+    "description": "Beach vibes at the park! Emersyn enjoys a beach-themed party with sand play, water fun, and lots of cotton candy and french fries.",
+    "type": "weather",
+    "duration_days": 3,
+    "activities": [
+      {
+        "name": "Sandcastle Building",
+        "description": "Build the most amazing sandcastle with Ava at the park's sand pit",
+        "rewards": {
+          "coins": 80,
+          "xp": 100
+        }
+      },
+      {
+        "name": "Beach Dance Party",
+        "description": "Dance to summer hits and make a fun beach reel",
+        "rewards": {
+          "coins": 100,
+          "xp": 130
+        }
+      }
+    ],
+    "special_items": [
+      {
+        "name": "Mermaid Swimsuit",
+        "description": "A sparkly swimsuit with mermaid scale pattern",
+        "rarity": "rare"
+      }
+    ],
+    "decorations": [
+      "beach umbrellas",
+      "inflatable flamingos",
+      "seashells",
+      "tropical flowers"
+    ]
+  },
+  {
+    "id": "seasonal_yoga_day",
+    "month": 6,
+    "title": "International Yoga Day",
+    "description": "Stretch and relax! Emersyn learns fun yoga poses in the garden, practices breathing exercises, and combines yoga with her karate training.",
+    "type": "special",
+    "duration_days": 1,
+    "activities": [
+      {
+        "name": "Garden Yoga Session",
+        "description": "Learn animal yoga poses with Whiskers, Buddy, and Cotton watching",
+        "rewards": {
+          "coins": 70,
+          "xp": 100
+        }
+      },
+      {
+        "name": "Yoga Reel Challenge",
+        "description": "Record a creative yoga pose video for social media",
+        "rewards": {
+          "coins": 80,
+          "xp": 110
+        }
+      }
+    ],
+    "special_items": [
+      {
+        "name": "Rainbow Yoga Mat",
+        "description": "A colorful yoga mat with unicorn designs",
+        "rarity": "uncommon"
+      }
+    ],
+    "decorations": [
+      "yoga mats",
+      "peace symbols",
+      "nature sounds",
+      "meditation cushions"
+    ]
+  },
+  {
+    "id": "seasonal_mango_festival",
+    "month": 6,
+    "title": "Mango Mania Festival",
+    "description": "It's mango season! Emersyn enjoys unlimited Frooti, tastes different mango varieties, and helps make aam panna and mango kulfi at home.",
+    "type": "festival",
+    "duration_days": 5,
+    "activities": [
+      {
+        "name": "Mango Tasting Party",
+        "description": "Try different mango varieties with friends in the kitchen",
+        "rewards": {
+          "coins": 90,
+          "xp": 120
+        }
+      },
+      {
+        "name": "Frooti Party",
+        "description": "Host a Frooti-themed party with mango decorations",
+        "rewards": {
+          "coins": 100,
+          "xp": 140
+        }
+      }
+    ],
+    "special_items": [
+      {
+        "name": "Mango Shaped Purse",
+        "description": "An adorable purse shaped like a cute mango",
+        "rarity": "rare"
+      }
+    ],
+    "decorations": [
+      "mango garlands",
+      "yellow tablecloths",
+      "fruit baskets",
+      "mango fairy lights"
+    ]
+  },
+  {
+    "id": "seasonal_monsoon_arrives",
+    "month": 7,
+    "title": "Monsoon Rain Dance",
+    "description": "The rains are here! Emersyn splashes in puddles, enjoys pakoras and chai, and dances in the garden with her colorful umbrella.",
+    "type": "weather",
+    "duration_days": 7,
+    "activities": [
+      {
+        "name": "Puddle Jumping Fun",
+        "description": "Splash in rain puddles in the garden wearing cute rain boots",
+        "rewards": {
+          "coins": 80,
+          "xp": 100
+        }
+      },
+      {
+        "name": "Rainy Day Reel",
+        "description": "Create a magical rain dance video with umbrella props",
+        "rewards": {
+          "coins": 110,
+          "xp": 150
+        }
+      },
+      {
+        "name": "Pakora & Chai Party",
+        "description": "Enjoy hot pakoras and masala chai in the living room",
+        "rewards": {
+          "coins": 70,
+          "xp": 90
+        }
+      }
+    ],
+    "special_items": [
+      {
+        "name": "Rainbow Umbrella",
+        "description": "A magical umbrella that changes colors in the rain",
+        "rarity": "rare"
+      },
+      {
+        "name": "Glitter Rain Boots",
+        "description": "Pink boots with silver glitter that sparkle in puddles",
+        "rarity": "uncommon"
+      }
+    ],
+    "decorations": [
+      "paper boats",
+      "rain clouds",
+      "umbrella garland",
+      "raindrop fairy lights"
+    ]
+  },
+  {
+    "id": "seasonal_friendship_day",
+    "month": 7,
+    "title": "Friendship Day Celebration",
+    "description": "Celebrate besties forever! Emersyn exchanges friendship bands with Ava, Mia, and Leo, and hosts a special sleepover party.",
+    "type": "holiday",
+    "duration_days": 2,
+    "activities": [
+      {
+        "name": "Friendship Band Exchange",
+        "description": "Make and exchange colorful friendship bands with all friends",
+        "rewards": {
+          "coins": 90,
+          "xp": 120
+        }
+      },
+      {
+        "name": "BFF Sleepover",
+        "description": "Host the ultimate sleepover with movies, popcorn chicken, and makeovers",
+        "rewards": {
+          "coins": 120,
+          "xp": 160
+        }
+      }
+    ],
+    "special_items": [
+      {
+        "name": "BFF Locket Set",
+        "description": "Heart lockets that split into two for best friends",
+        "rarity": "rare"
+      }
+    ],
+    "decorations": [
+      "friendship banners",
+      "photo booth",
+      "fairy lights",
+      "pillow fort"
+    ]
+  },
+  {
+    "id": "seasonal_karate_camp",
+    "month": 7,
+    "title": "Summer Karate Camp",
+    "description": "Level up karate skills! Emersyn attends a special summer camp, learns new kata forms, and works toward her next belt.",
+    "type": "special",
+    "duration_days": 5,
+    "activities": [
+      {
+        "name": "Advanced Kata Training",
+        "description": "Learn a challenging new kata sequence with intense practice",
+        "rewards": {
+          "coins": 150,
+          "xp": 250
+        }
+      },
+      {
+        "name": "Belt Test Preparation",
+        "description": "Practice all moves to prepare for the belt ceremony",
+        "rewards": {
+          "coins": 100,
+          "xp": 180
+        }
+      }
+    ],
+    "special_items": [
+      {
+        "name": "Special Training Gi",
+        "description": "A premium karate uniform with embroidered name",
+        "rarity": "legendary"
+      }
+    ],
+    "decorations": [
+      "dojo banners",
+      "belt display",
+      "training dummies",
+      "motivational posters"
+    ]
+  },
+  {
+    "id": "seasonal_raksha_bandhan",
+    "month": 8,
+    "title": "Raksha Bandhan",
+    "description": "Celebrate the bond of protection! Emersyn ties beautiful rakhis, receives gifts, and enjoys special sweets with her family and friends.",
+    "type": "festival",
+    "duration_days": 1,
+    "activities": [
+      {
+        "name": "Rakhi Making",
+        "description": "Create beautiful handmade rakhis with beads and threads",
+        "rewards": {
+          "coins": 80,
+          "xp": 100
+        }
+      },
+      {
+        "name": "Rakhi Ceremony",
+        "description": "Perform the traditional rakhi tying ceremony with sweets",
+        "rewards": {
+          "coins": 100,
+          "xp": 150
+        }
+      }
+    ],
+    "special_items": [
+      {
+        "name": "Designer Rakhi Set",
+        "description": "A beautiful set of sparkly rakhis with gems",
+        "rarity": "rare"
+      }
+    ],
+    "decorations": [
+      "rakhi display",
+      "sweet boxes",
+      "festive thali",
+      "flower decorations"
+    ]
+  },
+  {
+    "id": "seasonal_independence_day",
+    "month": 8,
+    "title": "Independence Day",
+    "description": "Jai Hind! Emersyn celebrates India's freedom with flag hoisting at school, patriotic songs, and a special tricolor dress-up.",
+    "type": "holiday",
+    "duration_days": 1,
+    "activities": [
+      {
+        "name": "Flag Hoisting Ceremony",
+        "description": "Attend the special flag ceremony at school with Teacher",
+        "rewards": {
+          "coins": 80,
+          "xp": 120
+        }
+      },
+      {
+        "name": "Patriotic Performance",
+        "description": "Perform a dance to patriotic songs at the school function",
+        "rewards": {
+          "coins": 120,
+          "xp": 180
+        }
+      }
+    ],
+    "special_items": [
+      {
+        "name": "Tricolor Lehenga",
+        "description": "A beautiful orange, white, and green traditional outfit",
+        "rarity": "rare"
+      }
+    ],
+    "decorations": [
+      "national flags",
+      "tricolor balloons",
+      "freedom fighter posters",
+      "patriotic rangoli"
+    ]
+  },
+  {
+    "id": "seasonal_janmashtami",
+    "month": 8,
+    "title": "Janmashtami Celebration",
+    "description": "Celebrate Lord Krishna's birthday! Emersyn dresses as a gopi, enjoys dahi handi fun, and makes delicious butter and sweets.",
+    "type": "festival",
+    "duration_days": 2,
+    "activities": [
+      {
+        "name": "Gopi Dress Up",
+        "description": "Dress in beautiful traditional gopi costume with jewelry",
+        "rewards": {
+          "coins": 90,
+          "xp": 120
+        }
+      },
+      {
+        "name": "Mini Dahi Handi",
+        "description": "Play a fun dahi handi game in the garden with friends",
+        "rewards": {
+          "coins": 100,
+          "xp": 140
+        }
+      }
+    ],
+    "special_items": [
+      {
+        "name": "Peacock Feather Crown",
+        "description": "A beautiful crown with peacock feathers like Krishna",
+        "rarity": "rare"
+      }
+    ],
+    "decorations": [
+      "krishna jhula",
+      "peacock feathers",
+      "butter pots",
+      "flower garlands"
+    ]
+  },
+  {
+    "id": "seasonal_ganesh_chaturthi",
+    "month": 9,
+    "title": "Ganesh Chaturthi",
+    "description": "Welcome Lord Ganesha! Emersyn helps set up the beautiful Ganesh idol, makes modak sweets, and enjoys the festive aarti and decorations.",
+    "type": "festival",
+    "duration_days": 5,
+    "activities": [
+      {
+        "name": "Ganesh Decoration",
+        "description": "Help decorate the beautiful Ganesh pandal in the living room",
+        "rewards": {
+          "coins": 100,
+          "xp": 150
+        }
+      },
+      {
+        "name": "Modak Making",
+        "description": "Learn to make sweet modaks in the kitchen",
+        "rewards": {
+          "coins": 80,
+          "xp": 110
+        }
+      },
+      {
+        "name": "Aarti & Dance",
+        "description": "Perform aarti and dance to Ganpati songs",
+        "rewards": {
+          "coins": 90,
+          "xp": 130
+        }
+      }
+    ],
+    "special_items": [
+      {
+        "name": "Ganesh Pendant",
+        "description": "A beautiful golden Ganesha pendant necklace",
+        "rarity": "rare"
+      }
+    ],
+    "decorations": [
+      "ganesh idol",
+      "marigold garlands",
+      "modak plates",
+      "festive lights"
+    ]
+  },
+  {
+    "id": "seasonal_back_to_school",
+    "month": 9,
+    "title": "Back to School",
+    "description": "New school year begins! Emersyn gets excited about new supplies, meets friends after summer, and shows off her new backpack and lunchbox.",
+    "type": "special",
+    "duration_days": 3,
+    "activities": [
+      {
+        "name": "School Supply Shopping",
+        "description": "Shop for cute stationery and supplies at the mall with mom",
+        "rewards": {
+          "coins": 100,
+          "xp": 130
+        }
+      },
+      {
+        "name": "First Day Outfit",
+        "description": "Plan the perfect first day outfit with new accessories",
+        "rewards": {
+          "coins": 80,
+          "xp": 100
+        }
+      }
+    ],
+    "special_items": [
+      {
+        "name": "Sparkly Backpack",
+        "description": "A glittery backpack with unicorn design",
+        "rarity": "uncommon"
+      }
+    ],
+    "decorations": [
+      "school supplies",
+      "chalkboard signs",
+      "apple decorations",
+      "book displays"
+    ]
+  },
+  {
+    "id": "seasonal_teachers_day",
+    "month": 9,
+    "title": "Teacher's Day",
+    "description": "Thank you, Teacher! Emersyn prepares a special surprise, performs a dance, and gives handmade gifts to show appreciation.",
+    "type": "holiday",
+    "duration_days": 1,
+    "activities": [
+      {
+        "name": "Thank You Card Making",
+        "description": "Create a beautiful handmade card for Teacher with Mia",
+        "rewards": {
+          "coins": 70,
+          "xp": 90
+        }
+      },
+      {
+        "name": "Class Performance",
+        "description": "Perform a special dance with classmates for Teacher",
+        "rewards": {
+          "coins": 100,
+          "xp": 150
+        }
+      }
+    ],
+    "special_items": [
+      {
+        "name": "Best Student Badge",
+        "description": "A shiny badge for being a wonderful student",
+        "rarity": "uncommon"
+      }
+    ],
+    "decorations": [
+      "thank you banners",
+      "flower bouquets",
+      "apple cutouts",
+      "classroom decorations"
+    ]
+  },
+  {
+    "id": "seasonal_navratri",
+    "month": 10,
+    "title": "Navratri Garba Nights",
+    "description": "Nine nights of dance! Emersyn dresses in colorful chaniya choli, plays dandiya with friends, and dances garba under the stars.",
+    "type": "festival",
+    "duration_days": 9,
+    "activities": [
+      {
+        "name": "Garba Dance Practice",
+        "description": "Learn traditional garba steps and practice with Ava",
+        "rewards": {
+          "coins": 120,
+          "xp": 180
+        }
+      },
+      {
+        "name": "Dandiya Night",
+        "description": "Play dandiya with decorated sticks at the special event",
+        "rewards": {
+          "coins": 100,
+          "xp": 150
+        }
+      },
+      {
+        "name": "Navratri Reel",
+        "description": "Record an amazing garba dance reel in traditional dress",
+        "rewards": {
+          "coins": 130,
+          "xp": 200
+        }
+      }
+    ],
+    "special_items": [
+      {
+        "name": "Designer Chaniya Choli",
+        "description": "A stunning embroidered traditional garba outfit",
+        "rarity": "legendary"
+      },
+      {
+        "name": "Decorated Dandiya Sticks",
+        "description": "Beautiful painted dandiya sticks with bells",
+        "rarity": "rare"
+      }
+    ],
+    "decorations": [
+      "colorful drapes",
+      "dandiya sticks",
+      "garba stage",
+      "festive lights"
+    ]
+  },
+  {
+    "id": "seasonal_halloween",
+    "month": 10,
+    "title": "Halloween Costume Party",
+    "description": "Spooky fun time! Emersyn creates an amazing costume, does special Halloween makeup, and goes trick-or-treating at the mall.",
+    "type": "holiday",
+    "duration_days": 2,
+    "activities": [
+      {
+        "name": "Costume Design",
+        "description": "Create the perfect Halloween costume with special makeup",
+        "rewards": {
+          "coins": 100,
+          "xp": 140
+        }
+      },
+      {
+        "name": "Mall Trick-or-Treat",
+        "description": "Collect candies from shops at the mall's Halloween event",
+        "rewards": {
+          "coins": 120,
+          "xp": 160
+        }
+      },
+      {
+        "name": "Spooky Dance Reel",
+        "description": "Record a fun Halloween dance video with Ava and Mia",
+        "rewards": {
+          "coins": 90,
+          "xp": 120
+        }
+      }
+    ],
+    "special_items": [
+      {
+        "name": "Glitter Witch Hat",
+        "description": "A sparkly purple witch hat with stars",
+        "rarity": "rare"
+      }
+    ],
+    "decorations": [
+      "pumpkins",
+      "spooky lights",
+      "bat cutouts",
+      "spider webs"
+    ]
+  },
+  {
+    "id": "seasonal_diwali",
+    "month": 10,
+    "title": "Diwali Festival of Lights",
+    "description": "The biggest celebration! Emersyn decorates with diyas and rangoli, wears her prettiest outfit, enjoys fireworks, and shares sweets with everyone.",
+    "type": "festival",
+    "duration_days": 5,
+    "activities": [
+      {
+        "name": "Rangoli Making",
+        "description": "Create a beautiful colorful rangoli design at the entrance",
+        "rewards": {
+          "coins": 120,
+          "xp": 180
+        }
+      },
+      {
+        "name": "Diya Decoration",
+        "description": "Paint and decorate clay diyas with glitter and colors",
+        "rewards": {
+          "coins": 100,
+          "xp": 150
+        }
+      },
+      {
+        "name": "Fireworks Show",
+        "description": "Enjoy safe sparklers and watch fireworks in the garden",
+        "rewards": {
+          "coins": 150,
+          "xp": 200
+        }
+      },
+      {
+        "name": "Diwali Dress Up",
+        "description": "Wear the most beautiful lehenga with full makeup and jewelry",
+        "rewards": {
+          "coins": 130,
+          "xp": 180
+        }
+      }
+    ],
+    "special_items": [
+      {
+        "name": "Royal Diwali Lehenga",
+        "description": "A magnificent embroidered lehenga with gold work",
+        "rarity": "legendary"
+      },
+      {
+        "name": "Golden Diya Set",
+        "description": "Beautiful golden diyas with intricate designs",
+        "rarity": "rare"
+      }
+    ],
+    "decorations": [
+      "diyas",
+      "rangoli",
+      "fairy lights",
+      "flower torans",
+      "lanterns",
+      "fireworks"
+    ]
+  },
+  {
+    "id": "seasonal_autumn_harvest",
+    "month": 11,
+    "title": "Autumn Harvest Festival",
+    "description": "Celebrate the harvest season! Emersyn visits a pumpkin patch, enjoys caramel apples, and helps decorate with fall colors.",
+    "type": "weather",
+    "duration_days": 4,
+    "activities": [
+      {
+        "name": "Pumpkin Patch Visit",
+        "description": "Pick the perfect pumpkin at the park's harvest festival",
+        "rewards": {
+          "coins": 80,
+          "xp": 100
+        }
+      },
+      {
+        "name": "Fall Crafts",
+        "description": "Make leaf art and autumn decorations with Mia",
+        "rewards": {
+          "coins": 70,
+          "xp": 90
+        }
+      }
+    ],
+    "special_items": [
+      {
+        "name": "Cozy Fall Sweater",
+        "description": "A cute sweater with pumpkin and leaf designs",
+        "rarity": "uncommon"
+      }
+    ],
+    "decorations": [
+      "fall leaves",
+      "pumpkins",
+      "hay bales",
+      "corn stalks"
+    ]
+  },
+  {
+    "id": "seasonal_childrens_day",
+    "month": 11,
+    "title": "Children's Day",
+    "description": "A day just for kids! Emersyn enjoys special activities at school, gets treats from Teacher, and celebrates being young and wonderful.",
+    "type": "holiday",
+    "duration_days": 1,
+    "activities": [
+      {
+        "name": "School Fun Day",
+        "description": "Enjoy games, dance, and treats organized by teachers",
+        "rewards": {
+          "coins": 100,
+          "xp": 150
+        }
+      },
+      {
+        "name": "Talent Show",
+        "description": "Perform your best karate kata or dance at the talent show",
+        "rewards": {
+          "coins": 120,
+          "xp": 180
+        }
+      }
+    ],
+    "special_items": [
+      {
+        "name": "Children's Day Crown",
+        "description": "A special crown for the most talented kid",
+        "rarity": "rare"
+      }
+    ],
+    "decorations": [
+      "balloons",
+      "children's day banner",
+      "candy stations",
+      "game booths"
+    ]
+  },
+  {
+    "id": "seasonal_amusement_park_fest",
+    "month": 11,
+    "title": "Amusement Park Anniversary",
+    "description": "The amusement park celebrates its anniversary! Enjoy unlimited rides, double cotton candy, and special carnival games with amazing prizes.",
+    "type": "special",
+    "duration_days": 7,
+    "activities": [
+      {
+        "name": "Ride Marathon",
+        "description": "Ride the ferris wheel, bumper cars, and merry-go-round all day",
+        "rewards": {
+          "coins": 150,
+          "xp": 200
+        }
+      },
+      {
+        "name": "Carnival Game Spree",
+        "description": "Play all carnival games and win special anniversary prizes",
+        "rewards": {
+          "coins": 130,
+          "xp": 180
+        }
+      }
+    ],
+    "special_items": [
+      {
+        "name": "Giant Teddy Bear",
+        "description": "A huge fluffy teddy bear from the carnival games",
+        "rarity": "legendary"
+      }
+    ],
+    "decorations": [
+      "carnival lights",
+      "anniversary banners",
+      "balloon arches",
+      "prize displays"
+    ]
+  },
+  {
+    "id": "seasonal_christmas",
+    "month": 12,
+    "title": "Christmas Celebration",
+    "description": "Merry Christmas! Emersyn decorates the tree, bakes cookies, wraps presents for friends, and enjoys the magical holiday spirit.",
+    "type": "holiday",
+    "duration_days": 3,
+    "activities": [
+      {
+        "name": "Tree Decorating",
+        "description": "Decorate the Christmas tree with ornaments and lights",
+        "rewards": {
+          "coins": 100,
+          "xp": 140
+        }
+      },
+      {
+        "name": "Cookie Baking",
+        "description": "Bake and decorate Christmas cookies in the kitchen",
+        "rewards": {
+          "coins": 80,
+          "xp": 100
+        }
+      },
+      {
+        "name": "Gift Exchange",
+        "description": "Exchange presents with Ava, Mia, and Leo at a party",
+        "rewards": {
+          "coins": 120,
+          "xp": 160
+        }
+      }
+    ],
+    "special_items": [
+      {
+        "name": "Santa Hat with Bells",
+        "description": "A festive red hat with jingling bells",
+        "rarity": "uncommon"
+      },
+      {
+        "name": "Christmas Dress",
+        "description": "A beautiful red and green holiday dress",
+        "rarity": "rare"
+      }
+    ],
+    "decorations": [
+      "christmas tree",
+      "stockings",
+      "wreaths",
+      "fairy lights",
+      "candy canes"
+    ]
+  },
+  {
+    "id": "seasonal_winter_wonderland",
+    "month": 12,
+    "title": "Winter Wonderland",
+    "description": "A magical winter experience! Emersyn enjoys fake snow at the mall, drinks hot chocolate, and has a cozy time with friends and pets.",
+    "type": "weather",
+    "duration_days": 5,
+    "activities": [
+      {
+        "name": "Snow Play at Mall",
+        "description": "Play in the mall's special winter snow zone",
+        "rewards": {
+          "coins": 90,
+          "xp": 120
+        }
+      },
+      {
+        "name": "Hot Chocolate Party",
+        "description": "Host a cozy hot chocolate party in the living room",
+        "rewards": {
+          "coins": 70,
+          "xp": 90
+        }
+      }
+    ],
+    "special_items": [
+      {
+        "name": "Snowflake Earrings",
+        "description": "Sparkling clip-on snowflake earrings",
+        "rarity": "uncommon"
+      }
+    ],
+    "decorations": [
+      "snowflakes",
+      "winter lights",
+      "cozy blankets",
+      "hot cocoa station"
+    ]
+  },
+  {
+    "id": "seasonal_new_year_eve",
+    "month": 12,
+    "title": "New Year's Eve Party",
+    "description": "The biggest party of the year! Emersyn dresses up fancy, enjoys special food court treats at the mall, and counts down to midnight.",
+    "type": "holiday",
+    "duration_days": 1,
+    "activities": [
+      {
+        "name": "Glam Dress Up",
+        "description": "Get ready with the fanciest outfit and sparkly makeup",
+        "rewards": {
+          "coins": 100,
+          "xp": 130
+        }
+      },
+      {
+        "name": "Midnight Countdown",
+        "description": "Celebrate the countdown with friends, Frooti, and confetti",
+        "rewards": {
+          "coins": 150,
+          "xp": 200
+        }
+      }
+    ],
+    "special_items": [
+      {
+        "name": "Sparkle Party Dress",
+        "description": "A dazzling sequined dress perfect for New Year's Eve",
+        "rarity": "legendary"
+      }
+    ],
+    "decorations": [
+      "disco ball",
+      "countdown clock",
+      "gold streamers",
+      "champagne glass props",
+      "confetti cannons"
+    ]
+  }
+]

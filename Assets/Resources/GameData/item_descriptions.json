@@ -1,0 +1,1938 @@
+{
+  "food": [
+    {
+      "name": "Rainbow Sprinkle Cupcake",
+      "description": "A fluffy vanilla cupcake topped with magical rainbow sprinkles! Makes every bite feel like a party.",
+      "price": 25,
+      "rarity": "common",
+      "stat_boost": {
+        "fun": 5
+      },
+      "unlock_level": 1,
+      "tags": [
+        "cute",
+        "sweet",
+        "rainbow"
+      ]
+    },
+    {
+      "name": "Strawberry Dream Pizza",
+      "description": "A sweet pizza topped with fresh strawberries and cream cheese frosting! Emersyn's favorite treat.",
+      "price": 45,
+      "rarity": "uncommon",
+      "stat_boost": {
+        "fun": 8,
+        "energy": 5
+      },
+      "unlock_level": 3,
+      "tags": [
+        "pink",
+        "sweet",
+        "fruity"
+      ]
+    },
+    {
+      "name": "Sparkle Sugar Cookies",
+      "description": "Star-shaped cookies dusted with edible glitter! They twinkle just like real stars.",
+      "price": 20,
+      "rarity": "common",
+      "stat_boost": {
+        "fun": 4
+      },
+      "unlock_level": 1,
+      "tags": [
+        "sparkly",
+        "sweet",
+        "cute"
+      ]
+    },
+    {
+      "name": "Unicorn Donut",
+      "description": "A magical donut with pastel swirl frosting and a tiny candy horn! Almost too cute to eat.",
+      "price": 35,
+      "rarity": "uncommon",
+      "stat_boost": {
+        "fun": 10
+      },
+      "unlock_level": 5,
+      "tags": [
+        "magical",
+        "pastel",
+        "unicorn"
+      ]
+    },
+    {
+      "name": "Cotton Candy Ice Cream",
+      "description": "Fluffy pink and blue ice cream that tastes like carnival dreams! Comes in a waffle cone.",
+      "price": 30,
+      "rarity": "common",
+      "stat_boost": {
+        "fun": 6,
+        "happiness": 3
+      },
+      "unlock_level": 2,
+      "tags": [
+        "pink",
+        "blue",
+        "sweet"
+      ]
+    },
+    {
+      "name": "Princess Layer Cake",
+      "description": "A towering pink cake with five layers and a tiny tiara on top! Perfect for celebrations.",
+      "price": 120,
+      "rarity": "rare",
+      "stat_boost": {
+        "fun": 15,
+        "happiness": 10
+      },
+      "unlock_level": 15,
+      "tags": [
+        "pink",
+        "fancy",
+        "princess"
+      ]
+    },
+    {
+      "name": "Bunny Pancakes",
+      "description": "Adorable pancakes shaped like bunny faces with strawberry ears! Breakfast has never been cuter.",
+      "price": 40,
+      "rarity": "uncommon",
+      "stat_boost": {
+        "energy": 10
+      },
+      "unlock_level": 4,
+      "tags": [
+        "cute",
+        "bunny",
+        "breakfast"
+      ]
+    },
+    {
+      "name": "Heart-Shaped Waffles",
+      "description": "Crispy waffles in the shape of hearts, drizzled with maple syrup and love!",
+      "price": 35,
+      "rarity": "common",
+      "stat_boost": {
+        "energy": 8
+      },
+      "unlock_level": 2,
+      "tags": [
+        "cute",
+        "pink",
+        "breakfast"
+      ]
+    },
+    {
+      "name": "Kawaii Sushi Platter",
+      "description": "Tiny sushi rolls with cute faces drawn in seaweed! Each piece has its own personality.",
+      "price": 65,
+      "rarity": "uncommon",
+      "stat_boost": {
+        "fun": 7,
+        "smarts": 5
+      },
+      "unlock_level": 8,
+      "tags": [
+        "cute",
+        "japanese",
+        "fancy"
+      ]
+    },
+    {
+      "name": "Starry Ramen Bowl",
+      "description": "A cozy bowl of ramen with star-shaped naruto and sparkly broth! Warms your heart.",
+      "price": 55,
+      "rarity": "uncommon",
+      "stat_boost": {
+        "energy": 12,
+        "happiness": 5
+      },
+      "unlock_level": 7,
+      "tags": [
+        "cozy",
+        "japanese",
+        "warm"
+      ]
+    },
+    {
+      "name": "Magical Fruit Salad",
+      "description": "A rainbow of fresh fruits arranged in a flower pattern! Each bite is naturally sweet.",
+      "price": 25,
+      "rarity": "common",
+      "stat_boost": {
+        "energy": 6,
+        "health": 5
+      },
+      "unlock_level": 1,
+      "tags": [
+        "healthy",
+        "rainbow",
+        "fresh"
+      ]
+    },
+    {
+      "name": "Bubble Tea Delight",
+      "description": "Sweet milk tea with chewy tapioca pearls in a cup with bunny ears! Sip sip hooray!",
+      "price": 30,
+      "rarity": "common",
+      "stat_boost": {
+        "fun": 5,
+        "happiness": 3
+      },
+      "unlock_level": 3,
+      "tags": [
+        "cute",
+        "sweet",
+        "trendy"
+      ]
+    },
+    {
+      "name": "Rainbow Juice Box",
+      "description": "A tiny juice box that changes color as you drink it! Tastes like tropical magic.",
+      "price": 15,
+      "rarity": "common",
+      "stat_boost": {
+        "energy": 4
+      },
+      "unlock_level": 1,
+      "tags": [
+        "rainbow",
+        "sweet",
+        "cute"
+      ]
+    },
+    {
+      "name": "Gummy Bear Paradise",
+      "description": "A mountain of colorful gummy bears in every flavor imaginable! Squishy and sweet.",
+      "price": 20,
+      "rarity": "common",
+      "stat_boost": {
+        "fun": 6
+      },
+      "unlock_level": 2,
+      "tags": [
+        "colorful",
+        "sweet",
+        "squishy"
+      ]
+    },
+    {
+      "name": "Caramel Popcorn Bucket",
+      "description": "Crunchy caramel popcorn in a bucket decorated with stars! Perfect for movie nights.",
+      "price": 25,
+      "rarity": "common",
+      "stat_boost": {
+        "fun": 5
+      },
+      "unlock_level": 2,
+      "tags": [
+        "sweet",
+        "crunchy",
+        "movie"
+      ]
+    },
+    {
+      "name": "Tiny Taco Trio",
+      "description": "Three mini tacos with happy faces made from toppings! They're taco-bout adorable.",
+      "price": 45,
+      "rarity": "uncommon",
+      "stat_boost": {
+        "energy": 8,
+        "fun": 4
+      },
+      "unlock_level": 6,
+      "tags": [
+        "cute",
+        "savory",
+        "tiny"
+      ]
+    },
+    {
+      "name": "Twirly Pasta Bowl",
+      "description": "Spiral pasta in creamy pink sauce topped with heart-shaped cheese! Twirl and smile.",
+      "price": 50,
+      "rarity": "uncommon",
+      "stat_boost": {
+        "energy": 10
+      },
+      "unlock_level": 5,
+      "tags": [
+        "pink",
+        "cozy",
+        "italian"
+      ]
+    },
+    {
+      "name": "Chocolate Lava Cake",
+      "description": "A warm chocolate cake that oozes gooey goodness inside! Pure chocolatey happiness.",
+      "price": 75,
+      "rarity": "rare",
+      "stat_boost": {
+        "happiness": 12,
+        "fun": 8
+      },
+      "unlock_level": 12,
+      "tags": [
+        "chocolate",
+        "fancy",
+        "warm"
+      ]
+    },
+    {
+      "name": "Strawberry Milk Bottle",
+      "description": "A cute glass bottle filled with creamy strawberry milk! Has a tiny bow on top.",
+      "price": 20,
+      "rarity": "common",
+      "stat_boost": {
+        "energy": 5
+      },
+      "unlock_level": 1,
+      "tags": [
+        "pink",
+        "sweet",
+        "cute"
+      ]
+    },
+    {
+      "name": "Cloud Cotton Candy",
+      "description": "Fluffy cotton candy shaped like a happy cloud! Melts on your tongue like magic.",
+      "price": 15,
+      "rarity": "common",
+      "stat_boost": {
+        "fun": 4
+      },
+      "unlock_level": 1,
+      "tags": [
+        "fluffy",
+        "sweet",
+        "dreamy"
+      ]
+    },
+    {
+      "name": "Mermaid Macaron Tower",
+      "description": "A tower of pastel macarons in ocean colors! Each one tastes like a different sea treasure.",
+      "price": 95,
+      "rarity": "rare",
+      "stat_boost": {
+        "fun": 12,
+        "happiness": 8
+      },
+      "unlock_level": 14,
+      "tags": [
+        "pastel",
+        "mermaid",
+        "fancy"
+      ]
+    },
+    {
+      "name": "Lucky Clover Cookies",
+      "description": "Four-leaf clover cookies that bring good luck with every bite! Frosted in green and gold.",
+      "price": 30,
+      "rarity": "uncommon",
+      "stat_boost": {
+        "luck": 10,
+        "fun": 3
+      },
+      "unlock_level": 4,
+      "tags": [
+        "lucky",
+        "green",
+        "magical"
+      ]
+    },
+    {
+      "name": "Teddy Bear Toast",
+      "description": "Toasted bread shaped like a teddy bear face with honey and banana features! Beary cute.",
+      "price": 25,
+      "rarity": "common",
+      "stat_boost": {
+        "energy": 6
+      },
+      "unlock_level": 2,
+      "tags": [
+        "cute",
+        "breakfast",
+        "cozy"
+      ]
+    },
+    {
+      "name": "Fairy Dust Donuts",
+      "description": "Mini donuts dusted with shimmering fairy dust sugar! They make you feel like flying.",
+      "price": 40,
+      "rarity": "uncommon",
+      "stat_boost": {
+        "fun": 8,
+        "magic": 5
+      },
+      "unlock_level": 6,
+      "tags": [
+        "magical",
+        "sparkly",
+        "mini"
+      ]
+    },
+    {
+      "name": "Panda Onigiri Set",
+      "description": "Rice balls shaped like cute panda faces! Wrapped with love and seaweed.",
+      "price": 35,
+      "rarity": "common",
+      "stat_boost": {
+        "energy": 7
+      },
+      "unlock_level": 3,
+      "tags": [
+        "cute",
+        "japanese",
+        "panda"
+      ]
+    },
+    {
+      "name": "Birthday Cake Pop Bouquet",
+      "description": "A bouquet of cake pops decorated like tiny birthday cakes! Every day feels special.",
+      "price": 85,
+      "rarity": "rare",
+      "stat_boost": {
+        "happiness": 15,
+        "fun": 10
+      },
+      "unlock_level": 10,
+      "tags": [
+        "birthday",
+        "colorful",
+        "fancy"
+      ]
+    },
+    {
+      "name": "Honey Bee Pudding",
+      "description": "Jiggly vanilla pudding with a cute bee made of honey on top! Buzzing with sweetness.",
+      "price": 30,
+      "rarity": "common",
+      "stat_boost": {
+        "happiness": 5
+      },
+      "unlock_level": 3,
+      "tags": [
+        "cute",
+        "jiggly",
+        "bee"
+      ]
+    },
+    {
+      "name": "Rainbow Grilled Cheese",
+      "description": "A magical grilled cheese that stretches in rainbow colors! Cheesy and dreamy.",
+      "price": 40,
+      "rarity": "uncommon",
+      "stat_boost": {
+        "energy": 8,
+        "fun": 5
+      },
+      "unlock_level": 5,
+      "tags": [
+        "rainbow",
+        "cheesy",
+        "magical"
+      ]
+    },
+    {
+      "name": "Kitten Croissant",
+      "description": "A buttery croissant shaped like a sleeping kitten! Almost too precious to munch.",
+      "price": 35,
+      "rarity": "uncommon",
+      "stat_boost": {
+        "energy": 6,
+        "happiness": 4
+      },
+      "unlock_level": 4,
+      "tags": [
+        "cute",
+        "kitten",
+        "french"
+      ]
+    },
+    {
+      "name": "Shooting Star Candy",
+      "description": "Hard candies shaped like shooting stars that sparkle on your tongue! Make a wish!",
+      "price": 15,
+      "rarity": "common",
+      "stat_boost": {
+        "fun": 3,
+        "luck": 2
+      },
+      "unlock_level": 1,
+      "tags": [
+        "sparkly",
+        "magical",
+        "sweet"
+      ]
+    },
+    {
+      "name": "Enchanted Apple Slices",
+      "description": "Crisp apple slices drizzled with caramel and sprinkled with fairy glitter! Healthy magic.",
+      "price": 20,
+      "rarity": "common",
+      "stat_boost": {
+        "health": 6,
+        "energy": 3
+      },
+      "unlock_level": 2,
+      "tags": [
+        "healthy",
+        "magical",
+        "fruity"
+      ]
+    },
+    {
+      "name": "Dreamy Hot Cocoa",
+      "description": "Warm cocoa topped with whipped cream clouds and marshmallow stars! Cozy in a cup.",
+      "price": 25,
+      "rarity": "common",
+      "stat_boost": {
+        "happiness": 6,
+        "warmth": 5
+      },
+      "unlock_level": 2,
+      "tags": [
+        "cozy",
+        "warm",
+        "sweet"
+      ]
+    },
+    {
+      "name": "Pixie Fruit Tart",
+      "description": "A delicate tart topped with glazed fruits arranged like a flower garden! Tastes like spring.",
+      "price": 70,
+      "rarity": "rare",
+      "stat_boost": {
+        "happiness": 10,
+        "health": 5
+      },
+      "unlock_level": 11,
+      "tags": [
+        "fancy",
+        "fruity",
+        "pretty"
+      ]
+    },
+    {
+      "name": "Golden Waffle Crown",
+      "description": "A waffle shaped like a royal crown, drizzled with golden honey! Breakfast fit for royalty.",
+      "price": 90,
+      "rarity": "rare",
+      "stat_boost": {
+        "energy": 15,
+        "happiness": 8
+      },
+      "unlock_level": 13,
+      "tags": [
+        "royal",
+        "golden",
+        "fancy"
+      ]
+    },
+    {
+      "name": "Legendary Rainbow Cake",
+      "description": "A magnificent seven-layer cake with each layer a different rainbow color! The ultimate celebration treat.",
+      "price": 500,
+      "rarity": "legendary",
+      "stat_boost": {
+        "fun": 25,
+        "happiness": 25,
+        "energy": 15
+      },
+      "unlock_level": 50,
+      "tags": [
+        "rainbow",
+        "legendary",
+        "magical"
+      ]
+    }
+  ],
+  "clothing": [
+    {
+      "name": "Strawberry Princess Dress",
+      "description": "A puffy pink dress covered in tiny strawberry prints! Twirl and watch it spin like magic.",
+      "price": 85,
+      "rarity": "uncommon",
+      "stat_boost": {
+        "charm": 8
+      },
+      "unlock_level": 5,
+      "tags": [
+        "pink",
+        "princess",
+        "fruity"
+      ]
+    },
+    {
+      "name": "Sparkle Star Top",
+      "description": "A cozy top with glittering stars that actually shimmer! Perfect for any adventure.",
+      "price": 40,
+      "rarity": "common",
+      "stat_boost": {
+        "charm": 4
+      },
+      "unlock_level": 2,
+      "tags": [
+        "sparkly",
+        "cute",
+        "stars"
+      ]
+    },
+    {
+      "name": "Rainbow Tutu Skirt",
+      "description": "A fluffy tutu in all the colors of the rainbow! Makes you feel like dancing.",
+      "price": 55,
+      "rarity": "uncommon",
+      "stat_boost": {
+        "fun": 6,
+        "charm": 4
+      },
+      "unlock_level": 4,
+      "tags": [
+        "rainbow",
+        "fluffy",
+        "dance"
+      ]
+    },
+    {
+      "name": "Bunny Ear Headband",
+      "description": "Soft floppy bunny ears on a comfy headband! Wiggle them when you're happy.",
+      "price": 25,
+      "rarity": "common",
+      "stat_boost": {
+        "cuteness": 5
+      },
+      "unlock_level": 1,
+      "tags": [
+        "bunny",
+        "cute",
+        "accessory"
+      ]
+    },
+    {
+      "name": "Cloud Soft Pajamas",
+      "description": "The fluffiest pajamas that feel like sleeping on clouds! Covered in tiny moon prints.",
+      "price": 45,
+      "rarity": "common",
+      "stat_boost": {
+        "comfort": 10
+      },
+      "unlock_level": 3,
+      "tags": [
+        "cozy",
+        "sleepy",
+        "soft"
+      ]
+    },
+    {
+      "name": "Magical Girl Costume",
+      "description": "A sparkly costume with a bow and wand! Transform into a hero of love and friendship.",
+      "price": 150,
+      "rarity": "rare",
+      "stat_boost": {
+        "magic": 12,
+        "charm": 10
+      },
+      "unlock_level": 15,
+      "tags": [
+        "magical",
+        "costume",
+        "sparkly"
+      ]
+    },
+    {
+      "name": "Candy Stripe Leggings",
+      "description": "Stretchy leggings with pink and white candy stripes! Sweet from head to toe.",
+      "price": 30,
+      "rarity": "common",
+      "stat_boost": {
+        "charm": 3
+      },
+      "unlock_level": 2,
+      "tags": [
+        "pink",
+        "sweet",
+        "cute"
+      ]
+    },
+    {
+      "name": "Glitter Jelly Shoes",
+      "description": "Transparent shoes filled with sparkly glitter that moves when you walk! Pure magic.",
+      "price": 50,
+      "rarity": "uncommon",
+      "stat_boost": {
+        "charm": 6,
+        "sparkle": 5
+      },
+      "unlock_level": 6,
+      "tags": [
+        "sparkly",
+        "cute",
+        "shoes"
+      ]
+    },
+    {
+      "name": "Unicorn Horn Headpiece",
+      "description": "A shimmering spiral horn headband that makes you feel truly magical! Includes flower crown.",
+      "price": 75,
+      "rarity": "rare",
+      "stat_boost": {
+        "magic": 10,
+        "charm": 5
+      },
+      "unlock_level": 10,
+      "tags": [
+        "unicorn",
+        "magical",
+        "fancy"
+      ]
+    },
+    {
+      "name": "Fluffy Cat Ear Hat",
+      "description": "A warm hat with adorable cat ears and whisker details! Purrfectly cozy.",
+      "price": 35,
+      "rarity": "common",
+      "stat_boost": {
+        "cuteness": 6
+      },
+      "unlock_level": 3,
+      "tags": [
+        "cat",
+        "cute",
+        "cozy"
+      ]
+    },
+    {
+      "name": "Butterfly Wing Cape",
+      "description": "A flowing cape that looks like real butterfly wings! Flutter through your day.",
+      "price": 95,
+      "rarity": "rare",
+      "stat_boost": {
+        "charm": 12,
+        "magic": 5
+      },
+      "unlock_level": 12,
+      "tags": [
+        "butterfly",
+        "magical",
+        "pretty"
+      ]
+    },
+    {
+      "name": "Polka Dot Party Dress",
+      "description": "A twirly dress covered in cheerful polka dots! Every day is a celebration.",
+      "price": 70,
+      "rarity": "uncommon",
+      "stat_boost": {
+        "fun": 7,
+        "charm": 6
+      },
+      "unlock_level": 7,
+      "tags": [
+        "cute",
+        "party",
+        "dots"
+      ]
+    },
+    {
+      "name": "Cozy Bear Slippers",
+      "description": "Squishy slippers shaped like teddy bear faces! Your feet will be beary happy.",
+      "price": 30,
+      "rarity": "common",
+      "stat_boost": {
+        "comfort": 8
+      },
+      "unlock_level": 2,
+      "tags": [
+        "cute",
+        "cozy",
+        "bear"
+      ]
+    },
+    {
+      "name": "Mermaid Scale Skirt",
+      "description": "A shimmery skirt with iridescent scales that change color in the light! Ocean dreams.",
+      "price": 110,
+      "rarity": "rare",
+      "stat_boost": {
+        "charm": 14,
+        "magic": 6
+      },
+      "unlock_level": 14,
+      "tags": [
+        "mermaid",
+        "shimmery",
+        "magical"
+      ]
+    },
+    {
+      "name": "Daisy Chain Crown",
+      "description": "A delicate crown made of tiny daisies! Feel like a flower fairy princess.",
+      "price": 40,
+      "rarity": "uncommon",
+      "stat_boost": {
+        "charm": 5,
+        "nature": 3
+      },
+      "unlock_level": 4,
+      "tags": [
+        "flowers",
+        "cute",
+        "fairy"
+      ]
+    },
+    {
+      "name": "Puffy Sleeve Blouse",
+      "description": "An adorable blouse with extra puffy sleeves! Makes every outfit feel fancy.",
+      "price": 45,
+      "rarity": "common",
+      "stat_boost": {
+        "charm": 5
+      },
+      "unlock_level": 3,
+      "tags": [
+        "cute",
+        "fancy",
+        "pink"
+      ]
+    },
+    {
+      "name": "Starlight Sneakers",
+      "description": "Comfy sneakers with LED stars that light up when you walk! Step into stardom.",
+      "price": 65,
+      "rarity": "uncommon",
+      "stat_boost": {
+        "fun": 8,
+        "energy": 4
+      },
+      "unlock_level": 8,
+      "tags": [
+        "sparkly",
+        "cool",
+        "shoes"
+      ]
+    },
+    {
+      "name": "Fairy Dust Tutu",
+      "description": "A magical tutu that leaves a trail of sparkles! Dance like a real fairy.",
+      "price": 120,
+      "rarity": "rare",
+      "stat_boost": {
+        "magic": 15,
+        "charm": 8
+      },
+      "unlock_level": 16,
+      "tags": [
+        "fairy",
+        "sparkly",
+        "magical"
+      ]
+    },
+    {
+      "name": "Kawaii Overalls",
+      "description": "Cute denim overalls with heart-shaped pockets and rainbow buttons! Adorably practical.",
+      "price": 55,
+      "rarity": "uncommon",
+      "stat_boost": {
+        "charm": 6
+      },
+      "unlock_level": 5,
+      "tags": [
+        "cute",
+        "casual",
+        "hearts"
+      ]
+    },
+    {
+      "name": "Princess Tiara",
+      "description": "A sparkling tiara with pink gems fit for royalty! Rule your kingdom with kindness.",
+      "price": 80,
+      "rarity": "rare",
+      "stat_boost": {
+        "charm": 10
+      },
+      "unlock_level": 11,
+      "tags": [
+        "princess",
+        "sparkly",
+        "fancy"
+      ]
+    },
+    {
+      "name": "Honey Bee Costume",
+      "description": "A fuzzy bee costume with wings and antennae! Buzz around spreading sweetness.",
+      "price": 90,
+      "rarity": "uncommon",
+      "stat_boost": {
+        "cuteness": 12,
+        "fun": 6
+      },
+      "unlock_level": 9,
+      "tags": [
+        "costume",
+        "cute",
+        "bee"
+      ]
+    },
+    {
+      "name": "Pastel Cardigan",
+      "description": "A soft cardigan in dreamy pastel colors with tiny bow buttons! Cozy and cute.",
+      "price": 50,
+      "rarity": "common",
+      "stat_boost": {
+        "comfort": 6,
+        "charm": 3
+      },
+      "unlock_level": 4,
+      "tags": [
+        "pastel",
+        "cozy",
+        "cute"
+      ]
+    },
+    {
+      "name": "Glowing Moon Necklace",
+      "description": "A crescent moon pendant that softly glows in the dark! Carry moonlight with you.",
+      "price": 60,
+      "rarity": "uncommon",
+      "stat_boost": {
+        "magic": 7
+      },
+      "unlock_level": 7,
+      "tags": [
+        "magical",
+        "accessory",
+        "moon"
+      ]
+    },
+    {
+      "name": "Ribbon Ballet Flats",
+      "description": "Dainty flats with long ribbons that wrap around your ankles! Dance through the day.",
+      "price": 45,
+      "rarity": "common",
+      "stat_boost": {
+        "charm": 5
+      },
+      "unlock_level": 3,
+      "tags": [
+        "cute",
+        "dance",
+        "pink"
+      ]
+    },
+    {
+      "name": "Dinosaur Onesie",
+      "description": "A cozy onesie that transforms you into the cutest dino ever! Rawr means I love you.",
+      "price": 70,
+      "rarity": "uncommon",
+      "stat_boost": {
+        "comfort": 10,
+        "fun": 6
+      },
+      "unlock_level": 6,
+      "tags": [
+        "costume",
+        "cozy",
+        "cute"
+      ]
+    },
+    {
+      "name": "Flower Fairy Dress",
+      "description": "A delicate dress made of flower petals with leaf accents! Straight from an enchanted garden.",
+      "price": 130,
+      "rarity": "rare",
+      "stat_boost": {
+        "charm": 15,
+        "nature": 10
+      },
+      "unlock_level": 18,
+      "tags": [
+        "fairy",
+        "flowers",
+        "magical"
+      ]
+    },
+    {
+      "name": "Lucky Bow Hair Clips",
+      "description": "A set of sparkly bow clips in every color! Mix and match for endless cuteness.",
+      "price": 20,
+      "rarity": "common",
+      "stat_boost": {
+        "charm": 3
+      },
+      "unlock_level": 1,
+      "tags": [
+        "cute",
+        "accessory",
+        "colorful"
+      ]
+    },
+    {
+      "name": "Cloud Nine Hoodie",
+      "description": "The softest hoodie with fluffy cloud designs and a rainbow zipper! Hugs you like a cloud.",
+      "price": 60,
+      "rarity": "uncommon",
+      "stat_boost": {
+        "comfort": 8,
+        "happiness": 4
+      },
+      "unlock_level": 5,
+      "tags": [
+        "cozy",
+        "clouds",
+        "rainbow"
+      ]
+    },
+    {
+      "name": "Kitty Paw Gloves",
+      "description": "Fingerless gloves with squishy paw pad palms! Give the softest high-fives ever.",
+      "price": 25,
+      "rarity": "common",
+      "stat_boost": {
+        "cuteness": 5
+      },
+      "unlock_level": 2,
+      "tags": [
+        "cat",
+        "cute",
+        "accessory"
+      ]
+    },
+    {
+      "name": "Shooting Star Dress",
+      "description": "A midnight blue dress covered in shooting stars that actually twinkle! Make wishes all day.",
+      "price": 140,
+      "rarity": "rare",
+      "stat_boost": {
+        "magic": 12,
+        "charm": 12
+      },
+      "unlock_level": 17,
+      "tags": [
+        "stars",
+        "magical",
+        "sparkly"
+      ]
+    },
+    {
+      "name": "Cupcake Hat",
+      "description": "A hat shaped like a frosted cupcake with a cherry on top! Sweet style statement.",
+      "price": 35,
+      "rarity": "common",
+      "stat_boost": {
+        "fun": 5
+      },
+      "unlock_level": 3,
+      "tags": [
+        "sweet",
+        "cute",
+        "food"
+      ]
+    },
+    {
+      "name": "Royal Ball Gown",
+      "description": "An extravagant gown with layers of tulle and crystal details! Feel like true royalty.",
+      "price": 200,
+      "rarity": "rare",
+      "stat_boost": {
+        "charm": 20
+      },
+      "unlock_level": 20,
+      "tags": [
+        "princess",
+        "fancy",
+        "sparkly"
+      ]
+    },
+    {
+      "name": "Friendship Bracelet Set",
+      "description": "Colorful woven bracelets to share with your best friends! Friendship is magic.",
+      "price": 15,
+      "rarity": "common",
+      "stat_boost": {
+        "friendship": 5
+      },
+      "unlock_level": 1,
+      "tags": [
+        "cute",
+        "accessory",
+        "friendship"
+      ]
+    },
+    {
+      "name": "Penguin Waddle Shoes",
+      "description": "Adorable shoes shaped like penguins that squeak when you walk! Waddle in style.",
+      "price": 55,
+      "rarity": "uncommon",
+      "stat_boost": {
+        "fun": 8,
+        "cuteness": 5
+      },
+      "unlock_level": 6,
+      "tags": [
+        "penguin",
+        "cute",
+        "shoes"
+      ]
+    },
+    {
+      "name": "Legendary Aurora Gown",
+      "description": "A breathtaking gown that shimmers with the colors of the northern lights! Truly one of a kind.",
+      "price": 500,
+      "rarity": "legendary",
+      "stat_boost": {
+        "charm": 30,
+        "magic": 20
+      },
+      "unlock_level": 50,
+      "tags": [
+        "legendary",
+        "magical",
+        "aurora"
+      ]
+    }
+  ],
+  "furniture": [
+    {
+      "name": "Princess Canopy Bed",
+      "description": "A dreamy bed with flowing pink curtains and fairy lights! Sleep like royalty every night.",
+      "price": 180,
+      "rarity": "rare",
+      "stat_boost": {
+        "comfort": 15
+      },
+      "unlock_level": 12,
+      "tags": [
+        "princess",
+        "pink",
+        "dreamy"
+      ]
+    },
+    {
+      "name": "Rainbow Study Desk",
+      "description": "A cheerful desk painted in rainbow stripes! Homework becomes fun when colors are involved.",
+      "price": 85,
+      "rarity": "uncommon",
+      "stat_boost": {
+        "smarts": 8
+      },
+      "unlock_level": 6,
+      "tags": [
+        "rainbow",
+        "study",
+        "cute"
+      ]
+    },
+    {
+      "name": "Cloud Puff Chair",
+      "description": "A chair shaped like a fluffy cloud that's incredibly comfy! Float while you sit.",
+      "price": 70,
+      "rarity": "uncommon",
+      "stat_boost": {
+        "comfort": 10
+      },
+      "unlock_level": 5,
+      "tags": [
+        "clouds",
+        "fluffy",
+        "cozy"
+      ]
+    },
+    {
+      "name": "Magical Bookshelf",
+      "description": "A tall bookshelf with star decorations that holds all your favorite stories! Knowledge is magical.",
+      "price": 95,
+      "rarity": "uncommon",
+      "stat_boost": {
+        "smarts": 10
+      },
+      "unlock_level": 8,
+      "tags": [
+        "books",
+        "stars",
+        "magical"
+      ]
+    },
+    {
+      "name": "Starlight Lamp",
+      "description": "A lamp that projects twinkling stars on your ceiling! Turn any room into a galaxy.",
+      "price": 55,
+      "rarity": "common",
+      "stat_boost": {
+        "magic": 5
+      },
+      "unlock_level": 4,
+      "tags": [
+        "stars",
+        "magical",
+        "light"
+      ]
+    },
+    {
+      "name": "Heart-Shaped Mirror",
+      "description": "A pretty mirror framed with pink hearts! Smile at your reflection and it smiles back.",
+      "price": 45,
+      "rarity": "common",
+      "stat_boost": {
+        "charm": 5
+      },
+      "unlock_level": 3,
+      "tags": [
+        "pink",
+        "hearts",
+        "cute"
+      ]
+    },
+    {
+      "name": "Flower Garden Rug",
+      "description": "A soft rug with colorful flowers that looks like a real garden! Step into spring.",
+      "price": 60,
+      "rarity": "common",
+      "stat_boost": {
+        "nature": 6
+      },
+      "unlock_level": 4,
+      "tags": [
+        "flowers",
+        "colorful",
+        "soft"
+      ]
+    },
+    {
+      "name": "Bunny Tea Table",
+      "description": "A small table with bunny-shaped legs perfect for tea parties! Includes tiny bunny stools.",
+      "price": 90,
+      "rarity": "uncommon",
+      "stat_boost": {
+        "fun": 8
+      },
+      "unlock_level": 7,
+      "tags": [
+        "bunny",
+        "cute",
+        "tea party"
+      ]
+    },
+    {
+      "name": "Marshmallow Sofa",
+      "description": "A squishy sofa that looks and feels like a giant marshmallow! Sink into sweetness.",
+      "price": 120,
+      "rarity": "rare",
+      "stat_boost": {
+        "comfort": 12
+      },
+      "unlock_level": 10,
+      "tags": [
+        "soft",
+        "sweet",
+        "cozy"
+      ]
+    },
+    {
+      "name": "Twinkle Grand Piano",
+      "description": "A beautiful pink piano with sparkling keys! Play magical melodies all day long.",
+      "price": 250,
+      "rarity": "rare",
+      "stat_boost": {
+        "music": 20,
+        "charm": 10
+      },
+      "unlock_level": 18,
+      "tags": [
+        "music",
+        "pink",
+        "fancy"
+      ]
+    },
+    {
+      "name": "Mermaid Aquarium",
+      "description": "A beautiful tank with colorful fish and mermaid decorations! Watch the underwater magic.",
+      "price": 150,
+      "rarity": "rare",
+      "stat_boost": {
+        "calm": 15
+      },
+      "unlock_level": 14,
+      "tags": [
+        "mermaid",
+        "fish",
+        "magical"
+      ]
+    },
+    {
+      "name": "Unicorn Rocking Chair",
+      "description": "A rocking chair shaped like a magical unicorn! Rock your way to dreamland.",
+      "price": 100,
+      "rarity": "uncommon",
+      "stat_boost": {
+        "fun": 10,
+        "comfort": 5
+      },
+      "unlock_level": 9,
+      "tags": [
+        "unicorn",
+        "magical",
+        "fun"
+      ]
+    },
+    {
+      "name": "Cotton Candy Nightstand",
+      "description": "A fluffy nightstand that looks like cotton candy! Keep your treasures close while you sleep.",
+      "price": 50,
+      "rarity": "common",
+      "stat_boost": {
+        "comfort": 4
+      },
+      "unlock_level": 3,
+      "tags": [
+        "sweet",
+        "pink",
+        "cute"
+      ]
+    },
+    {
+      "name": "Enchanted Wardrobe",
+      "description": "A magical wardrobe with carved flowers that holds all your prettiest outfits! Fashion kingdom inside.",
+      "price": 140,
+      "rarity": "rare",
+      "stat_boost": {
+        "charm": 12
+      },
+      "unlock_level": 13,
+      "tags": [
+        "magical",
+        "fancy",
+        "storage"
+      ]
+    },
+    {
+      "name": "Jellyfish Lamp",
+      "description": "A glowing lamp with floating jellyfish that change colors! Mesmerizing and peaceful.",
+      "price": 75,
+      "rarity": "uncommon",
+      "stat_boost": {
+        "calm": 10
+      },
+      "unlock_level": 7,
+      "tags": [
+        "ocean",
+        "colorful",
+        "magical"
+      ]
+    },
+    {
+      "name": "Teddy Bear Bean Bag",
+      "description": "A giant bean bag shaped like a cuddly teddy bear! The best seat for reading stories.",
+      "price": 65,
+      "rarity": "common",
+      "stat_boost": {
+        "comfort": 8
+      },
+      "unlock_level": 5,
+      "tags": [
+        "bear",
+        "cozy",
+        "cute"
+      ]
+    },
+    {
+      "name": "Crystal Vanity Table",
+      "description": "A sparkling vanity with a light-up mirror perfect for getting pretty! Feel like a star.",
+      "price": 130,
+      "rarity": "rare",
+      "stat_boost": {
+        "charm": 15
+      },
+      "unlock_level": 12,
+      "tags": [
+        "sparkly",
+        "fancy",
+        "pretty"
+      ]
+    },
+    {
+      "name": "Rainbow Hammock",
+      "description": "A colorful hammock for indoor relaxation! Swing gently and daydream away.",
+      "price": 80,
+      "rarity": "uncommon",
+      "stat_boost": {
+        "comfort": 9,
+        "fun": 5
+      },
+      "unlock_level": 8,
+      "tags": [
+        "rainbow",
+        "relaxing",
+        "fun"
+      ]
+    },
+    {
+      "name": "Mushroom Stool Set",
+      "description": "Cute stools shaped like spotted mushrooms! Perfect for a fairy forest room.",
+      "price": 55,
+      "rarity": "common",
+      "stat_boost": {
+        "nature": 6
+      },
+      "unlock_level": 4,
+      "tags": [
+        "mushroom",
+        "fairy",
+        "cute"
+      ]
+    },
+    {
+      "name": "Dollhouse Bookcase",
+      "description": "A bookcase shaped like a magical dollhouse! Store books in tiny rooms.",
+      "price": 110,
+      "rarity": "uncommon",
+      "stat_boost": {
+        "smarts": 8,
+        "fun": 6
+      },
+      "unlock_level": 10,
+      "tags": [
+        "cute",
+        "books",
+        "dollhouse"
+      ]
+    },
+    {
+      "name": "Bubble Gum Dresser",
+      "description": "A round pink dresser with bubble-shaped drawers! Pop open to find your clothes.",
+      "price": 75,
+      "rarity": "uncommon",
+      "stat_boost": {
+        "charm": 6
+      },
+      "unlock_level": 6,
+      "tags": [
+        "pink",
+        "cute",
+        "storage"
+      ]
+    },
+    {
+      "name": "Fairy Ring Table",
+      "description": "A round table surrounded by tiny glowing mushrooms! Perfect for magical meetings.",
+      "price": 95,
+      "rarity": "uncommon",
+      "stat_boost": {
+        "magic": 10
+      },
+      "unlock_level": 9,
+      "tags": [
+        "fairy",
+        "magical",
+        "mushroom"
+      ]
+    },
+    {
+      "name": "Sleepy Moon Crib",
+      "description": "A beautiful crib with a crescent moon headboard and star mobile! Sweet dreams guaranteed.",
+      "price": 160,
+      "rarity": "rare",
+      "stat_boost": {
+        "comfort": 14
+      },
+      "unlock_level": 15,
+      "tags": [
+        "moon",
+        "stars",
+        "dreamy"
+      ]
+    },
+    {
+      "name": "Candy Swirl Shelf",
+      "description": "A spiral shelf that looks like a lollipop! Display your favorite treasures sweetly.",
+      "price": 60,
+      "rarity": "common",
+      "stat_boost": {
+        "fun": 5
+      },
+      "unlock_level": 5,
+      "tags": [
+        "candy",
+        "colorful",
+        "cute"
+      ]
+    },
+    {
+      "name": "Kitten Climbing Tower",
+      "description": "A tall tower with platforms for climbing and a cozy hideaway! Adventure awaits.",
+      "price": 85,
+      "rarity": "uncommon",
+      "stat_boost": {
+        "fun": 10
+      },
+      "unlock_level": 7,
+      "tags": [
+        "cat",
+        "fun",
+        "climbing"
+      ]
+    },
+    {
+      "name": "Ice Cream Sundae Desk",
+      "description": "A desk shaped like a giant ice cream sundae with a cherry lamp! Sweetest study spot.",
+      "price": 120,
+      "rarity": "rare",
+      "stat_boost": {
+        "smarts": 10,
+        "fun": 8
+      },
+      "unlock_level": 11,
+      "tags": [
+        "sweet",
+        "cute",
+        "study"
+      ]
+    },
+    {
+      "name": "Princess Throne Chair",
+      "description": "A majestic throne with velvet cushions and golden details! Rule your room in style.",
+      "price": 175,
+      "rarity": "rare",
+      "stat_boost": {
+        "charm": 15
+      },
+      "unlock_level": 16,
+      "tags": [
+        "princess",
+        "fancy",
+        "royal"
+      ]
+    },
+    {
+      "name": "Seashell Bed",
+      "description": "A gorgeous bed shaped like an open seashell! Dream of ocean adventures.",
+      "price": 200,
+      "rarity": "rare",
+      "stat_boost": {
+        "comfort": 16,
+        "calm": 8
+      },
+      "unlock_level": 17,
+      "tags": [
+        "mermaid",
+        "ocean",
+        "dreamy"
+      ]
+    },
+    {
+      "name": "Gumball Machine Storage",
+      "description": "A giant gumball machine that stores toys and treasures! Turn the handle for surprises.",
+      "price": 70,
+      "rarity": "uncommon",
+      "stat_boost": {
+        "fun": 8
+      },
+      "unlock_level": 6,
+      "tags": [
+        "candy",
+        "colorful",
+        "storage"
+      ]
+    },
+    {
+      "name": "Legendary Crystal Canopy Bed",
+      "description": "An extraordinary bed with crystal posts that glow with inner light and silk curtains woven with gold thread! The most magical sleep awaits.",
+      "price": 500,
+      "rarity": "legendary",
+      "stat_boost": {
+        "comfort": 30,
+        "magic": 15
+      },
+      "unlock_level": 50,
+      "tags": [
+        "legendary",
+        "crystal",
+        "magical"
+      ]
+    }
+  ],
+  "decor": [
+    {
+      "name": "Kawaii Cat Poster",
+      "description": "An adorable poster featuring cats in cute poses! Meow-velous wall decoration.",
+      "price": 15,
+      "rarity": "common",
+      "stat_boost": {
+        "cuteness": 3
+      },
+      "unlock_level": 1,
+      "tags": [
+        "cat",
+        "cute",
+        "poster"
+      ]
+    },
+    {
+      "name": "Rainbow Dreams Painting",
+      "description": "A beautiful painting of a rainbow over a candy land! Brings color to any wall.",
+      "price": 45,
+      "rarity": "uncommon",
+      "stat_boost": {
+        "happiness": 6
+      },
+      "unlock_level": 4,
+      "tags": [
+        "rainbow",
+        "art",
+        "dreamy"
+      ]
+    },
+    {
+      "name": "Butterfly Wall Stickers",
+      "description": "Colorful butterfly stickers that look like they're flying! Transform your walls into a garden.",
+      "price": 20,
+      "rarity": "common",
+      "stat_boost": {
+        "nature": 4
+      },
+      "unlock_level": 2,
+      "tags": [
+        "butterfly",
+        "colorful",
+        "cute"
+      ]
+    },
+    {
+      "name": "Fairy Light Curtain",
+      "description": "Twinkling lights that hang like a magical curtain! Make your room sparkle.",
+      "price": 35,
+      "rarity": "common",
+      "stat_boost": {
+        "magic": 5
+      },
+      "unlock_level": 3,
+      "tags": [
+        "sparkly",
+        "magical",
+        "lights"
+      ]
+    },
+    {
+      "name": "Heart Pile Cushions",
+      "description": "A set of squishy heart-shaped cushions in pink and red! Spread the love around.",
+      "price": 30,
+      "rarity": "common",
+      "stat_boost": {
+        "comfort": 5
+      },
+      "unlock_level": 2,
+      "tags": [
+        "hearts",
+        "pink",
+        "soft"
+      ]
+    },
+    {
+      "name": "Giant Teddy Bear",
+      "description": "A huge fluffy teddy bear perfect for hugging! Your new best cuddle buddy.",
+      "price": 75,
+      "rarity": "uncommon",
+      "stat_boost": {
+        "comfort": 10,
+        "happiness": 5
+      },
+      "unlock_level": 6,
+      "tags": [
+        "bear",
+        "fluffy",
+        "cute"
+      ]
+    },
+    {
+      "name": "Ballerina Music Box",
+      "description": "A delicate music box with a spinning ballerina! Plays the sweetest melody.",
+      "price": 55,
+      "rarity": "uncommon",
+      "stat_boost": {
+        "music": 8
+      },
+      "unlock_level": 5,
+      "tags": [
+        "music",
+        "dance",
+        "pretty"
+      ]
+    },
+    {
+      "name": "Magical Castle Snow Globe",
+      "description": "A beautiful snow globe with a fairy tale castle inside! Shake it for sparkly magic.",
+      "price": 65,
+      "rarity": "uncommon",
+      "stat_boost": {
+        "magic": 8
+      },
+      "unlock_level": 7,
+      "tags": [
+        "magical",
+        "sparkly",
+        "castle"
+      ]
+    },
+    {
+      "name": "Friendship Trophy",
+      "description": "A golden trophy celebrating being the best friend ever! You're a winner at friendship.",
+      "price": 40,
+      "rarity": "common",
+      "stat_boost": {
+        "friendship": 8
+      },
+      "unlock_level": 4,
+      "tags": [
+        "gold",
+        "friendship",
+        "award"
+      ]
+    },
+    {
+      "name": "Starry Night Mobile",
+      "description": "A hanging mobile with moons and stars that spin gently! Watch the cosmos dance.",
+      "price": 35,
+      "rarity": "common",
+      "stat_boost": {
+        "calm": 6
+      },
+      "unlock_level": 3,
+      "tags": [
+        "stars",
+        "moon",
+        "dreamy"
+      ]
+    },
+    {
+      "name": "Plush Unicorn Collection",
+      "description": "A family of soft unicorn plushies in pastel colors! Magical friends forever.",
+      "price": 50,
+      "rarity": "uncommon",
+      "stat_boost": {
+        "magic": 6,
+        "happiness": 5
+      },
+      "unlock_level": 5,
+      "tags": [
+        "unicorn",
+        "plush",
+        "pastel"
+      ]
+    },
+    {
+      "name": "Flower Fairy Painting",
+      "description": "An enchanting painting of fairies dancing among flowers! Brings magic to your walls.",
+      "price": 60,
+      "rarity": "uncommon",
+      "stat_boost": {
+        "magic": 7,
+        "nature": 4
+      },
+      "unlock_level": 6,
+      "tags": [
+        "fairy",
+        "flowers",
+        "art"
+      ]
+    },
+    {
+      "name": "Glowing Star Stickers",
+      "description": "Stars that stick to your ceiling and glow in the dark! Sleep under the stars every night.",
+      "price": 15,
+      "rarity": "common",
+      "stat_boost": {
+        "magic": 3
+      },
+      "unlock_level": 1,
+      "tags": [
+        "stars",
+        "glowing",
+        "cute"
+      ]
+    },
+    {
+      "name": "Mermaid Tail Pillow",
+      "description": "A sparkly pillow shaped like a mermaid tail! Perfect for ocean dreamers.",
+      "price": 40,
+      "rarity": "common",
+      "stat_boost": {
+        "comfort": 6
+      },
+      "unlock_level": 4,
+      "tags": [
+        "mermaid",
+        "sparkly",
+        "soft"
+      ]
+    },
+    {
+      "name": "Bunny Alarm Clock",
+      "description": "A cute clock with bunny ears that wiggles when it rings! Wake up to cuteness.",
+      "price": 30,
+      "rarity": "common",
+      "stat_boost": {
+        "energy": 4
+      },
+      "unlock_level": 2,
+      "tags": [
+        "bunny",
+        "cute",
+        "clock"
+      ]
+    },
+    {
+      "name": "Rainbow Pennant Banner",
+      "description": "A cheerful banner with rainbow triangle flags! Instant party atmosphere.",
+      "price": 20,
+      "rarity": "common",
+      "stat_boost": {
+        "fun": 4
+      },
+      "unlock_level": 2,
+      "tags": [
+        "rainbow",
+        "party",
+        "cute"
+      ]
+    },
+    {
+      "name": "Crystal Wind Chimes",
+      "description": "Sparkling crystal chimes that make magical sounds in the breeze! Music from the wind.",
+      "price": 45,
+      "rarity": "uncommon",
+      "stat_boost": {
+        "calm": 8,
+        "music": 4
+      },
+      "unlock_level": 5,
+      "tags": [
+        "crystal",
+        "music",
+        "magical"
+      ]
+    },
+    {
+      "name": "Cupcake Wall Clock",
+      "description": "A clock shaped like a frosted cupcake! Time is always sweet.",
+      "price": 35,
+      "rarity": "common",
+      "stat_boost": {
+        "fun": 5
+      },
+      "unlock_level": 3,
+      "tags": [
+        "sweet",
+        "cute",
+        "clock"
+      ]
+    },
+    {
+      "name": "Panda Plush Family",
+      "description": "A set of panda plushies in different sizes! A whole family of cuddly friends.",
+      "price": 55,
+      "rarity": "uncommon",
+      "stat_boost": {
+        "happiness": 8
+      },
+      "unlock_level": 6,
+      "tags": [
+        "panda",
+        "plush",
+        "cute"
+      ]
+    },
+    {
+      "name": "Princess Portrait Frame",
+      "description": "An ornate golden frame perfect for your favorite photos! Feel like royalty.",
+      "price": 40,
+      "rarity": "common",
+      "stat_boost": {
+        "charm": 5
+      },
+      "unlock_level": 4,
+      "tags": [
+        "gold",
+        "fancy",
+        "princess"
+      ]
+    },
+    {
+      "name": "Floating Cloud Shelf",
+      "description": "A shelf shaped like a fluffy cloud! Display treasures among the clouds.",
+      "price": 50,
+      "rarity": "uncommon",
+      "stat_boost": {
+        "dreamy": 6
+      },
+      "unlock_level": 5,
+      "tags": [
+        "clouds",
+        "cute",
+        "storage"
+      ]
+    },
+    {
+      "name": "Kitten Wall Stickers",
+      "description": "Adorable kitten stickers in playful poses! Cover your walls in cuteness.",
+      "price": 20,
+      "rarity": "common",
+      "stat_boost": {
+        "cuteness": 5
+      },
+      "unlock_level": 2,
+      "tags": [
+        "cat",
+        "cute",
+        "stickers"
+      ]
+    },
+    {
+      "name": "Enchanted Rose Globe",
+      "description": "A beautiful globe with a magical glowing rose inside! Beauty that lasts forever.",
+      "price": 85,
+      "rarity": "rare",
+      "stat_boost": {
+        "magic": 12
+      },
+      "unlock_level": 10,
+      "tags": [
+        "magical",
+        "rose",
+        "glowing"
+      ]
+    },
+    {
+      "name": "Donut Stack Sculpture",
+      "description": "A cute sculpture of stacked donuts in pastel colors! Sweetest decoration ever.",
+      "price": 35,
+      "rarity": "common",
+      "stat_boost": {
+        "fun": 5
+      },
+      "unlock_level": 3,
+      "tags": [
+        "sweet",
+        "pastel",
+        "cute"
+      ]
+    },
+    {
+      "name": "Legendary Wishing Star",
+      "description": "A magnificent golden star that grants wishes and fills the room with shimmering light! The most magical decoration in all the land.",
+      "price": 500,
+      "rarity": "legendary",
+      "stat_boost": {
+        "magic": 25,
+        "luck": 20,
+        "happiness": 15
+      },
+      "unlock_level": 50,
+      "tags": [
+        "legendary",
+        "magical",
+        "golden"
+      ]
+    }
+  ]
+}

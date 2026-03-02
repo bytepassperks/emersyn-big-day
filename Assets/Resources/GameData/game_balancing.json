@@ -1,0 +1,1448 @@
+{
+  "game_title": "Emersyn's Big Day",
+  "version": "1.0.0",
+  "last_updated": "2024-01-15",
+  "need_decay_rates": {
+    "hunger": {
+      "base_decay": 0.85,
+      "min_value": 0,
+      "max_value": 100,
+      "critical_threshold": 20,
+      "warning_threshold": 40,
+      "boost_activities": {
+        "eat_breakfast": 35,
+        "eat_lunch": 40,
+        "eat_dinner": 45,
+        "eat_snack": 15,
+        "drink_juice": 8,
+        "eat_cookie": 12,
+        "eat_fruit": 18,
+        "visit_cafe": 50
+      }
+    },
+    "energy": {
+      "base_decay": 0.65,
+      "min_value": 0,
+      "max_value": 100,
+      "critical_threshold": 20,
+      "warning_threshold": 40,
+      "boost_activities": {
+        "take_nap": 40,
+        "sleep_night": 100,
+        "rest_on_couch": 20,
+        "drink_smoothie": 10,
+        "power_nap": 25,
+        "meditation": 15,
+        "cozy_reading": 12
+      }
+    },
+    "hygiene": {
+      "base_decay": 0.45,
+      "min_value": 0,
+      "max_value": 100,
+      "critical_threshold": 20,
+      "warning_threshold": 40,
+      "boost_activities": {
+        "take_bath": 60,
+        "take_shower": 50,
+        "wash_hands": 8,
+        "brush_teeth": 15,
+        "spa_day": 75,
+        "bubble_bath": 70,
+        "quick_freshen": 12
+      }
+    },
+    "fun": {
+      "base_decay": 0.55,
+      "min_value": 0,
+      "max_value": 100,
+      "critical_threshold": 20,
+      "warning_threshold": 40,
+      "boost_activities": {
+        "play_minigame": 25,
+        "watch_tv": 15,
+        "play_with_toys": 20,
+        "visit_playground": 35,
+        "dance_party": 30,
+        "play_with_pet": 22,
+        "read_comic": 12,
+        "jump_on_bed": 18
+      }
+    },
+    "social": {
+      "base_decay": 0.35,
+      "min_value": 0,
+      "max_value": 100,
+      "critical_threshold": 20,
+      "warning_threshold": 40,
+      "boost_activities": {
+        "chat_with_friend": 20,
+        "attend_party": 40,
+        "give_gift": 25,
+        "play_together": 30,
+        "phone_call": 15,
+        "send_letter": 10,
+        "group_activity": 35,
+        "hug_friend": 12
+      }
+    },
+    "comfort": {
+      "base_decay": 0.25,
+      "min_value": 0,
+      "max_value": 100,
+      "critical_threshold": 20,
+      "warning_threshold": 40,
+      "boost_activities": {
+        "sit_on_couch": 15,
+        "wear_cozy_clothes": 20,
+        "drink_hot_cocoa": 18,
+        "cuddle_plushie": 22,
+        "warm_blanket": 25,
+        "cozy_corner": 30,
+        "rocking_chair": 12
+      }
+    },
+    "bladder": {
+      "base_decay": 1.2,
+      "min_value": 0,
+      "max_value": 100,
+      "critical_threshold": 20,
+      "warning_threshold": 40,
+      "boost_activities": {
+        "use_bathroom": 100,
+        "quick_break": 100
+      }
+    },
+    "creativity": {
+      "base_decay": 0.4,
+      "min_value": 0,
+      "max_value": 100,
+      "critical_threshold": 20,
+      "warning_threshold": 40,
+      "boost_activities": {
+        "paint_picture": 30,
+        "build_blocks": 25,
+        "write_story": 28,
+        "make_music": 32,
+        "craft_project": 35,
+        "design_outfit": 22,
+        "decorate_room": 27,
+        "photography": 20
+      }
+    }
+  },
+  "reward_curves": {
+    "xp_per_level": [
+      100,
+      150,
+      225,
+      340,
+      510,
+      765,
+      1148,
+      1722,
+      2583,
+      3875,
+      5425,
+      7595,
+      10633,
+      14886,
+      20840,
+      29176,
+      40846,
+      57185,
+      80059,
+      112083,
+      156916,
+      219682,
+      307555,
+      430577,
+      602808,
+      843931,
+      1181504,
+      1654105,
+      2315747,
+      3242046,
+      4538864,
+      6354410,
+      8896174,
+      12454644,
+      17436501,
+      24411102,
+      34175543,
+      47845760,
+      66984064,
+      93777690,
+      131288766,
+      183804272,
+      257325981,
+      360256374,
+      504358923,
+      706102493,
+      988543490,
+      1383960886,
+      1937545240,
+      2712563336
+    ],
+    "coins_per_minigame": {
+      "base": 25,
+      "level_multiplier": 1.15,
+      "star_bonus": {
+        "1_star": 10,
+        "2_star": 25,
+        "3_star": 50
+      },
+      "perfect_bonus": 75,
+      "first_time_bonus": 100,
+      "daily_first_play_bonus": 15
+    },
+    "daily_login_rewards": [
+      {
+        "day": 1,
+        "coins": 100,
+        "stars": 0,
+        "special_item": null
+      },
+      {
+        "day": 2,
+        "coins": 150,
+        "stars": 1,
+        "special_item": null
+      },
+      {
+        "day": 3,
+        "coins": 200,
+        "stars": 1,
+        "special_item": "mystery_box_small"
+      },
+      {
+        "day": 4,
+        "coins": 250,
+        "stars": 2,
+        "special_item": null
+      },
+      {
+        "day": 5,
+        "coins": 350,
+        "stars": 2,
+        "special_item": "cute_accessory_random"
+      },
+      {
+        "day": 6,
+        "coins": 500,
+        "stars": 3,
+        "special_item": "mystery_box_medium"
+      },
+      {
+        "day": 7,
+        "coins": 1000,
+        "stars": 5,
+        "special_item": "weekly_treasure_chest"
+      }
+    ],
+    "achievement_rewards": {
+      "easy": {
+        "coins": 50,
+        "xp": 100,
+        "stars": 1
+      },
+      "medium": {
+        "coins": 150,
+        "xp": 350,
+        "stars": 3
+      },
+      "hard": {
+        "coins": 400,
+        "xp": 1000,
+        "stars": 7
+      },
+      "legendary": {
+        "coins": 1500,
+        "xp": 5000,
+        "stars": 20
+      }
+    },
+    "streak_bonuses": {
+      "day_1": 1.0,
+      "day_2": 1.1,
+      "day_3": 1.2,
+      "day_4": 1.3,
+      "day_5": 1.4,
+      "day_6": 1.5,
+      "day_7": 1.75,
+      "day_8": 1.8,
+      "day_9": 1.85,
+      "day_10": 1.9,
+      "day_11": 1.95,
+      "day_12": 2.0,
+      "day_13": 2.05,
+      "day_14": 2.15,
+      "day_15": 2.2,
+      "day_16": 2.25,
+      "day_17": 2.3,
+      "day_18": 2.35,
+      "day_19": 2.4,
+      "day_20": 2.45,
+      "day_21": 2.6,
+      "day_22": 2.65,
+      "day_23": 2.7,
+      "day_24": 2.75,
+      "day_25": 2.8,
+      "day_26": 2.85,
+      "day_27": 2.9,
+      "day_28": 3.0,
+      "day_29": 3.1,
+      "day_30": 3.5
+    }
+  },
+  "difficulty_scaling": {
+    "bubble_pop": {
+      "level_1": {
+        "spawn_rate": 1.2,
+        "bubble_speed": 80,
+        "time_limit": 60,
+        "target_score": 500,
+        "special_bubble_chance": 0.05
+      },
+      "level_5": {
+        "spawn_rate": 1.5,
+        "bubble_speed": 110,
+        "time_limit": 55,
+        "target_score": 1200,
+        "special_bubble_chance": 0.1
+      },
+      "level_10": {
+        "spawn_rate": 1.9,
+        "bubble_speed": 150,
+        "time_limit": 50,
+        "target_score": 2500,
+        "special_bubble_chance": 0.15
+      },
+      "level_20": {
+        "spawn_rate": 2.4,
+        "bubble_speed": 200,
+        "time_limit": 45,
+        "target_score": 5000,
+        "special_bubble_chance": 0.2
+      },
+      "level_50": {
+        "spawn_rate": 3.2,
+        "bubble_speed": 300,
+        "time_limit": 40,
+        "target_score": 12000,
+        "special_bubble_chance": 0.3
+      }
+    },
+    "cooking_game": {
+      "level_1": {
+        "recipe_complexity": 1,
+        "time_limit": 120,
+        "ingredient_count": 3,
+        "burn_speed": 0.3,
+        "recipe_steps": 3
+      },
+      "level_5": {
+        "recipe_complexity": 2,
+        "time_limit": 110,
+        "ingredient_count": 4,
+        "burn_speed": 0.4,
+        "recipe_steps": 5
+      },
+      "level_10": {
+        "recipe_complexity": 3,
+        "time_limit": 100,
+        "ingredient_count": 5,
+        "burn_speed": 0.5,
+        "recipe_steps": 7
+      },
+      "level_20": {
+        "recipe_complexity": 4,
+        "time_limit": 90,
+        "ingredient_count": 7,
+        "burn_speed": 0.65,
+        "recipe_steps": 10
+      },
+      "level_50": {
+        "recipe_complexity": 5,
+        "time_limit": 75,
+        "ingredient_count": 10,
+        "burn_speed": 0.85,
+        "recipe_steps": 15
+      }
+    },
+    "memory_match": {
+      "level_1": {
+        "grid_size": "3x4",
+        "time_limit": 90,
+        "pair_count": 6,
+        "preview_time": 5
+      },
+      "level_5": {
+        "grid_size": "4x4",
+        "time_limit": 85,
+        "pair_count": 8,
+        "preview_time": 4
+      },
+      "level_10": {
+        "grid_size": "4x5",
+        "time_limit": 80,
+        "pair_count": 10,
+        "preview_time": 3
+      },
+      "level_20": {
+        "grid_size": "5x6",
+        "time_limit": 70,
+        "pair_count": 15,
+        "preview_time": 2
+      },
+      "level_50": {
+        "grid_size": "6x7",
+        "time_limit": 60,
+        "pair_count": 21,
+        "preview_time": 1
+      }
+    },
+    "star_catcher": {
+      "level_1": {
+        "fall_speed": 100,
+        "spawn_rate": 1.0,
+        "time_limit": 45,
+        "bomb_ratio": 0.05,
+        "power_up_chance": 0.15
+      },
+      "level_5": {
+        "fall_speed": 140,
+        "spawn_rate": 1.3,
+        "time_limit": 50,
+        "bomb_ratio": 0.1,
+        "power_up_chance": 0.12
+      },
+      "level_10": {
+        "fall_speed": 180,
+        "spawn_rate": 1.6,
+        "time_limit": 55,
+        "bomb_ratio": 0.15,
+        "power_up_chance": 0.1
+      },
+      "level_20": {
+        "fall_speed": 240,
+        "spawn_rate": 2.0,
+        "time_limit": 60,
+        "bomb_ratio": 0.2,
+        "power_up_chance": 0.08
+      },
+      "level_50": {
+        "fall_speed": 350,
+        "spawn_rate": 2.8,
+        "time_limit": 70,
+        "bomb_ratio": 0.28,
+        "power_up_chance": 0.05
+      }
+    },
+    "racing_run": {
+      "level_1": {
+        "obstacle_speed": 150,
+        "lane_count": 3,
+        "coin_frequency": 0.8,
+        "power_up_chance": 0.2,
+        "distance_goal": 500
+      },
+      "level_5": {
+        "obstacle_speed": 200,
+        "lane_count": 3,
+        "coin_frequency": 0.7,
+        "power_up_chance": 0.18,
+        "distance_goal": 1000
+      },
+      "level_10": {
+        "obstacle_speed": 280,
+        "lane_count": 4,
+        "coin_frequency": 0.6,
+        "power_up_chance": 0.15,
+        "distance_goal": 2000
+      },
+      "level_20": {
+        "obstacle_speed": 380,
+        "lane_count": 4,
+        "coin_frequency": 0.5,
+        "power_up_chance": 0.12,
+        "distance_goal": 4000
+      },
+      "level_50": {
+        "obstacle_speed": 550,
+        "lane_count": 5,
+        "coin_frequency": 0.4,
+        "power_up_chance": 0.08,
+        "distance_goal": 10000
+      }
+    },
+    "garden_grow": {
+      "level_1": {
+        "grow_time": 30,
+        "weed_spawn_rate": 0.1,
+        "water_drain_rate": 0.3,
+        "harvest_window": 15,
+        "plant_slots": 4
+      },
+      "level_5": {
+        "grow_time": 28,
+        "weed_spawn_rate": 0.15,
+        "water_drain_rate": 0.4,
+        "harvest_window": 12,
+        "plant_slots": 6
+      },
+      "level_10": {
+        "grow_time": 25,
+        "weed_spawn_rate": 0.2,
+        "water_drain_rate": 0.5,
+        "harvest_window": 10,
+        "plant_slots": 8
+      },
+      "level_20": {
+        "grow_time": 22,
+        "weed_spawn_rate": 0.28,
+        "water_drain_rate": 0.65,
+        "harvest_window": 8,
+        "plant_slots": 10
+      },
+      "level_50": {
+        "grow_time": 18,
+        "weed_spawn_rate": 0.4,
+        "water_drain_rate": 0.85,
+        "harvest_window": 5,
+        "plant_slots": 15
+      }
+    },
+    "fashion_show": {
+      "level_1": {
+        "outfit_pieces": 3,
+        "time_limit": 90,
+        "judge_strictness": 0.3,
+        "theme_variety": 3,
+        "accessory_slots": 1
+      },
+      "level_5": {
+        "outfit_pieces": 4,
+        "time_limit": 80,
+        "judge_strictness": 0.4,
+        "theme_variety": 5,
+        "accessory_slots": 2
+      },
+      "level_10": {
+        "outfit_pieces": 5,
+        "time_limit": 70,
+        "judge_strictness": 0.55,
+        "theme_variety": 8,
+        "accessory_slots": 3
+      },
+      "level_20": {
+        "outfit_pieces": 6,
+        "time_limit": 60,
+        "judge_strictness": 0.7,
+        "theme_variety": 12,
+        "accessory_slots": 4
+      },
+      "level_50": {
+        "outfit_pieces": 8,
+        "time_limit": 45,
+        "judge_strictness": 0.9,
+        "theme_variety": 20,
+        "accessory_slots": 6
+      }
+    },
+    "hide_seek": {
+      "level_1": {
+        "hiding_spots": 8,
+        "time_limit": 60,
+        "hint_frequency": 10,
+        "npc_count": 3
+      },
+      "level_5": {
+        "hiding_spots": 12,
+        "time_limit": 55,
+        "hint_frequency": 12,
+        "npc_count": 4
+      },
+      "level_10": {
+        "hiding_spots": 18,
+        "time_limit": 50,
+        "hint_frequency": 15,
+        "npc_count": 5
+      },
+      "level_20": {
+        "hiding_spots": 25,
+        "time_limit": 45,
+        "hint_frequency": 20,
+        "npc_count": 7
+      },
+      "level_50": {
+        "hiding_spots": 40,
+        "time_limit": 40,
+        "hint_frequency": 30,
+        "npc_count": 10
+      }
+    },
+    "puzzle_solve": {
+      "level_1": {
+        "piece_count": 9,
+        "rotation_enabled": false,
+        "time_limit": 120,
+        "hint_cost": 5
+      },
+      "level_5": {
+        "piece_count": 16,
+        "rotation_enabled": false,
+        "time_limit": 110,
+        "hint_cost": 10
+      },
+      "level_10": {
+        "piece_count": 25,
+        "rotation_enabled": true,
+        "time_limit": 100,
+        "hint_cost": 15
+      },
+      "level_20": {
+        "piece_count": 49,
+        "rotation_enabled": true,
+        "time_limit": 90,
+        "hint_cost": 25
+      },
+      "level_50": {
+        "piece_count": 100,
+        "rotation_enabled": true,
+        "time_limit": 75,
+        "hint_cost": 50
+      }
+    },
+    "pet_care": {
+      "level_1": {
+        "need_count": 2,
+        "decay_speed": 0.3,
+        "task_variety": 3,
+        "patience_required": 10
+      },
+      "level_5": {
+        "need_count": 3,
+        "decay_speed": 0.4,
+        "task_variety": 5,
+        "patience_required": 15
+      },
+      "level_10": {
+        "need_count": 4,
+        "decay_speed": 0.5,
+        "task_variety": 7,
+        "patience_required": 20
+      },
+      "level_20": {
+        "need_count": 5,
+        "decay_speed": 0.65,
+        "task_variety": 10,
+        "patience_required": 28
+      },
+      "level_50": {
+        "need_count": 6,
+        "decay_speed": 0.85,
+        "task_variety": 15,
+        "patience_required": 40
+      }
+    },
+    "art_studio": {
+      "level_1": {
+        "tool_count": 4,
+        "canvas_size": "small",
+        "color_palette_size": 8,
+        "undo_limit": 10
+      },
+      "level_5": {
+        "tool_count": 6,
+        "canvas_size": "small",
+        "color_palette_size": 12,
+        "undo_limit": 8
+      },
+      "level_10": {
+        "tool_count": 8,
+        "canvas_size": "medium",
+        "color_palette_size": 18,
+        "undo_limit": 6
+      },
+      "level_20": {
+        "tool_count": 12,
+        "canvas_size": "medium",
+        "color_palette_size": 24,
+        "undo_limit": 4
+      },
+      "level_50": {
+        "tool_count": 18,
+        "canvas_size": "large",
+        "color_palette_size": 36,
+        "undo_limit": 2
+      }
+    },
+    "music_maker": {
+      "level_1": {
+        "note_count": 4,
+        "tempo": 80,
+        "track_count": 1,
+        "complexity": 1,
+        "sequence_length": 8
+      },
+      "level_5": {
+        "note_count": 6,
+        "tempo": 95,
+        "track_count": 2,
+        "complexity": 2,
+        "sequence_length": 12
+      },
+      "level_10": {
+        "note_count": 8,
+        "tempo": 110,
+        "track_count": 2,
+        "complexity": 3,
+        "sequence_length": 16
+      },
+      "level_20": {
+        "note_count": 10,
+        "tempo": 130,
+        "track_count": 3,
+        "complexity": 4,
+        "sequence_length": 24
+      },
+      "level_50": {
+        "note_count": 14,
+        "tempo": 160,
+        "track_count": 4,
+        "complexity": 5,
+        "sequence_length": 36
+      }
+    },
+    "shopping_spree": {
+      "level_1": {
+        "budget": 100,
+        "item_count": 8,
+        "discount_frequency": 0.3,
+        "time_limit": 90,
+        "shopping_list_size": 3
+      },
+      "level_5": {
+        "budget": 150,
+        "item_count": 12,
+        "discount_frequency": 0.25,
+        "time_limit": 80,
+        "shopping_list_size": 5
+      },
+      "level_10": {
+        "budget": 200,
+        "item_count": 18,
+        "discount_frequency": 0.2,
+        "time_limit": 70,
+        "shopping_list_size": 7
+      },
+      "level_20": {
+        "budget": 300,
+        "item_count": 25,
+        "discount_frequency": 0.15,
+        "time_limit": 60,
+        "shopping_list_size": 10
+      },
+      "level_50": {
+        "budget": 500,
+        "item_count": 40,
+        "discount_frequency": 0.08,
+        "time_limit": 45,
+        "shopping_list_size": 15
+      }
+    },
+    "color_mix": {
+      "level_1": {
+        "target_colors": 3,
+        "mixer_precision": 0.25,
+        "time_limit": 60,
+        "palette_size": 3
+      },
+      "level_5": {
+        "target_colors": 5,
+        "mixer_precision": 0.2,
+        "time_limit": 55,
+        "palette_size": 4
+      },
+      "level_10": {
+        "target_colors": 7,
+        "mixer_precision": 0.15,
+        "time_limit": 50,
+        "palette_size": 5
+      },
+      "level_20": {
+        "target_colors": 10,
+        "mixer_precision": 0.1,
+        "time_limit": 45,
+        "palette_size": 6
+      },
+      "level_50": {
+        "target_colors": 15,
+        "mixer_precision": 0.05,
+        "time_limit": 35,
+        "palette_size": 8
+      }
+    },
+    "dance_party": {
+      "level_1": {
+        "move_count": 4,
+        "tempo": 90,
+        "combo_window": 1.5,
+        "pattern_length": 4
+      },
+      "level_5": {
+        "move_count": 5,
+        "tempo": 105,
+        "combo_window": 1.3,
+        "pattern_length": 6
+      },
+      "level_10": {
+        "move_count": 6,
+        "tempo": 120,
+        "combo_window": 1.1,
+        "pattern_length": 8
+      },
+      "level_20": {
+        "move_count": 8,
+        "tempo": 140,
+        "combo_window": 0.9,
+        "pattern_length": 12
+      },
+      "level_50": {
+        "move_count": 10,
+        "tempo": 170,
+        "combo_window": 0.6,
+        "pattern_length": 18
+      }
+    }
+  },
+  "economy_balance": {
+    "starting_coins": 500,
+    "starting_stars": 5,
+    "coin_sources": {
+      "minigame_completion": 25,
+      "daily_login": 100,
+      "achievement_easy": 50,
+      "achievement_medium": 150,
+      "achievement_hard": 400,
+      "achievement_legendary": 1500,
+      "friendship_milestone": 75,
+      "pet_care_bonus": 30,
+      "garden_harvest": 20,
+      "fashion_show_win": 60,
+      "perfect_minigame": 100,
+      "weekly_challenge": 250,
+      "help_neighbor": 35,
+      "birthday_bonus": 1000,
+      "level_up_bonus": 50,
+      "first_win_of_day": 40,
+      "watching_ad": 50,
+      "treasure_hunt": 150,
+      "daily_quest": 45,
+      "weekly_quest": 200
+    },
+    "star_sources": {
+      "daily_login_day_2": 1,
+      "daily_login_day_3": 1,
+      "daily_login_day_4": 2,
+      "daily_login_day_5": 2,
+      "daily_login_day_6": 3,
+      "daily_login_day_7": 5,
+      "achievement_easy": 1,
+      "achievement_medium": 3,
+      "achievement_hard": 7,
+      "achievement_legendary": 20,
+      "special_event": 10,
+      "monthly_challenge": 15,
+      "perfect_week": 8,
+      "friendship_max_level": 5,
+      "collection_complete": 12,
+      "season_pass_milestone": 3
+    },
+    "star_conversion_rate": 100,
+    "inflation_rate": {
+      "base_multiplier": 1.0,
+      "per_level_increase": 0.02,
+      "max_multiplier": 2.0
+    },
+    "daily_free_coins": 50,
+    "ad_reward_coins": 50,
+    "ad_cooldown_minutes": 30,
+    "max_ads_per_day": 10,
+    "max_inventory_size": {
+      "clothing": 100,
+      "furniture": 200,
+      "decorations": 150,
+      "consumables": 50,
+      "collectibles": 500,
+      "pet_items": 75
+    },
+    "shop_refresh_hours": 24,
+    "premium_currency_name": "sparkle_stars",
+    "soft_currency_name": "sunny_coins"
+  },
+  "social_system": {
+    "friendship_levels": [
+      {
+        "level": 1,
+        "name": "New Friend",
+        "threshold": 0,
+        "unlock": "wave_greeting"
+      },
+      {
+        "level": 2,
+        "name": "Buddy",
+        "threshold": 100,
+        "unlock": "share_snack"
+      },
+      {
+        "level": 3,
+        "name": "Good Friend",
+        "threshold": 300,
+        "unlock": "play_together"
+      },
+      {
+        "level": 4,
+        "name": "Close Friend",
+        "threshold": 600,
+        "unlock": "secret_handshake"
+      },
+      {
+        "level": 5,
+        "name": "Best Friend",
+        "threshold": 1000,
+        "unlock": "matching_outfits"
+      },
+      {
+        "level": 6,
+        "name": "BFF",
+        "threshold": 1500,
+        "unlock": "sleepover_invite"
+      },
+      {
+        "level": 7,
+        "name": "Super BFF",
+        "threshold": 2200,
+        "unlock": "best_friend_necklace"
+      },
+      {
+        "level": 8,
+        "name": "Ultimate BFF",
+        "threshold": 3000,
+        "unlock": "friendship_house"
+      },
+      {
+        "level": 9,
+        "name": "Soul Sisters",
+        "threshold": 4000,
+        "unlock": "telepathy_emote"
+      },
+      {
+        "level": 10,
+        "name": "Forever Friends",
+        "threshold": 5500,
+        "unlock": "legendary_duo_outfit"
+      }
+    ],
+    "interaction_friendship_gain": {
+      "wave": 2,
+      "chat": 5,
+      "play_minigame_together": 15,
+      "give_gift_common": 10,
+      "give_gift_rare": 25,
+      "give_gift_legendary": 50,
+      "give_preferred_gift": 35,
+      "share_meal": 12,
+      "attend_party_together": 20,
+      "help_with_task": 18,
+      "send_postcard": 8,
+      "compliment": 6,
+      "dance_together": 14,
+      "photo_together": 16,
+      "visit_home": 10,
+      "sleepover": 30
+    },
+    "decay_rate": {
+      "per_day_no_interaction": 2,
+      "minimum_level_threshold": 1,
+      "decay_protection_days": 3
+    },
+    "gift_preferences": {
+      "emersyn": {
+        "loves": [
+          "sparkly_accessories",
+          "pink_items",
+          "unicorn_themed",
+          "baking_supplies"
+        ],
+        "likes": [
+          "flowers",
+          "books",
+          "art_supplies"
+        ],
+        "dislikes": [
+          "spooky_items",
+          "sports_equipment"
+        ]
+      },
+      "bella": {
+        "loves": [
+          "pet_accessories",
+          "nature_items",
+          "garden_tools",
+          "animal_plushies"
+        ],
+        "likes": [
+          "outdoor_gear",
+          "healthy_snacks",
+          "cameras"
+        ],
+        "dislikes": [
+          "technology",
+          "formal_wear"
+        ]
+      },
+      "mia": {
+        "loves": [
+          "art_supplies",
+          "rainbow_items",
+          "craft_kits",
+          "musical_instruments"
+        ],
+        "likes": [
+          "colorful_clothing",
+          "stickers",
+          "journals"
+        ],
+        "dislikes": [
+          "plain_items",
+          "sporty_gear"
+        ]
+      },
+      "sophie": {
+        "loves": [
+          "books",
+          "science_kits",
+          "puzzle_games",
+          "star_themed"
+        ],
+        "likes": [
+          "cozy_items",
+          "tea_sets",
+          "glasses_accessories"
+        ],
+        "dislikes": [
+          "loud_toys",
+          "messy_crafts"
+        ]
+      },
+      "lily": {
+        "loves": [
+          "dance_items",
+          "performance_gear",
+          "sparkly_clothes",
+          "music_players"
+        ],
+        "likes": [
+          "mirrors",
+          "hair_accessories",
+          "snacks"
+        ],
+        "dislikes": [
+          "gardening_tools",
+          "quiet_games"
+        ]
+      },
+      "oliver": {
+        "loves": [
+          "adventure_gear",
+          "treasure_maps",
+          "explorer_hats",
+          "binoculars"
+        ],
+        "likes": [
+          "sports_items",
+          "action_figures",
+          "snacks"
+        ],
+        "dislikes": [
+          "formal_wear",
+          "delicate_items"
+        ]
+      },
+      "charlie": {
+        "loves": [
+          "cooking_supplies",
+          "food_items",
+          "chef_hats",
+          "recipe_books"
+        ],
+        "likes": [
+          "cozy_clothes",
+          "kitchen_gadgets",
+          "taste_testing"
+        ],
+        "dislikes": [
+          "exercise_equipment",
+          "cleaning_supplies"
+        ]
+      },
+      "max": {
+        "loves": [
+          "sports_equipment",
+          "trophies",
+          "athletic_wear",
+          "energy_drinks"
+        ],
+        "likes": [
+          "outdoor_toys",
+          "competitive_games",
+          "sneakers"
+        ],
+        "dislikes": [
+          "formal_items",
+          "slow_activities"
+        ]
+      }
+    }
+  },
+  "pet_system": {
+    "available_pets": [
+      "puppy",
+      "kitten",
+      "bunny",
+      "hamster",
+      "bird",
+      "turtle",
+      "panda",
+      "unicorn",
+      "dragon",
+      "fox"
+    ],
+    "pet_needs": {
+      "hunger": {
+        "max_value": 100,
+        "decay_rate": 0.6,
+        "critical_threshold": 15,
+        "warning_threshold": 35
+      },
+      "happiness": {
+        "max_value": 100,
+        "decay_rate": 0.4,
+        "critical_threshold": 20,
+        "warning_threshold": 40
+      },
+      "cleanliness": {
+        "max_value": 100,
+        "decay_rate": 0.35,
+        "critical_threshold": 15,
+        "warning_threshold": 35
+      },
+      "energy": {
+        "max_value": 100,
+        "decay_rate": 0.5,
+        "critical_threshold": 20,
+        "warning_threshold": 40
+      }
+    },
+    "pet_activities": {
+      "feed": {
+        "hunger_restore": 40,
+        "happiness_boost": 5,
+        "cost": 10,
+        "cooldown_minutes": 30
+      },
+      "treat": {
+        "hunger_restore": 15,
+        "happiness_boost": 15,
+        "cost": 25,
+        "cooldown_minutes": 15
+      },
+      "play_fetch": {
+        "happiness_boost": 25,
+        "energy_drain": 15,
+        "cleanliness_drain": 10,
+        "cooldown_minutes": 20
+      },
+      "cuddle": {
+        "happiness_boost": 20,
+        "energy_restore": 10,
+        "cooldown_minutes": 10
+      },
+      "brush": {
+        "cleanliness_restore": 30,
+        "happiness_boost": 10,
+        "cooldown_minutes": 45
+      },
+      "bath": {
+        "cleanliness_restore": 100,
+        "happiness_boost": 5,
+        "energy_drain": 10,
+        "cost": 15,
+        "cooldown_minutes": 120
+      },
+      "nap_together": {
+        "energy_restore": 50,
+        "happiness_boost": 15,
+        "cooldown_minutes": 60
+      },
+      "walk": {
+        "happiness_boost": 30,
+        "energy_drain": 20,
+        "cleanliness_drain": 15,
+        "cooldown_minutes": 30
+      },
+      "dress_up": {
+        "happiness_boost": 20,
+        "cooldown_minutes": 25
+      },
+      "photo_session": {
+        "happiness_boost": 25,
+        "cooldown_minutes": 40
+      }
+    },
+    "pet_evolution_stages": [
+      {
+        "stage": 1,
+        "name": "Baby",
+        "friendship_required": 0,
+        "size_multiplier": 0.5,
+        "unlocks": [
+          "basic_bed",
+          "starter_food"
+        ]
+      },
+      {
+        "stage": 2,
+        "name": "Toddler",
+        "friendship_required": 200,
+        "size_multiplier": 0.65,
+        "unlocks": [
+          "cute_collar",
+          "play_toys"
+        ]
+      },
+      {
+        "stage": 3,
+        "name": "Child",
+        "friendship_required": 500,
+        "size_multiplier": 0.8,
+        "unlocks": [
+          "fancy_bed",
+          "gourmet_food",
+          "first_outfit"
+        ]
+      },
+      {
+        "stage": 4,
+        "name": "Teen",
+        "friendship_required": 1000,
+        "size_multiplier": 0.9,
+        "unlocks": [
+          "playground_equipment",
+          "matching_accessories"
+        ]
+      },
+      {
+        "stage": 5,
+        "name": "Adult",
+        "friendship_required": 2000,
+        "size_multiplier": 1.0,
+        "unlocks": [
+          "luxury_items",
+          "all_outfits",
+          "special_effects"
+        ]
+      },
+      {
+        "stage": 6,
+        "name": "Elder",
+        "friendship_required": 4000,
+        "size_multiplier": 1.0,
+        "unlocks": [
+          "wisdom_aura",
+          "legendary_accessories",
+          "mentor_ability"
+        ]
+      }
+    ],
+    "pet_tricks": [
+      {
+        "trick": "sit",
+        "friendship_level": 1,
+        "xp_reward": 5,
+        "training_time": 30
+      },
+      {
+        "trick": "shake_paw",
+        "friendship_level": 2,
+        "xp_reward": 10,
+        "training_time": 60
+      },
+      {
+        "trick": "roll_over",
+        "friendship_level": 3,
+        "xp_reward": 15,
+        "training_time": 90
+      },
+      {
+        "trick": "spin",
+        "friendship_level": 4,
+        "xp_reward": 20,
+        "training_time": 120
+      },
+      {
+        "trick": "play_dead",
+        "friendship_level": 5,
+        "xp_reward": 30,
+        "training_time": 180
+      },
+      {
+        "trick": "dance",
+        "friendship_level": 6,
+        "xp_reward": 40,
+        "training_time": 240
+      },
+      {
+        "trick": "sing",
+        "friendship_level": 7,
+        "xp_reward": 50,
+        "training_time": 300
+      },
+      {
+        "trick": "backflip",
+        "friendship_level": 8,
+        "xp_reward": 75,
+        "training_time": 400
+      },
+      {
+        "trick": "magic_trick",
+        "friendship_level": 9,
+        "xp_reward": 100,
+        "training_time": 500
+      },
+      {
+        "trick": "legendary_performance",
+        "friendship_level": 10,
+        "xp_reward": 200,
+        "training_time": 600
+      }
+    ],
+    "pet_mood_effects": {
+      "happy": {
+        "minigame_bonus": 1.1,
+        "coin_bonus": 1.05
+      },
+      "content": {
+        "minigame_bonus": 1.0,
+        "coin_bonus": 1.0
+      },
+      "sad": {
+        "minigame_bonus": 0.9,
+        "coin_bonus": 0.95
+      },
+      "hungry": {
+        "minigame_bonus": 0.85,
+        "coin_bonus": 0.9
+      },
+      "tired": {
+        "minigame_bonus": 0.8,
+        "coin_bonus": 0.9
+      }
+    }
+  },
+  "time_system": {
+    "game_day_duration_real_minutes": 24,
+    "time_periods": {
+      "morning": {
+        "start_hour": 6,
+        "end_hour": 12,
+        "energy_decay_multiplier": 0.8,
+        "available_activities": [
+          "breakfast",
+          "morning_exercise",
+          "school"
+        ]
+      },
+      "afternoon": {
+        "start_hour": 12,
+        "end_hour": 18,
+        "energy_decay_multiplier": 1.0,
+        "available_activities": [
+          "lunch",
+          "minigames",
+          "social",
+          "shopping"
+        ]
+      },
+      "evening": {
+        "start_hour": 18,
+        "end_hour": 22,
+        "energy_decay_multiplier": 1.2,
+        "available_activities": [
+          "dinner",
+          "relaxation",
+          "stargazing",
+          "sleepovers"
+        ]
+      },
+      "night": {
+        "start_hour": 22,
+        "end_hour": 6,
+        "energy_decay_multiplier": 0.5,
+        "available_activities": [
+          "sleep",
+          "dreams"
+        ]
+      }
+    }
+  },
+  "seasonal_events": {
+    "spring_garden_festival": {
+      "duration_days": 14,
+      "special_currency": "flower_petals",
+      "exclusive_rewards": [
+        "spring_outfit",
+        "garden_pet",
+        "flower_furniture_set"
+      ]
+    },
+    "summer_beach_bash": {
+      "duration_days": 21,
+      "special_currency": "seashells",
+      "exclusive_rewards": [
+        "beach_outfit",
+        "tropical_pet",
+        "beach_house_items"
+      ]
+    },
+    "autumn_harvest_fair": {
+      "duration_days": 14,
+      "special_currency": "golden_leaves",
+      "exclusive_rewards": [
+        "cozy_outfit",
+        "harvest_pet",
+        "autumn_decorations"
+      ]
+    },
+    "winter_wonderland": {
+      "duration_days": 28,
+      "special_currency": "snowflakes",
+      "exclusive_rewards": [
+        "winter_outfit",
+        "snow_pet",
+        "holiday_furniture_set"
+      ]
+    },
+    "birthday_celebration": {
+      "duration_days": 7,
+      "special_currency": "birthday_candles",
+      "exclusive_rewards": [
+        "birthday_outfit",
+        "party_pet",
+        "celebration_items"
+      ]
+    }
+  }
+}

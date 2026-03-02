@@ -1,0 +1,537 @@
+{
+  "ava": {
+    "greeting": [
+      "Emersyn! Yay, you're here! Let's have the best day ever! 🌟",
+      "Hiii bestie! I was just thinking about you!",
+      "Oh my gosh, Emersyn! I'm so happy to see you!",
+      "There's my favorite person! Ready for an adventure?",
+      "Emersyn! *jumps up and down* This is gonna be so fun!"
+    ],
+    "farewell": [
+      "Bye-bye, Emersyn! See you super soon! 💕",
+      "Aww, do you have to go? Okay, bye bestie!",
+      "See ya later, alligator! Don't forget about me!",
+      "Bye! I'll miss you bunches and bunches!",
+      "Until next time, best friend! Keep being awesome!"
+    ],
+    "happy": [
+      "I feel like dancing and spinning around! Wheee!",
+      "Today is the most wonderful day ever!",
+      "My heart feels like it's full of sunshine! ☀️",
+      "I'm so happy I could paint a thousand rainbows!",
+      "Everything is sparkly and amazing right now!"
+    ],
+    "sad": [
+      "I feel a little droopy today, like a wilted flower...",
+      "Sometimes even sunny days have clouds, I guess...",
+      "I could really use a hug right now, Emersyn..."
+    ],
+    "hungry": [
+      "My tummy is making funny grumbly sounds!",
+      "Ooh, I could really go for a yummy snack right now!",
+      "Is it snack time yet? I hope so!"
+    ],
+    "tired": [
+      "*yawns* All that adventuring made me super sleepy...",
+      "I think I need a cozy nap soon...",
+      "My eyes are getting all heavy and droopy!"
+    ],
+    "excited": [
+      "EEEEEK! This is so exciting I can't even stand still!",
+      "Oh oh oh! I have the best idea ever! 🎨",
+      "My heart is going pitter-patter super fast!",
+      "I'm so excited my pigtails are bouncing!",
+      "This is gonna be AMAZING, I just know it!"
+    ],
+    "compliment": [
+      "Emersyn, you're the best friend in the whole wide world!",
+      "Wow, you're so creative! I love that about you!",
+      "You always make everything more fun! 💖",
+      "Your smile is like sunshine on a cloudy day!",
+      "You're braver than a superhero, you know that?"
+    ],
+    "encouragement": [
+      "You can do it, Emersyn! I believe in you!",
+      "Don't give up! You're doing so great!",
+      "Even if it's hard, I know you'll figure it out!",
+      "Keep trying! Every artist makes mistakes too!",
+      "You're stronger than you think, bestie! 🌈"
+    ],
+    "fun_fact": [
+      "Did you know butterflies taste with their feet? So cool!",
+      "I learned that rainbows have seven colors! I wanna paint them all!",
+      "Guess what? Cats can't taste sweet things! Isn't that wild?",
+      "Flamingos are pink because of what they eat! Nature is amazing!",
+      "Octopuses have three hearts! That's so much love to give! 💕"
+    ],
+    "activity_suggestion": [
+      "Let's paint a picture together! I have all my colors ready!",
+      "Wanna go explore the park? I bet we'll find something cool!",
+      "We should make friendship bracelets! Wouldn't that be fun?",
+      "Let's play pretend! We can be anything we want! 🎭",
+      "How about we have a dance party? I'll bring the sparkles!"
+    ],
+    "weather_comment": {
+      "sunny": [
+        "The sun is shining! Perfect day for outdoor painting! ☀️",
+        "Look how blue the sky is! It's like a giant canvas!",
+        "Sunny days make my heart feel all warm and happy!"
+      ],
+      "rainy": [
+        "Rain makes the best sounds on the window! Pitter-patter!",
+        "Ooh, puddles! I love splashing in puddles! 🌧️",
+        "Rainy days are perfect for indoor art projects!"
+      ],
+      "snowy": [
+        "SNOW! It's like the sky is dropping cotton balls! ❄️",
+        "Everything looks like a magical winter wonderland!",
+        "Let's catch snowflakes on our tongues! They're all different!"
+      ]
+    },
+    "morning": [
+      "Good morning, sunshine! Ready for a brand new day?",
+      "Rise and shine, Emersyn! Adventures await! 🌅",
+      "Morning time is the best time to start something new!"
+    ],
+    "evening": [
+      "What a wonderful day we had! I'm so happy!",
+      "The sunset is so pretty! Look at all those colors! 🌅",
+      "Time to rest up for more adventures tomorrow!"
+    ],
+    "achievement": [
+      "WOW! Emersyn, you did it! I'm so proud of you! 🌟",
+      "That was AMAZING! You're like a superstar!",
+      "See? I knew you could do it! You're incredible!",
+      "Hooray hooray hooray! Let's celebrate!",
+      "You're the most talented friend ever! Way to go! 🎉"
+    ]
+  },
+  "mia": {
+    "greeting": [
+      "Oh, hello Emersyn! I was just reading about something fascinating!",
+      "Greetings, friend! Did you know we've been friends for exactly wonderful?",
+      "Emersyn! Perfect timing! I have so much to tell you!",
+      "Hi there! My books and I are happy to see you! 📚",
+      "Welcome, welcome! I was hoping you'd come by today!"
+    ],
+    "farewell": [
+      "Goodbye, Emersyn! Remember to stay curious!",
+      "See you later! I'll save a good book recommendation for you!",
+      "Farewell, friend! May your day be full of discoveries!",
+      "Bye-bye! Don't forget: learning is an adventure! 📖",
+      "Until we meet again! Keep asking great questions!"
+    ],
+    "happy": [
+      "I feel absolutely wonderful! Like I just solved a puzzle!",
+      "My brain is buzzing with happy thoughts today!",
+      "Everything feels like it makes perfect sense right now! ✨",
+      "I'm as happy as finding the perfect book on a rainy day!",
+      "Today is scientifically proven to be a great day!"
+    ],
+    "sad": [
+      "Even scientists have cloudy days sometimes...",
+      "I feel like a book with a sad chapter right now...",
+      "My heart feels heavy like a big dictionary... 📚"
+    ],
+    "hungry": [
+      "According to my tummy, it's definitely time to eat!",
+      "My stomach is conducting a growling experiment!",
+      "Fun fact: I'm hungry! Very, very hungry!"
+    ],
+    "tired": [
+      "I think I read too many books today... *yawn*",
+      "My brain needs to recharge, like a battery...",
+      "Even the smartest scientists need their rest! 😴"
+    ],
+    "excited": [
+      "Oh my goodness! This is absolutely extraordinary!",
+      "I'm so excited my glasses are fogging up! 🤓",
+      "This is better than finding a rare book!",
+      "My curiosity meter is off the charts right now!",
+      "Fascinating! Incredible! Amazing! I can't contain myself!"
+    ],
+    "compliment": [
+      "Emersyn, your brain is wonderfully brilliant!",
+      "You ask the best questions! That's a sign of a great thinker!",
+      "I really admire how hard you try at everything! 🌟",
+      "You're as special as a first-edition book!",
+      "Your kindness is scientifically remarkable!"
+    ],
+    "encouragement": [
+      "Every great scientist failed before they succeeded! Keep going!",
+      "Your brain is capable of amazing things, Emersyn!",
+      "Don't worry! Mistakes are just learning in disguise!",
+      "I believe in you! You're smarter than you know! 📚",
+      "Take it step by step! That's how discoveries are made!"
+    ],
+    "fun_fact": [
+      "Did you know honey never goes bad? They found 3000-year-old honey!",
+      "A group of flamingos is called a flamboyance! Isn't that perfect?",
+      "Bananas are berries, but strawberries aren't! Science is funny! 🍌",
+      "Sharks have been around longer than trees! Can you imagine?",
+      "Your brain uses the same power as a small light bulb! 💡"
+    ],
+    "activity_suggestion": [
+      "Want to do a fun science experiment together?",
+      "Let's go to the library! There's a whole world in there! 📚",
+      "How about we start a nature journal? We can draw what we find!",
+      "We could build something amazing! I have blueprints!",
+      "Let's observe the clouds and guess their shapes! It's science AND art!"
+    ],
+    "weather_comment": {
+      "sunny": [
+        "Perfect weather for studying plants and bugs outside!",
+        "The sun provides vitamin D! Very important for growing! ☀️",
+        "Sunny days are great for shadow experiments!"
+      ],
+      "rainy": [
+        "Rain is just the water cycle in action! How cool is that?",
+        "Each raindrop traveled from the ocean to here! 🌧️",
+        "Perfect reading weather! I love the sound of rain!"
+      ],
+      "snowy": [
+        "Every snowflake has six sides! Nature's geometry! ❄️",
+        "Snow is actually a great insulator! Science is amazing!",
+        "Did you know snow can be different colors in some places?"
+      ]
+    },
+    "morning": [
+      "Good morning! A new day means new things to learn!",
+      "Rise and shine! The world is full of mysteries to solve! 🌅",
+      "Morning, Emersyn! I've already learned three new things!"
+    ],
+    "evening": [
+      "What a productive day of discovery!",
+      "The stars are coming out! Did you know they're giant balls of gas?",
+      "Time to rest our brains for tomorrow's adventures! 🌙"
+    ],
+    "achievement": [
+      "Remarkable! Your achievement has been scientifically verified as AWESOME!",
+      "Hypothesis confirmed: Emersyn is amazing! 🎉",
+      "You did it! This deserves to be written in a book!",
+      "Extraordinary work! I'm so impressed!",
+      "Your success is inspiring! Well done, friend! 📚"
+    ]
+  },
+  "leo": {
+    "greeting": [
+      "Hey Emersyn! Ready to have some fun? Let's GO!",
+      "Yo! There's my buddy! Gimme a high five! ✋",
+      "Emersyn! Awesome! I was just about to do something cool!",
+      "What's up, friend? Today's gonna be EPIC!",
+      "Heyyy! Perfect timing! I've got so much energy today!"
+    ],
+    "farewell": [
+      "Later, gator! Stay awesome! 🏃",
+      "Gotta zoom! See ya next time, Emersyn!",
+      "Bye buddy! Keep moving and grooving!",
+      "Catch ya later! Don't forget to have fun!",
+      "Peace out! You're the best, Emersyn! ✌️"
+    ],
+    "happy": [
+      "WOOHOO! I feel like I could run a million miles!",
+      "I'm so happy I could do a cartwheel! Watch this!",
+      "Today is AWESOME and so is everything! 🌟",
+      "I feel like a champion! Nothing can stop me!",
+      "My happy meter is at maximum power!"
+    ],
+    "sad": [
+      "Even sports stars have off days, I guess...",
+      "I feel like I lost a game today... 😢",
+      "My energy is all gone... like a deflated ball..."
+    ],
+    "hungry": [
+      "Whoa, my tummy is doing a drum solo! Feed me! 🍕",
+      "I'm STARVING! Time to refuel!",
+      "All this running around made me super hungry!"
+    ],
+    "tired": [
+      "Okay... maybe I ran around TOO much today... *pant pant*",
+      "I think I need to recharge my batteries... 😴",
+      "Even athletes need rest! Nap time sounds good!"
+    ],
+    "excited": [
+      "OH YEAH! This is gonna be SO COOL!",
+      "I can't stop bouncing! I'm too excited! 🎉",
+      "WOOOOO! Let's do this thing!",
+      "My excitement level is through the ROOF!",
+      "This is the best! THE BEST! I can't even!"
+    ],
+    "compliment": [
+      "Emersyn, you're a total superstar! 🌟",
+      "Dude, you're so cool! I'm lucky you're my friend!",
+      "You've got the heart of a champion!",
+      "You're braver than the bravest athlete I know!",
+      "You rock! Like, seriously ROCK! 🎸"
+    ],
+    "encouragement": [
+      "Come on, you got this! Push through!",
+      "Never give up! Champions keep trying! 💪",
+      "You're doing amazing! Keep going, keep going!",
+      "Believe in yourself! I believe in you!",
+      "Every pro started as a beginner! You'll get there!"
+    ],
+    "fun_fact": [
+      "Did you know the first basketball was a soccer ball? Cool, right?",
+      "Carrots can help you see better! I eat tons of them! 🥕",
+      "The longest soccer game lasted 36 hours! Imagine!",
+      "Cooking is like science you can eat! That's why I love it!",
+      "Your heart beats about 100,000 times a day! It's always exercising! 💓"
+    ],
+    "activity_suggestion": [
+      "Let's race to the park! Ready, set, GO! 🏃",
+      "Wanna help me make cookies? I'm a great chef!",
+      "How about we play catch? I'll go easy on ya!",
+      "Let's have a dance-off! Show me your moves! 💃",
+      "We could build an obstacle course! It'll be epic!"
+    ],
+    "weather_comment": {
+      "sunny": [
+        "Perfect weather for playing outside! Let's go! ☀️",
+        "Sun's out, fun's out! Time for sports!",
+        "I love sunny days! So many things to do!"
+      ],
+      "rainy": [
+        "Indoor games it is! I know tons of fun ones! 🌧️",
+        "Rain means it's cooking time! Let's make something yummy!",
+        "Puddle jumping counts as exercise, right?"
+      ],
+      "snowy": [
+        "SNOW! Snowball fight! You and me! Let's go! ❄️",
+        "Time to build the biggest snowman ever!",
+        "Snow sports are the BEST sports!"
+      ]
+    },
+    "morning": [
+      "Good morning! Time to get moving! Rise and shine! 🌅",
+      "Morning, Emersyn! I've already done ten jumping jacks!",
+      "New day, new adventures! Let's make it count!"
+    ],
+    "evening": [
+      "Whew! What a day! I'm happily tired! 🌙",
+      "Great day, buddy! Time to rest up for tomorrow!",
+      "The stars are out! Even they're cheering for us!"
+    ],
+    "achievement": [
+      "YOOO! You did it! That was INCREDIBLE! 🏆",
+      "CHAMPION! You're officially a champion!",
+      "High five! No, HIGH TEN! You crushed it!",
+      "That was MVP-level awesome, Emersyn!",
+      "GOOOAAAL! I mean, YAY! You're amazing! ⭐"
+    ]
+  },
+  "shopkeeper": {
+    "greeting": [
+      "Well, hello there, little one! Welcome to my shop! 🏪",
+      "Emersyn, dear! How lovely to see you today!",
+      "Come in, come in! Make yourself right at home!",
+      "Ah, my favorite young customer! Hello, sweetie!",
+      "Welcome, welcome! The shop is always brighter when you visit!"
+    ],
+    "farewell": [
+      "Take care now, dear! Come back anytime!",
+      "Goodbye, little one! Stay safe out there! 💕",
+      "Off you go! May your day be filled with joy!",
+      "See you soon, sweetie! The door's always open for you!",
+      "Farewell, Emersyn! You brightened my whole day!"
+    ],
+    "happy": [
+      "Oh my, business is good and life is sweet! 🌸",
+      "I'm feeling as warm as fresh-baked bread today!",
+      "What a wonderful day to be in this lovely town!",
+      "My heart is as full as my shop shelves!",
+      "Everything feels just right today, doesn't it?"
+    ],
+    "sad": [
+      "Even old shopkeepers have blue days sometimes, dear...",
+      "My heart feels a bit heavy today, little one...",
+      "Sometimes the shelves feel emptier than usual... 💔"
+    ],
+    "hungry": [
+      "Oh my, I got so busy I forgot to eat! Silly me!",
+      "My tummy's reminding me it's lunchtime!",
+      "I could really use some of my homemade soup right now!"
+    ],
+    "tired": [
+      "These old bones need a rest, I think... 😴",
+      "Running a shop keeps me busy! Time for tea and a sit-down.",
+      "I might just take a little nap behind the counter..."
+    ],
+    "excited": [
+      "Oh goodness gracious! How exciting! 🎉",
+      "Well, butter my biscuits! This is wonderful news!",
+      "My old heart is going pitter-patter with joy!",
+      "How thrilling! I haven't been this excited in ages!",
+      "Oh my stars! This is simply delightful!"
+    ],
+    "compliment": [
+      "You're such a polite and kind young person, Emersyn! 💖",
+      "Your parents raised a wonderful child, they did!",
+      "You have the sweetest smile in the whole town!",
+      "What a bright and caring soul you are, dear!",
+      "You remind me why I love this job so much!"
+    ],
+    "encouragement": [
+      "You can do anything you set your mind to, dear!",
+      "I've seen many children grow up, and you're special! ⭐",
+      "Don't you worry, everything will work out just fine!",
+      "Keep that chin up! Better days are always coming!",
+      "Believe in yourself as much as I believe in you!"
+    ],
+    "fun_fact": [
+      "Did you know I've run this shop for over 40 years? Time flies!",
+      "The secret to happiness? Kindness and a good cup of tea! ☕",
+      "I've seen this town grow from just a few houses!",
+      "Every item in my shop has a story, you know!",
+      "The best things in life aren't things at all - they're friends! 💕"
+    ],
+    "activity_suggestion": [
+      "Why don't you help me organize the shelves, dear?",
+      "How about you pick out a treat? My gift to you! 🍬",
+      "Would you like to learn how to use the old cash register?",
+      "Let's look through my collection of interesting trinkets!",
+      "Care to help me put up some new decorations?"
+    ],
+    "weather_comment": {
+      "sunny": [
+        "What a beautiful sunny day! Good for business! ☀️",
+        "The sunshine makes everything in the shop sparkle!",
+        "Perfect day to open the windows and let the light in!"
+      ],
+      "rainy": [
+        "Rainy days bring the coziest customers! 🌧️",
+        "Come in from the rain, dear! Warm and dry in here!",
+        "I love the sound of rain on the shop roof!"
+      ],
+      "snowy": [
+        "Bundle up, little one! It's a winter wonderland out there! ❄️",
+        "Snow always makes the shop feel extra cozy!",
+        "Hot cocoa weather! Would you like some, dear?"
+      ]
+    },
+    "morning": [
+      "Good morning, sunshine! Early bird gets the worm! 🌅",
+      "Ah, a fresh new day! The shop is open and ready!",
+      "Morning, dear! Best time of day to start something new!"
+    ],
+    "evening": [
+      "The day is winding down, but my heart is full! 🌙",
+      "What a lovely day it's been! Time to rest soon.",
+      "Evening already? Time flies when you're having fun!"
+    ],
+    "achievement": [
+      "Oh, Emersyn! I'm so proud of you, dear! 🌟",
+      "Well done, little one! I knew you could do it!",
+      "Marvelous! Simply marvelous! You're a star!",
+      "This calls for a celebration! How wonderful!",
+      "You've made this old shopkeeper so happy! Bravo! 👏"
+    ]
+  },
+  "teacher": {
+    "greeting": [
+      "Hello, Emersyn! Ready to learn something wonderful today? 📚",
+      "Welcome, welcome! I'm so glad you're here!",
+      "Good to see you! Every day is a chance to discover!",
+      "Ah, Emersyn! My classroom is brighter with you in it!",
+      "Hello, dear student! What shall we explore today? ✨"
+    ],
+    "farewell": [
+      "Goodbye, Emersyn! Keep that curious mind active!",
+      "Take care! Remember, you're capable of great things!",
+      "See you next time! Don't stop asking questions! 📖",
+      "Farewell! May you learn something new every day!",
+      "Off you go! Make the world a better place, little one!"
+    ],
+    "happy": [
+      "Teaching wonderful students like you makes me so happy! 💖",
+      "I love my job! Every day is an adventure!",
+      "My heart is full of joy today!",
+      "There's nothing better than seeing students succeed!",
+      "What a beautiful day to learn and grow! 🌸"
+    ],
+    "sad": [
+      "Even teachers have tough days sometimes, dear...",
+      "I'm feeling a little down, but your smile helps! 💙",
+      "Sometimes things are hard, and that's okay..."
+    ],
+    "hungry": [
+      "Oh my, is it lunchtime already? My tummy thinks so!",
+      "I got so caught up in teaching, I forgot to eat!",
+      "A hungry teacher needs brain food! 🍎"
+    ],
+    "tired": [
+      "Teaching is wonderful but tiring! Time for a rest... 😴",
+      "My voice needs a little break, I think...",
+      "Even teachers need their sleep to be their best!"
+    ],
+    "excited": [
+      "Oh, how exciting! I love when we discover new things! 🎉",
+      "This is wonderful! I can't wait to share this with you!",
+      "My teacher heart is doing happy jumps!",
+      "How thrilling! Learning is the best adventure!",
+      "I'm so excited I could teach a hundred lessons! ⭐"
+    ],
+    "compliment": [
+      "Emersyn, you're such a wonderful student! 🌟",
+      "I admire how hard you try! That's what matters most!",
+      "You have such a kind and curious heart!",
+      "Your creativity amazes me every single day!",
+      "You make teaching the best job in the world! 💕"
+    ],
+    "encouragement": [
+      "I believe in you, Emersyn! You can do this!",
+      "Mistakes help us learn! Don't be afraid to try! 📚",
+      "Every expert was once a beginner, just like you!",
+      "Take your time! Good things come to those who persist!",
+      "You're making progress every day, even when you can't see it! 🌈"
+    ],
+    "fun_fact": [
+      "Did you know octopuses have blue blood? Nature is amazing!",
+      "A baby panda is smaller than a mouse when it's born! 🐼",
+      "There are more stars in the sky than grains of sand on Earth!",
+      "Dolphins sleep with one eye open! Isn't that wild?",
+      "Your brain is like a super computer that never stops working! 🧠"
+    ],
+    "activity_suggestion": [
+      "Let's read a story together! I have a great one! 📖",
+      "How about we do a fun learning game?",
+      "Want to practice writing? I'll help you!",
+      "Let's explore nature and see what we can find! 🌿",
+      "We could do an art project about what you learned today!"
+    ],
+    "weather_comment": {
+      "sunny": [
+        "What a lovely day for outdoor learning! ☀️",
+        "The sunshine reminds me: you're a bright light too!",
+        "Perfect weather to study nature outside!"
+      ],
+      "rainy": [
+        "Rainy days are perfect for cozy reading time! 🌧️",
+        "Listen to the rain! It's nature's lullaby.",
+        "Great day for indoor experiments and stories!"
+      ],
+      "snowy": [
+        "Snow is frozen science falling from the sky! ❄️",
+        "What a magical winter day for learning!",
+        "Let's learn about how snowflakes are made!"
+      ]
+    },
+    "morning": [
+      "Good morning, bright star! Ready to learn? 🌅",
+      "A new day means new things to discover!",
+      "Morning, Emersyn! Let's make today amazing!"
+    ],
+    "evening": [
+      "What wonderful things did you learn today? 🌙",
+      "Rest well tonight! Tomorrow brings more adventures!",
+      "The stars are like nature's classroom! Look up and wonder!"
+    ],
+    "achievement": [
+      "Outstanding work, Emersyn! I'm so proud of you! 🏆",
+      "You did it! See what happens when you believe in yourself?",
+      "Wonderful! This is what learning is all about! ⭐",
+      "Bravo! You should be very proud of yourself!",
+      "Excellence! You've shown what you're truly capable of! 🎉"
+    ]
+  }
+}

@@ -1,0 +1,2606 @@
+[
+  {
+    "id": "quest_001",
+    "title": "Morning Sparkle Routine",
+    "description": "Start the day with a fresh face! Apply kid-friendly makeup to get ready for adventures.",
+    "category": "fashion",
+    "difficulty": "easy",
+    "steps": [
+      {
+        "action": "go_to",
+        "target": "bathroom",
+        "count": 1
+      },
+      {
+        "action": "collect",
+        "target": "lip_gloss",
+        "count": 1
+      },
+      {
+        "action": "wear",
+        "target": "pink_eyeshadow",
+        "count": 1
+      }
+    ],
+    "rewards": {
+      "coins": 15,
+      "xp": 20,
+      "stars": 1
+    },
+    "time_limit_minutes": 0,
+    "repeatable": true
+  },
+  {
+    "id": "quest_002",
+    "title": "Diwali Rangoli Magic",
+    "description": "Create a beautiful rangoli design in the garden to celebrate Diwali with colors and patterns!",
+    "category": "creative",
+    "difficulty": "medium",
+    "steps": [
+      {
+        "action": "go_to",
+        "target": "garden",
+        "count": 1
+      },
+      {
+        "action": "collect",
+        "target": "rangoli_powder",
+        "count": 5
+      },
+      {
+        "action": "craft",
+        "target": "diwali_rangoli",
+        "count": 1
+      }
+    ],
+    "rewards": {
+      "coins": 50,
+      "xp": 60,
+      "stars": 3
+    },
+    "time_limit_minutes": 10,
+    "repeatable": true
+  },
+  {
+    "id": "quest_003",
+    "title": "Holi Color Splash",
+    "description": "Gather colors and play Holi with friends in the park! Spread joy and rainbow fun everywhere.",
+    "category": "adventure",
+    "difficulty": "medium",
+    "steps": [
+      {
+        "action": "collect",
+        "target": "holi_colors",
+        "count": 4
+      },
+      {
+        "action": "go_to",
+        "target": "park",
+        "count": 1
+      },
+      {
+        "action": "talk_to",
+        "target": "Ava",
+        "count": 1
+      }
+    ],
+    "rewards": {
+      "coins": 40,
+      "xp": 50,
+      "stars": 2
+    },
+    "time_limit_minutes": 15,
+    "repeatable": true
+  },
+  {
+    "id": "quest_004",
+    "title": "Gol Gappe Chef",
+    "description": "Learn to make yummy gol gappe in the kitchen! Fill the puris with spicy pani and serve them up.",
+    "category": "cooking",
+    "difficulty": "medium",
+    "steps": [
+      {
+        "action": "go_to",
+        "target": "kitchen",
+        "count": 1
+      },
+      {
+        "action": "collect",
+        "target": "puri_shells",
+        "count": 6
+      },
+      {
+        "action": "cook",
+        "target": "gol_gappe",
+        "count": 1
+      }
+    ],
+    "rewards": {
+      "coins": 35,
+      "xp": 45,
+      "stars": 2
+    },
+    "time_limit_minutes": 8,
+    "repeatable": true
+  },
+  {
+    "id": "quest_005",
+    "title": "Viral Reel Star",
+    "description": "Create an awesome dance reel to post on social media! Choose a cool background and show your moves.",
+    "category": "dance",
+    "difficulty": "easy",
+    "steps": [
+      {
+        "action": "go_to",
+        "target": "living_room",
+        "count": 1
+      },
+      {
+        "action": "dance",
+        "target": "trendy_dance",
+        "count": 1
+      },
+      {
+        "action": "craft",
+        "target": "dance_reel",
+        "count": 1
+      }
+    ],
+    "rewards": {
+      "coins": 30,
+      "xp": 40,
+      "stars": 2
+    },
+    "time_limit_minutes": 5,
+    "repeatable": true
+  },
+  {
+    "id": "quest_006",
+    "title": "Karate White Belt Test",
+    "description": "Practice your basic kata moves and earn your first karate belt! Show discipline and focus.",
+    "category": "karate",
+    "difficulty": "easy",
+    "steps": [
+      {
+        "action": "go_to",
+        "target": "school",
+        "count": 1
+      },
+      {
+        "action": "practice",
+        "target": "basic_kata",
+        "count": 3
+      },
+      {
+        "action": "collect",
+        "target": "white_belt",
+        "count": 1
+      }
+    ],
+    "rewards": {
+      "coins": 25,
+      "xp": 35,
+      "stars": 1
+    },
+    "time_limit_minutes": 0,
+    "repeatable": false
+  },
+  {
+    "id": "quest_007",
+    "title": "Cotton Candy Cloud Hunt",
+    "description": "Find the cotton candy stand at the amusement park and collect the fluffiest pink treat!",
+    "category": "adventure",
+    "difficulty": "easy",
+    "steps": [
+      {
+        "action": "go_to",
+        "target": "amusement_park",
+        "count": 1
+      },
+      {
+        "action": "collect",
+        "target": "cotton_candy",
+        "count": 2
+      }
+    ],
+    "rewards": {
+      "coins": 20,
+      "xp": 25,
+      "stars": 1
+    },
+    "time_limit_minutes": 0,
+    "repeatable": true
+  },
+  {
+    "id": "quest_008",
+    "title": "Frooti Party Time",
+    "description": "Invite your friends for a refreshing Frooti party! Collect mango drinks and share the fun.",
+    "category": "social",
+    "difficulty": "easy",
+    "steps": [
+      {
+        "action": "collect",
+        "target": "frooti_bottles",
+        "count": 4
+      },
+      {
+        "action": "go_to",
+        "target": "garden",
+        "count": 1
+      },
+      {
+        "action": "talk_to",
+        "target": "Ava",
+        "count": 1
+      }
+    ],
+    "rewards": {
+      "coins": 25,
+      "xp": 30,
+      "stars": 1
+    },
+    "time_limit_minutes": 0,
+    "repeatable": true
+  },
+  {
+    "id": "quest_009",
+    "title": "Popcorn Chicken Cook-Off",
+    "description": "Compete in a cooking contest to make the crispiest popcorn chicken! Beat the clock and win.",
+    "category": "cooking",
+    "difficulty": "hard",
+    "steps": [
+      {
+        "action": "go_to",
+        "target": "kitchen",
+        "count": 1
+      },
+      {
+        "action": "collect",
+        "target": "chicken_pieces",
+        "count": 8
+      },
+      {
+        "action": "cook",
+        "target": "popcorn_chicken",
+        "count": 1
+      }
+    ],
+    "rewards": {
+      "coins": 60,
+      "xp": 75,
+      "stars": 3
+    },
+    "time_limit_minutes": 5,
+    "repeatable": true
+  },
+  {
+    "id": "quest_010",
+    "title": "Feed Whiskers",
+    "description": "Your kitty is hungry! Go to the kitchen and prepare a tasty meal for Whiskers.",
+    "category": "daily",
+    "difficulty": "easy",
+    "steps": [
+      {
+        "action": "go_to",
+        "target": "kitchen",
+        "count": 1
+      },
+      {
+        "action": "collect",
+        "target": "cat_food",
+        "count": 1
+      },
+      {
+        "action": "talk_to",
+        "target": "Whiskers",
+        "count": 1
+      }
+    ],
+    "rewards": {
+      "coins": 10,
+      "xp": 15,
+      "stars": 1
+    },
+    "time_limit_minutes": 0,
+    "repeatable": true
+  },
+  {
+    "id": "quest_011",
+    "title": "Garden Harvest Festival",
+    "description": "The vegetables are ready! Harvest tomatoes, carrots, and flowers from your beautiful garden.",
+    "category": "garden",
+    "difficulty": "easy",
+    "steps": [
+      {
+        "action": "go_to",
+        "target": "garden",
+        "count": 1
+      },
+      {
+        "action": "collect",
+        "target": "tomatoes",
+        "count": 3
+      },
+      {
+        "action": "collect",
+        "target": "flowers",
+        "count": 2
+      }
+    ],
+    "rewards": {
+      "coins": 20,
+      "xp": 25,
+      "stars": 1
+    },
+    "time_limit_minutes": 0,
+    "repeatable": true
+  },
+  {
+    "id": "quest_012",
+    "title": "Mall Adventure Day",
+    "description": "Explore the mall with Ava! Ride the escalators, window shop, and grab snacks at the food court.",
+    "category": "adventure",
+    "difficulty": "medium",
+    "steps": [
+      {
+        "action": "go_to",
+        "target": "mall",
+        "count": 1
+      },
+      {
+        "action": "talk_to",
+        "target": "Ava",
+        "count": 1
+      },
+      {
+        "action": "collect",
+        "target": "mall_snacks",
+        "count": 2
+      }
+    ],
+    "rewards": {
+      "coins": 35,
+      "xp": 45,
+      "stars": 2
+    },
+    "time_limit_minutes": 0,
+    "repeatable": true
+  },
+  {
+    "id": "quest_013",
+    "title": "Arcade High Score Hero",
+    "description": "Beat the high score on your favorite arcade game and collect tickets for prizes!",
+    "category": "adventure",
+    "difficulty": "hard",
+    "steps": [
+      {
+        "action": "go_to",
+        "target": "arcade",
+        "count": 1
+      },
+      {
+        "action": "collect",
+        "target": "arcade_tickets",
+        "count": 50
+      },
+      {
+        "action": "practice",
+        "target": "arcade_game",
+        "count": 3
+      }
+    ],
+    "rewards": {
+      "coins": 55,
+      "xp": 70,
+      "stars": 3
+    },
+    "time_limit_minutes": 10,
+    "repeatable": true
+  },
+  {
+    "id": "quest_014",
+    "title": "Claw Machine Champion",
+    "description": "Win a cute plushie from the claw machine at the arcade! It takes skill and patience.",
+    "category": "adventure",
+    "difficulty": "medium",
+    "steps": [
+      {
+        "action": "go_to",
+        "target": "arcade",
+        "count": 1
+      },
+      {
+        "action": "collect",
+        "target": "game_tokens",
+        "count": 5
+      },
+      {
+        "action": "collect",
+        "target": "plushie_prize",
+        "count": 1
+      }
+    ],
+    "rewards": {
+      "coins": 40,
+      "xp": 50,
+      "stars": 2
+    },
+    "time_limit_minutes": 0,
+    "repeatable": true
+  },
+  {
+    "id": "quest_015",
+    "title": "Ferris Wheel Dreams",
+    "description": "Ride the magical ferris wheel at the amusement park and enjoy the view from the top!",
+    "category": "adventure",
+    "difficulty": "easy",
+    "steps": [
+      {
+        "action": "go_to",
+        "target": "amusement_park",
+        "count": 1
+      },
+      {
+        "action": "collect",
+        "target": "ride_ticket",
+        "count": 1
+      }
+    ],
+    "rewards": {
+      "coins": 15,
+      "xp": 20,
+      "stars": 1
+    },
+    "time_limit_minutes": 0,
+    "repeatable": true
+  },
+  {
+    "id": "quest_016",
+    "title": "Bumper Car Bash",
+    "description": "Challenge your friends to a bumper car battle! Bump and zoom around the arena.",
+    "category": "adventure",
+    "difficulty": "medium",
+    "steps": [
+      {
+        "action": "go_to",
+        "target": "amusement_park",
+        "count": 1
+      },
+      {
+        "action": "talk_to",
+        "target": "Leo",
+        "count": 1
+      },
+      {
+        "action": "collect",
+        "target": "bumper_car_ticket",
+        "count": 1
+      }
+    ],
+    "rewards": {
+      "coins": 30,
+      "xp": 40,
+      "stars": 2
+    },
+    "time_limit_minutes": 0,
+    "repeatable": true
+  },
+  {
+    "id": "quest_017",
+    "title": "Roller Coaster Brave",
+    "description": "Be brave and ride the roller coaster! Scream with joy as you zoom through loops and drops.",
+    "category": "adventure",
+    "difficulty": "hard",
+    "steps": [
+      {
+        "action": "go_to",
+        "target": "amusement_park",
+        "count": 1
+      },
+      {
+        "action": "collect",
+        "target": "courage_badge",
+        "count": 1
+      },
+      {
+        "action": "collect",
+        "target": "coaster_ticket",
+        "count": 1
+      }
+    ],
+    "rewards": {
+      "coins": 50,
+      "xp": 65,
+      "stars": 3
+    },
+    "time_limit_minutes": 0,
+    "repeatable": true
+  },
+  {
+    "id": "quest_018",
+    "title": "Chai Time with Friends",
+    "description": "Brew a perfect cup of masala chai and share it with your friends in the garden.",
+    "category": "cooking",
+    "difficulty": "easy",
+    "steps": [
+      {
+        "action": "go_to",
+        "target": "kitchen",
+        "count": 1
+      },
+      {
+        "action": "cook",
+        "target": "masala_chai",
+        "count": 1
+      },
+      {
+        "action": "talk_to",
+        "target": "Mia",
+        "count": 1
+      }
+    ],
+    "rewards": {
+      "coins": 20,
+      "xp": 25,
+      "stars": 1
+    },
+    "time_limit_minutes": 0,
+    "repeatable": true
+  },
+  {
+    "id": "quest_019",
+    "title": "Dance-Off with Ava",
+    "description": "Challenge your bestie Ava to an epic dance battle! Show your best moves and win.",
+    "category": "dance",
+    "difficulty": "medium",
+    "steps": [
+      {
+        "action": "go_to",
+        "target": "living_room",
+        "count": 1
+      },
+      {
+        "action": "talk_to",
+        "target": "Ava",
+        "count": 1
+      },
+      {
+        "action": "dance",
+        "target": "dance_battle",
+        "count": 1
+      }
+    ],
+    "rewards": {
+      "coins": 35,
+      "xp": 45,
+      "stars": 2
+    },
+    "time_limit_minutes": 5,
+    "repeatable": true
+  },
+  {
+    "id": "quest_020",
+    "title": "YouTube Marathon",
+    "description": "Cozy up in the living room and watch your favorite YouTube videos on the big TV!",
+    "category": "daily",
+    "difficulty": "easy",
+    "steps": [
+      {
+        "action": "go_to",
+        "target": "living_room",
+        "count": 1
+      },
+      {
+        "action": "collect",
+        "target": "snacks",
+        "count": 2
+      }
+    ],
+    "rewards": {
+      "coins": 10,
+      "xp": 15,
+      "stars": 1
+    },
+    "time_limit_minutes": 0,
+    "repeatable": true
+  },
+  {
+    "id": "quest_021",
+    "title": "Karate Yellow Belt Journey",
+    "description": "Train hard and master new kata moves to earn your yellow belt! Focus and discipline are key.",
+    "category": "karate",
+    "difficulty": "medium",
+    "steps": [
+      {
+        "action": "go_to",
+        "target": "school",
+        "count": 1
+      },
+      {
+        "action": "practice",
+        "target": "intermediate_kata",
+        "count": 5
+      },
+      {
+        "action": "collect",
+        "target": "yellow_belt",
+        "count": 1
+      }
+    ],
+    "rewards": {
+      "coins": 45,
+      "xp": 55,
+      "stars": 2
+    },
+    "time_limit_minutes": 0,
+    "repeatable": false
+  },
+  {
+    "id": "quest_022",
+    "title": "Nail Art Party",
+    "description": "Paint your nails with sparkly colors and create cute designs for a nail art party!",
+    "category": "fashion",
+    "difficulty": "easy",
+    "steps": [
+      {
+        "action": "go_to",
+        "target": "bedroom",
+        "count": 1
+      },
+      {
+        "action": "collect",
+        "target": "nail_polish",
+        "count": 3
+      },
+      {
+        "action": "craft",
+        "target": "nail_art",
+        "count": 1
+      }
+    ],
+    "rewards": {
+      "coins": 20,
+      "xp": 25,
+      "stars": 1
+    },
+    "time_limit_minutes": 0,
+    "repeatable": true
+  },
+  {
+    "id": "quest_023",
+    "title": "French Fry Feast",
+    "description": "Cook up a batch of crispy golden french fries and share them with Buddy the dog!",
+    "category": "cooking",
+    "difficulty": "easy",
+    "steps": [
+      {
+        "action": "go_to",
+        "target": "kitchen",
+        "count": 1
+      },
+      {
+        "action": "collect",
+        "target": "potatoes",
+        "count": 3
+      },
+      {
+        "action": "cook",
+        "target": "french_fries",
+        "count": 1
+      }
+    ],
+    "rewards": {
+      "coins": 20,
+      "xp": 25,
+      "stars": 1
+    },
+    "time_limit_minutes": 0,
+    "repeatable": true
+  },
+  {
+    "id": "quest_024",
+    "title": "School Art Project",
+    "description": "Work with Mia on a creative art project for school! Gather supplies and make something amazing.",
+    "category": "school",
+    "difficulty": "medium",
+    "steps": [
+      {
+        "action": "go_to",
+        "target": "school",
+        "count": 1
+      },
+      {
+        "action": "collect",
+        "target": "art_supplies",
+        "count": 4
+      },
+      {
+        "action": "craft",
+        "target": "art_project",
+        "count": 1
+      }
+    ],
+    "rewards": {
+      "coins": 35,
+      "xp": 45,
+      "stars": 2
+    },
+    "time_limit_minutes": 10,
+    "repeatable": true
+  },
+  {
+    "id": "quest_025",
+    "title": "Playground Fun",
+    "description": "Meet friends at the playground for swings, slides, and lots of laughter!",
+    "category": "social",
+    "difficulty": "easy",
+    "steps": [
+      {
+        "action": "go_to",
+        "target": "playground",
+        "count": 1
+      },
+      {
+        "action": "talk_to",
+        "target": "Ava",
+        "count": 1
+      },
+      {
+        "action": "talk_to",
+        "target": "Leo",
+        "count": 1
+      }
+    ],
+    "rewards": {
+      "coins": 15,
+      "xp": 20,
+      "stars": 1
+    },
+    "time_limit_minutes": 0,
+    "repeatable": true
+  },
+  {
+    "id": "quest_026",
+    "title": "Diwali Diya Decoration",
+    "description": "Decorate beautiful diyas with colors and glitter to light up your home for Diwali!",
+    "category": "creative",
+    "difficulty": "medium",
+    "steps": [
+      {
+        "action": "collect",
+        "target": "plain_diyas",
+        "count": 5
+      },
+      {
+        "action": "collect",
+        "target": "glitter",
+        "count": 3
+      },
+      {
+        "action": "craft",
+        "target": "decorated_diya",
+        "count": 5
+      }
+    ],
+    "rewards": {
+      "coins": 40,
+      "xp": 50,
+      "stars": 2
+    },
+    "time_limit_minutes": 0,
+    "repeatable": true
+  },
+  {
+    "id": "quest_027",
+    "title": "Walk Buddy the Dog",
+    "description": "Take Buddy for a walk in the park! He needs exercise and loves to explore.",
+    "category": "daily",
+    "difficulty": "easy",
+    "steps": [
+      {
+        "action": "talk_to",
+        "target": "Buddy",
+        "count": 1
+      },
+      {
+        "action": "go_to",
+        "target": "park",
+        "count": 1
+      },
+      {
+        "action": "collect",
+        "target": "dog_treats",
+        "count": 2
+      }
+    ],
+    "rewards": {
+      "coins": 15,
+      "xp": 20,
+      "stars": 1
+    },
+    "time_limit_minutes": 0,
+    "repeatable": true
+  },
+  {
+    "id": "quest_028",
+    "title": "Merry-Go-Round Magic",
+    "description": "Ride the colorful merry-go-round at the amusement park and pick your favorite horse!",
+    "category": "adventure",
+    "difficulty": "easy",
+    "steps": [
+      {
+        "action": "go_to",
+        "target": "amusement_park",
+        "count": 1
+      },
+      {
+        "action": "collect",
+        "target": "carousel_ticket",
+        "count": 1
+      }
+    ],
+    "rewards": {
+      "coins": 15,
+      "xp": 20,
+      "stars": 1
+    },
+    "time_limit_minutes": 0,
+    "repeatable": true
+  },
+  {
+    "id": "quest_029",
+    "title": "Candy Collection Spree",
+    "description": "Collect different types of candies from around town! Sweet treats await everywhere.",
+    "category": "adventure",
+    "difficulty": "medium",
+    "steps": [
+      {
+        "action": "go_to",
+        "target": "shop",
+        "count": 1
+      },
+      {
+        "action": "collect",
+        "target": "candies",
+        "count": 10
+      },
+      {
+        "action": "talk_to",
+        "target": "Shopkeeper",
+        "count": 1
+      }
+    ],
+    "rewards": {
+      "coins": 30,
+      "xp": 40,
+      "stars": 2
+    },
+    "time_limit_minutes": 0,
+    "repeatable": true
+  },
+  {
+    "id": "quest_030",
+    "title": "Reel Scroll Session",
+    "description": "Grab your tablet and scroll through fun reels for inspiration! Find trending dances.",
+    "category": "daily",
+    "difficulty": "easy",
+    "steps": [
+      {
+        "action": "go_to",
+        "target": "bedroom",
+        "count": 1
+      },
+      {
+        "action": "collect",
+        "target": "tablet",
+        "count": 1
+      }
+    ],
+    "rewards": {
+      "coins": 10,
+      "xp": 15,
+      "stars": 1
+    },
+    "time_limit_minutes": 0,
+    "repeatable": true
+  },
+  {
+    "id": "quest_031",
+    "title": "Fashion Show Star",
+    "description": "Organize a fashion show in the living room! Pick outfits and strut your stuff on the runway.",
+    "category": "fashion",
+    "difficulty": "medium",
+    "steps": [
+      {
+        "action": "go_to",
+        "target": "bedroom",
+        "count": 1
+      },
+      {
+        "action": "wear",
+        "target": "fancy_dress",
+        "count": 1
+      },
+      {
+        "action": "go_to",
+        "target": "living_room",
+        "count": 1
+      }
+    ],
+    "rewards": {
+      "coins": 35,
+      "xp": 45,
+      "stars": 2
+    },
+    "time_limit_minutes": 0,
+    "repeatable": true
+  },
+  {
+    "id": "quest_032",
+    "title": "Bunny Cuddle Time",
+    "description": "Spend quality time with Cotton the bunny! Give pets, treats, and lots of love.",
+    "category": "daily",
+    "difficulty": "easy",
+    "steps": [
+      {
+        "action": "go_to",
+        "target": "garden",
+        "count": 1
+      },
+      {
+        "action": "talk_to",
+        "target": "Cotton",
+        "count": 1
+      },
+      {
+        "action": "collect",
+        "target": "carrots",
+        "count": 2
+      }
+    ],
+    "rewards": {
+      "coins": 15,
+      "xp": 20,
+      "stars": 1
+    },
+    "time_limit_minutes": 0,
+    "repeatable": true
+  },
+  {
+    "id": "quest_033",
+    "title": "Carnival Ring Toss",
+    "description": "Win prizes at the carnival ring toss game! Aim carefully and toss those rings.",
+    "category": "adventure",
+    "difficulty": "medium",
+    "steps": [
+      {
+        "action": "go_to",
+        "target": "amusement_park",
+        "count": 1
+      },
+      {
+        "action": "collect",
+        "target": "game_rings",
+        "count": 5
+      },
+      {
+        "action": "collect",
+        "target": "carnival_prize",
+        "count": 1
+      }
+    ],
+    "rewards": {
+      "coins": 30,
+      "xp": 40,
+      "stars": 2
+    },
+    "time_limit_minutes": 5,
+    "repeatable": true
+  },
+  {
+    "id": "quest_034",
+    "title": "Lipstick Makeover",
+    "description": "Try on different lip colors and find your perfect shade for today's adventures!",
+    "category": "fashion",
+    "difficulty": "easy",
+    "steps": [
+      {
+        "action": "go_to",
+        "target": "bathroom",
+        "count": 1
+      },
+      {
+        "action": "collect",
+        "target": "lipstick",
+        "count": 3
+      },
+      {
+        "action": "wear",
+        "target": "pink_lipstick",
+        "count": 1
+      }
+    ],
+    "rewards": {
+      "coins": 15,
+      "xp": 20,
+      "stars": 1
+    },
+    "time_limit_minutes": 0,
+    "repeatable": true
+  },
+  {
+    "id": "quest_035",
+    "title": "Help Leo Study",
+    "description": "Leo needs help with homework! Be a good friend and study together at school.",
+    "category": "school",
+    "difficulty": "easy",
+    "steps": [
+      {
+        "action": "go_to",
+        "target": "school",
+        "count": 1
+      },
+      {
+        "action": "talk_to",
+        "target": "Leo",
+        "count": 1
+      },
+      {
+        "action": "collect",
+        "target": "study_books",
+        "count": 2
+      }
+    ],
+    "rewards": {
+      "coins": 20,
+      "xp": 30,
+      "stars": 1
+    },
+    "time_limit_minutes": 0,
+    "repeatable": true
+  },
+  {
+    "id": "quest_036",
+    "title": "Escalator Explorer",
+    "description": "Ride all the escalators in the mall! Up and down, it's like a mini adventure.",
+    "category": "adventure",
+    "difficulty": "easy",
+    "steps": [
+      {
+        "action": "go_to",
+        "target": "mall",
+        "count": 1
+      },
+      {
+        "action": "collect",
+        "target": "escalator_rides",
+        "count": 4
+      }
+    ],
+    "rewards": {
+      "coins": 15,
+      "xp": 20,
+      "stars": 1
+    },
+    "time_limit_minutes": 0,
+    "repeatable": true
+  },
+  {
+    "id": "quest_037",
+    "title": "Holi Thandai Treat",
+    "description": "Make refreshing thandai drink for Holi celebrations! A cool treat for a colorful day.",
+    "category": "cooking",
+    "difficulty": "medium",
+    "steps": [
+      {
+        "action": "go_to",
+        "target": "kitchen",
+        "count": 1
+      },
+      {
+        "action": "collect",
+        "target": "milk",
+        "count": 2
+      },
+      {
+        "action": "cook",
+        "target": "thandai",
+        "count": 1
+      }
+    ],
+    "rewards": {
+      "coins": 30,
+      "xp": 40,
+      "stars": 2
+    },
+    "time_limit_minutes": 0,
+    "repeatable": true
+  },
+  {
+    "id": "quest_038",
+    "title": "Ticket Redemption Pro",
+    "description": "Collect enough arcade tickets to redeem an awesome prize from the prize counter!",
+    "category": "adventure",
+    "difficulty": "hard",
+    "steps": [
+      {
+        "action": "go_to",
+        "target": "arcade",
+        "count": 1
+      },
+      {
+        "action": "collect",
+        "target": "arcade_tickets",
+        "count": 100
+      },
+      {
+        "action": "collect",
+        "target": "big_prize",
+        "count": 1
+      }
+    ],
+    "rewards": {
+      "coins": 60,
+      "xp": 80,
+      "stars": 3
+    },
+    "time_limit_minutes": 15,
+    "repeatable": true
+  },
+  {
+    "id": "quest_039",
+    "title": "Plant Sunflowers",
+    "description": "Plant beautiful sunflower seeds in the garden and watch them grow tall and bright!",
+    "category": "garden",
+    "difficulty": "easy",
+    "steps": [
+      {
+        "action": "go_to",
+        "target": "garden",
+        "count": 1
+      },
+      {
+        "action": "collect",
+        "target": "sunflower_seeds",
+        "count": 3
+      },
+      {
+        "action": "craft",
+        "target": "planted_sunflowers",
+        "count": 3
+      }
+    ],
+    "rewards": {
+      "coins": 20,
+      "xp": 25,
+      "stars": 1
+    },
+    "time_limit_minutes": 0,
+    "repeatable": true
+  },
+  {
+    "id": "quest_040",
+    "title": "Trendy Dance Tutorial",
+    "description": "Learn a new trendy dance from watching videos and practice until you nail it!",
+    "category": "dance",
+    "difficulty": "medium",
+    "steps": [
+      {
+        "action": "go_to",
+        "target": "living_room",
+        "count": 1
+      },
+      {
+        "action": "practice",
+        "target": "trendy_dance",
+        "count": 3
+      },
+      {
+        "action": "dance",
+        "target": "new_dance",
+        "count": 1
+      }
+    ],
+    "rewards": {
+      "coins": 30,
+      "xp": 40,
+      "stars": 2
+    },
+    "time_limit_minutes": 0,
+    "repeatable": true
+  },
+  {
+    "id": "quest_041",
+    "title": "Karate Orange Belt Challenge",
+    "description": "Master advanced kicks and punches to earn your orange belt! Train with dedication.",
+    "category": "karate",
+    "difficulty": "hard",
+    "steps": [
+      {
+        "action": "go_to",
+        "target": "school",
+        "count": 1
+      },
+      {
+        "action": "practice",
+        "target": "advanced_kata",
+        "count": 7
+      },
+      {
+        "action": "collect",
+        "target": "orange_belt",
+        "count": 1
+      }
+    ],
+    "rewards": {
+      "coins": 55,
+      "xp": 70,
+      "stars": 3
+    },
+    "time_limit_minutes": 0,
+    "repeatable": false
+  },
+  {
+    "id": "quest_042",
+    "title": "Food Court Feast",
+    "description": "Visit the mall food court and try different yummy foods! So many choices.",
+    "category": "adventure",
+    "difficulty": "medium",
+    "steps": [
+      {
+        "action": "go_to",
+        "target": "mall",
+        "count": 1
+      },
+      {
+        "action": "collect",
+        "target": "food_court_items",
+        "count": 3
+      },
+      {
+        "action": "talk_to",
+        "target": "Shopkeeper",
+        "count": 1
+      }
+    ],
+    "rewards": {
+      "coins": 30,
+      "xp": 40,
+      "stars": 2
+    },
+    "time_limit_minutes": 0,
+    "repeatable": true
+  },
+  {
+    "id": "quest_043",
+    "title": "Mia's Art Gallery",
+    "description": "Help Mia set up an art gallery in the garden! Display paintings and invite guests.",
+    "category": "creative",
+    "difficulty": "medium",
+    "steps": [
+      {
+        "action": "talk_to",
+        "target": "Mia",
+        "count": 1
+      },
+      {
+        "action": "collect",
+        "target": "paintings",
+        "count": 5
+      },
+      {
+        "action": "go_to",
+        "target": "garden",
+        "count": 1
+      }
+    ],
+    "rewards": {
+      "coins": 40,
+      "xp": 50,
+      "stars": 2
+    },
+    "time_limit_minutes": 0,
+    "repeatable": true
+  },
+  {
+    "id": "quest_044",
+    "title": "Desi Street Food Tour",
+    "description": "Explore and collect different desi street foods! From samosas to chaat, taste them all.",
+    "category": "cooking",
+    "difficulty": "medium",
+    "steps": [
+      {
+        "action": "go_to",
+        "target": "shop",
+        "count": 1
+      },
+      {
+        "action": "collect",
+        "target": "samosa",
+        "count": 2
+      },
+      {
+        "action": "collect",
+        "target": "chaat",
+        "count": 2
+      }
+    ],
+    "rewards": {
+      "coins": 35,
+      "xp": 45,
+      "stars": 2
+    },
+    "time_limit_minutes": 0,
+    "repeatable": true
+  },
+  {
+    "id": "quest_045",
+    "title": "Treasure Hunt Adventure",
+    "description": "Follow clues around the house to find hidden treasure! X marks the spot.",
+    "category": "adventure",
+    "difficulty": "hard",
+    "steps": [
+      {
+        "action": "go_to",
+        "target": "bedroom",
+        "count": 1
+      },
+      {
+        "action": "collect",
+        "target": "treasure_clues",
+        "count": 5
+      },
+      {
+        "action": "collect",
+        "target": "treasure_chest",
+        "count": 1
+      }
+    ],
+    "rewards": {
+      "coins": 50,
+      "xp": 65,
+      "stars": 3
+    },
+    "time_limit_minutes": 10,
+    "repeatable": true
+  },
+  {
+    "id": "quest_046",
+    "title": "Window Shopping Spree",
+    "description": "Explore all the shop windows at the mall! Dream about all the pretty things.",
+    "category": "adventure",
+    "difficulty": "easy",
+    "steps": [
+      {
+        "action": "go_to",
+        "target": "mall",
+        "count": 1
+      },
+      {
+        "action": "collect",
+        "target": "window_views",
+        "count": 5
+      }
+    ],
+    "rewards": {
+      "coins": 15,
+      "xp": 20,
+      "stars": 1
+    },
+    "time_limit_minutes": 0,
+    "repeatable": true
+  },
+  {
+    "id": "quest_047",
+    "title": "Glitter Eyeshadow Glam",
+    "description": "Apply sparkly eyeshadow for a glamorous look! Perfect for a special day out.",
+    "category": "fashion",
+    "difficulty": "easy",
+    "steps": [
+      {
+        "action": "go_to",
+        "target": "bathroom",
+        "count": 1
+      },
+      {
+        "action": "collect",
+        "target": "eyeshadow_palette",
+        "count": 1
+      },
+      {
+        "action": "wear",
+        "target": "glitter_eyeshadow",
+        "count": 1
+      }
+    ],
+    "rewards": {
+      "coins": 15,
+      "xp": 20,
+      "stars": 1
+    },
+    "time_limit_minutes": 0,
+    "repeatable": true
+  },
+  {
+    "id": "quest_048",
+    "title": "Best Friend Bracelet",
+    "description": "Make matching friendship bracelets for you and Ava! Craft with love and beads.",
+    "category": "creative",
+    "difficulty": "medium",
+    "steps": [
+      {
+        "action": "collect",
+        "target": "beads",
+        "count": 10
+      },
+      {
+        "action": "craft",
+        "target": "friendship_bracelet",
+        "count": 2
+      },
+      {
+        "action": "talk_to",
+        "target": "Ava",
+        "count": 1
+      }
+    ],
+    "rewards": {
+      "coins": 30,
+      "xp": 40,
+      "stars": 2
+    },
+    "time_limit_minutes": 0,
+    "repeatable": true
+  },
+  {
+    "id": "quest_049",
+    "title": "Balloon Pop Carnival",
+    "description": "Pop balloons at the carnival game to win prizes! Aim your darts carefully.",
+    "category": "adventure",
+    "difficulty": "medium",
+    "steps": [
+      {
+        "action": "go_to",
+        "target": "amusement_park",
+        "count": 1
+      },
+      {
+        "action": "collect",
+        "target": "darts",
+        "count": 5
+      },
+      {
+        "action": "collect",
+        "target": "balloon_prize",
+        "count": 1
+      }
+    ],
+    "rewards": {
+      "coins": 30,
+      "xp": 40,
+      "stars": 2
+    },
+    "time_limit_minutes": 5,
+    "repeatable": true
+  },
+  {
+    "id": "quest_050",
+    "title": "Morning Breakfast Chef",
+    "description": "Cook a yummy breakfast to start the day right! Make toast, eggs, and juice.",
+    "category": "cooking",
+    "difficulty": "easy",
+    "steps": [
+      {
+        "action": "go_to",
+        "target": "kitchen",
+        "count": 1
+      },
+      {
+        "action": "collect",
+        "target": "breakfast_ingredients",
+        "count": 3
+      },
+      {
+        "action": "cook",
+        "target": "breakfast",
+        "count": 1
+      }
+    ],
+    "rewards": {
+      "coins": 20,
+      "xp": 25,
+      "stars": 1
+    },
+    "time_limit_minutes": 0,
+    "repeatable": true
+  },
+  {
+    "id": "quest_051",
+    "title": "Dance Reel Challenge",
+    "description": "Create three different dance reels in one day! Show off your variety of moves.",
+    "category": "dance",
+    "difficulty": "hard",
+    "steps": [
+      {
+        "action": "dance",
+        "target": "hip_hop_reel",
+        "count": 1
+      },
+      {
+        "action": "dance",
+        "target": "bollywood_reel",
+        "count": 1
+      },
+      {
+        "action": "dance",
+        "target": "freestyle_reel",
+        "count": 1
+      }
+    ],
+    "rewards": {
+      "coins": 50,
+      "xp": 65,
+      "stars": 3
+    },
+    "time_limit_minutes": 15,
+    "repeatable": true
+  },
+  {
+    "id": "quest_052",
+    "title": "Teacher's Helper",
+    "description": "Help the Teacher organize the classroom! Collect supplies and tidy up.",
+    "category": "school",
+    "difficulty": "easy",
+    "steps": [
+      {
+        "action": "go_to",
+        "target": "school",
+        "count": 1
+      },
+      {
+        "action": "talk_to",
+        "target": "Teacher",
+        "count": 1
+      },
+      {
+        "action": "collect",
+        "target": "school_supplies",
+        "count": 5
+      }
+    ],
+    "rewards": {
+      "coins": 25,
+      "xp": 30,
+      "stars": 1
+    },
+    "time_limit_minutes": 0,
+    "repeatable": true
+  },
+  {
+    "id": "quest_053",
+    "title": "Whiskers' Grooming Day",
+    "description": "Give Whiskers a spa day! Brush fur, clean ears, and make kitty look fabulous.",
+    "category": "daily",
+    "difficulty": "easy",
+    "steps": [
+      {
+        "action": "talk_to",
+        "target": "Whiskers",
+        "count": 1
+      },
+      {
+        "action": "collect",
+        "target": "cat_brush",
+        "count": 1
+      },
+      {
+        "action": "go_to",
+        "target": "bathroom",
+        "count": 1
+      }
+    ],
+    "rewards": {
+      "coins": 20,
+      "xp": 25,
+      "stars": 1
+    },
+    "time_limit_minutes": 0,
+    "repeatable": true
+  },
+  {
+    "id": "quest_054",
+    "title": "Samosa Making Master",
+    "description": "Learn to make crispy samosas filled with spiced potatoes! A delicious Indian snack.",
+    "category": "cooking",
+    "difficulty": "medium",
+    "steps": [
+      {
+        "action": "go_to",
+        "target": "kitchen",
+        "count": 1
+      },
+      {
+        "action": "collect",
+        "target": "samosa_ingredients",
+        "count": 4
+      },
+      {
+        "action": "cook",
+        "target": "samosas",
+        "count": 1
+      }
+    ],
+    "rewards": {
+      "coins": 35,
+      "xp": 45,
+      "stars": 2
+    },
+    "time_limit_minutes": 8,
+    "repeatable": true
+  },
+  {
+    "id": "quest_055",
+    "title": "Park Picnic Party",
+    "description": "Organize a picnic in the park with all your friends! Bring food and blankets.",
+    "category": "social",
+    "difficulty": "medium",
+    "steps": [
+      {
+        "action": "collect",
+        "target": "picnic_basket",
+        "count": 1
+      },
+      {
+        "action": "go_to",
+        "target": "park",
+        "count": 1
+      },
+      {
+        "action": "talk_to",
+        "target": "Ava",
+        "count": 1
+      },
+      {
+        "action": "talk_to",
+        "target": "Mia",
+        "count": 1
+      }
+    ],
+    "rewards": {
+      "coins": 40,
+      "xp": 50,
+      "stars": 2
+    },
+    "time_limit_minutes": 0,
+    "repeatable": true
+  },
+  {
+    "id": "quest_056",
+    "title": "Bollywood Dance Star",
+    "description": "Learn a classic Bollywood dance routine! Twirl, jump, and express with drama.",
+    "category": "dance",
+    "difficulty": "medium",
+    "steps": [
+      {
+        "action": "go_to",
+        "target": "living_room",
+        "count": 1
+      },
+      {
+        "action": "practice",
+        "target": "bollywood_moves",
+        "count": 4
+      },
+      {
+        "action": "dance",
+        "target": "bollywood_routine",
+        "count": 1
+      }
+    ],
+    "rewards": {
+      "coins": 35,
+      "xp": 45,
+      "stars": 2
+    },
+    "time_limit_minutes": 0,
+    "repeatable": true
+  },
+  {
+    "id": "quest_057",
+    "title": "Diwali Sweets Shop",
+    "description": "Visit the shop and buy traditional Diwali sweets! Ladoo, barfi, and jalebi await.",
+    "category": "adventure",
+    "difficulty": "easy",
+    "steps": [
+      {
+        "action": "go_to",
+        "target": "shop",
+        "count": 1
+      },
+      {
+        "action": "talk_to",
+        "target": "Shopkeeper",
+        "count": 1
+      },
+      {
+        "action": "collect",
+        "target": "diwali_sweets",
+        "count": 5
+      }
+    ],
+    "rewards": {
+      "coins": 25,
+      "xp": 30,
+      "stars": 1
+    },
+    "time_limit_minutes": 0,
+    "repeatable": true
+  },
+  {
+    "id": "quest_058",
+    "title": "Racing Arcade Game",
+    "description": "Play the racing game at the arcade and beat the fastest lap time!",
+    "category": "adventure",
+    "difficulty": "medium",
+    "steps": [
+      {
+        "action": "go_to",
+        "target": "arcade",
+        "count": 1
+      },
+      {
+        "action": "collect",
+        "target": "game_tokens",
+        "count": 3
+      },
+      {
+        "action": "practice",
+        "target": "racing_game",
+        "count": 1
+      }
+    ],
+    "rewards": {
+      "coins": 30,
+      "xp": 40,
+      "stars": 2
+    },
+    "time_limit_minutes": 5,
+    "repeatable": true
+  },
+  {
+    "id": "quest_059",
+    "title": "Flower Crown Craft",
+    "description": "Pick flowers from the garden and craft a beautiful flower crown to wear!",
+    "category": "creative",
+    "difficulty": "easy",
+    "steps": [
+      {
+        "action": "go_to",
+        "target": "garden",
+        "count": 1
+      },
+      {
+        "action": "collect",
+        "target": "garden_flowers",
+        "count": 8
+      },
+      {
+        "action": "craft",
+        "target": "flower_crown",
+        "count": 1
+      }
+    ],
+    "rewards": {
+      "coins": 20,
+      "xp": 25,
+      "stars": 1
+    },
+    "time_limit_minutes": 0,
+    "repeatable": true
+  },
+  {
+    "id": "quest_060",
+    "title": "Science Fair Project",
+    "description": "Create an amazing science project for the school fair! Impress the Teacher.",
+    "category": "school",
+    "difficulty": "hard",
+    "steps": [
+      {
+        "action": "go_to",
+        "target": "school",
+        "count": 1
+      },
+      {
+        "action": "collect",
+        "target": "science_materials",
+        "count": 6
+      },
+      {
+        "action": "craft",
+        "target": "science_project",
+        "count": 1
+      }
+    ],
+    "rewards": {
+      "coins": 55,
+      "xp": 70,
+      "stars": 3
+    },
+    "time_limit_minutes": 15,
+    "repeatable": true
+  },
+  {
+    "id": "quest_061",
+    "title": "Cotton Candy Stand Helper",
+    "description": "Help at the cotton candy stand! Spin fluffy pink and blue clouds of sweetness.",
+    "category": "adventure",
+    "difficulty": "medium",
+    "steps": [
+      {
+        "action": "go_to",
+        "target": "amusement_park",
+        "count": 1
+      },
+      {
+        "action": "collect",
+        "target": "sugar_supplies",
+        "count": 3
+      },
+      {
+        "action": "craft",
+        "target": "cotton_candy",
+        "count": 5
+      }
+    ],
+    "rewards": {
+      "coins": 35,
+      "xp": 45,
+      "stars": 2
+    },
+    "time_limit_minutes": 8,
+    "repeatable": true
+  },
+  {
+    "id": "quest_062",
+    "title": "Bedtime Routine",
+    "description": "Complete your bedtime routine! Brush teeth, change into pajamas, and get cozy.",
+    "category": "daily",
+    "difficulty": "easy",
+    "steps": [
+      {
+        "action": "go_to",
+        "target": "bathroom",
+        "count": 1
+      },
+      {
+        "action": "go_to",
+        "target": "bedroom",
+        "count": 1
+      },
+      {
+        "action": "wear",
+        "target": "pajamas",
+        "count": 1
+      }
+    ],
+    "rewards": {
+      "coins": 10,
+      "xp": 15,
+      "stars": 1
+    },
+    "time_limit_minutes": 0,
+    "repeatable": true
+  },
+  {
+    "id": "quest_063",
+    "title": "Karate Green Belt Master",
+    "description": "Train intensely and demonstrate perfect form to earn your green belt!",
+    "category": "karate",
+    "difficulty": "hard",
+    "steps": [
+      {
+        "action": "go_to",
+        "target": "school",
+        "count": 1
+      },
+      {
+        "action": "practice",
+        "target": "master_kata",
+        "count": 10
+      },
+      {
+        "action": "collect",
+        "target": "green_belt",
+        "count": 1
+      }
+    ],
+    "rewards": {
+      "coins": 70,
+      "xp": 90,
+      "stars": 3
+    },
+    "time_limit_minutes": 0,
+    "repeatable": false
+  },
+  {
+    "id": "quest_064",
+    "title": "Friendship Photo Booth",
+    "description": "Take fun photos with friends at the mall photo booth! Strike silly poses.",
+    "category": "social",
+    "difficulty": "easy",
+    "steps": [
+      {
+        "action": "go_to",
+        "target": "mall",
+        "count": 1
+      },
+      {
+        "action": "talk_to",
+        "target": "Ava",
+        "count": 1
+      },
+      {
+        "action": "collect",
+        "target": "photo_strips",
+        "count": 3
+      }
+    ],
+    "rewards": {
+      "coins": 20,
+      "xp": 25,
+      "stars": 1
+    },
+    "time_limit_minutes": 0,
+    "repeatable": true
+  },
+  {
+    "id": "quest_065",
+    "title": "Mango Lassi Maker",
+    "description": "Blend a refreshing mango lassi! Frooti-flavored smoothie for a hot day.",
+    "category": "cooking",
+    "difficulty": "easy",
+    "steps": [
+      {
+        "action": "go_to",
+        "target": "kitchen",
+        "count": 1
+      },
+      {
+        "action": "collect",
+        "target": "mangoes",
+        "count": 2
+      },
+      {
+        "action": "cook",
+        "target": "mango_lassi",
+        "count": 1
+      }
+    ],
+    "rewards": {
+      "coins": 20,
+      "xp": 25,
+      "stars": 1
+    },
+    "time_limit_minutes": 0,
+    "repeatable": true
+  },
+  {
+    "id": "quest_066",
+    "title": "Duck Pond Carnival",
+    "description": "Pick lucky ducks at the carnival game to win mystery prizes!",
+    "category": "adventure",
+    "difficulty": "easy",
+    "steps": [
+      {
+        "action": "go_to",
+        "target": "amusement_park",
+        "count": 1
+      },
+      {
+        "action": "collect",
+        "target": "lucky_ducks",
+        "count": 3
+      }
+    ],
+    "rewards": {
+      "coins": 20,
+      "xp": 25,
+      "stars": 1
+    },
+    "time_limit_minutes": 0,
+    "repeatable": true
+  },
+  {
+    "id": "quest_067",
+    "title": "Water the Garden",
+    "description": "Keep your garden healthy! Water all the plants and flowers.",
+    "category": "garden",
+    "difficulty": "easy",
+    "steps": [
+      {
+        "action": "go_to",
+        "target": "garden",
+        "count": 1
+      },
+      {
+        "action": "collect",
+        "target": "watering_can",
+        "count": 1
+      },
+      {
+        "action": "collect",
+        "target": "watered_plants",
+        "count": 5
+      }
+    ],
+    "rewards": {
+      "coins": 15,
+      "xp": 20,
+      "stars": 1
+    },
+    "time_limit_minutes": 0,
+    "repeatable": true
+  },
+  {
+    "id": "quest_068",
+    "title": "Makeup Tutorial Reel",
+    "description": "Film a makeup tutorial reel! Show how to apply lip gloss and eyeshadow.",
+    "category": "creative",
+    "difficulty": "medium",
+    "steps": [
+      {
+        "action": "go_to",
+        "target": "bathroom",
+        "count": 1
+      },
+      {
+        "action": "wear",
+        "target": "makeup_look",
+        "count": 1
+      },
+      {
+        "action": "craft",
+        "target": "tutorial_reel",
+        "count": 1
+      }
+    ],
+    "rewards": {
+      "coins": 35,
+      "xp": 45,
+      "stars": 2
+    },
+    "time_limit_minutes": 0,
+    "repeatable": true
+  },
+  {
+    "id": "quest_069",
+    "title": "Leo's Book Club",
+    "description": "Join Leo for a cozy book reading session! Share stories and imagination.",
+    "category": "social",
+    "difficulty": "easy",
+    "steps": [
+      {
+        "action": "go_to",
+        "target": "living_room",
+        "count": 1
+      },
+      {
+        "action": "talk_to",
+        "target": "Leo",
+        "count": 1
+      },
+      {
+        "action": "collect",
+        "target": "storybooks",
+        "count": 2
+      }
+    ],
+    "rewards": {
+      "coins": 20,
+      "xp": 25,
+      "stars": 1
+    },
+    "time_limit_minutes": 0,
+    "repeatable": true
+  },
+  {
+    "id": "quest_070",
+    "title": "Holi Water Balloon Fun",
+    "description": "Fill water balloons with colored water and have a splash fight with friends!",
+    "category": "adventure",
+    "difficulty": "medium",
+    "steps": [
+      {
+        "action": "collect",
+        "target": "water_balloons",
+        "count": 10
+      },
+      {
+        "action": "go_to",
+        "target": "garden",
+        "count": 1
+      },
+      {
+        "action": "talk_to",
+        "target": "Ava",
+        "count": 1
+      }
+    ],
+    "rewards": {
+      "coins": 35,
+      "xp": 45,
+      "stars": 2
+    },
+    "time_limit_minutes": 10,
+    "repeatable": true
+  },
+  {
+    "id": "quest_071",
+    "title": "Sparkle Nail Collection",
+    "description": "Collect all the sparkle nail polish colors! Build your perfect collection.",
+    "category": "fashion",
+    "difficulty": "medium",
+    "steps": [
+      {
+        "action": "go_to",
+        "target": "shop",
+        "count": 1
+      },
+      {
+        "action": "collect",
+        "target": "sparkle_polish",
+        "count": 6
+      }
+    ],
+    "rewards": {
+      "coins": 30,
+      "xp": 40,
+      "stars": 2
+    },
+    "time_limit_minutes": 0,
+    "repeatable": true
+  },
+  {
+    "id": "quest_072",
+    "title": "Whack-a-Mole Champion",
+    "description": "Beat the high score on the whack-a-mole arcade game! Quick reflexes needed.",
+    "category": "adventure",
+    "difficulty": "medium",
+    "steps": [
+      {
+        "action": "go_to",
+        "target": "arcade",
+        "count": 1
+      },
+      {
+        "action": "collect",
+        "target": "game_tokens",
+        "count": 2
+      },
+      {
+        "action": "practice",
+        "target": "whack_a_mole",
+        "count": 1
+      }
+    ],
+    "rewards": {
+      "coins": 30,
+      "xp": 40,
+      "stars": 2
+    },
+    "time_limit_minutes": 3,
+    "repeatable": true
+  },
+  {
+    "id": "quest_073",
+    "title": "Buddy's Trick Training",
+    "description": "Teach Buddy the dog a new trick! Practice sit, roll over, or shake paw.",
+    "category": "daily",
+    "difficulty": "medium",
+    "steps": [
+      {
+        "action": "talk_to",
+        "target": "Buddy",
+        "count": 1
+      },
+      {
+        "action": "collect",
+        "target": "dog_treats",
+        "count": 5
+      },
+      {
+        "action": "practice",
+        "target": "dog_trick",
+        "count": 3
+      }
+    ],
+    "rewards": {
+      "coins": 30,
+      "xp": 40,
+      "stars": 2
+    },
+    "time_limit_minutes": 0,
+    "repeatable": true
+  },
+  {
+    "id": "quest_074",
+    "title": "Pakora Cooking Class",
+    "description": "Make crispy vegetable pakoras! A perfect rainy day snack with chai.",
+    "category": "cooking",
+    "difficulty": "medium",
+    "steps": [
+      {
+        "action": "go_to",
+        "target": "kitchen",
+        "count": 1
+      },
+      {
+        "action": "collect",
+        "target": "vegetables",
+        "count": 4
+      },
+      {
+        "action": "cook",
+        "target": "pakoras",
+        "count": 1
+      }
+    ],
+    "rewards": {
+      "coins": 30,
+      "xp": 40,
+      "stars": 2
+    },
+    "time_limit_minutes": 8,
+    "repeatable": true
+  },
+  {
+    "id": "quest_075",
+    "title": "Swing Set Fun",
+    "description": "Swing high at the playground! See how high you can go.",
+    "category": "adventure",
+    "difficulty": "easy",
+    "steps": [
+      {
+        "action": "go_to",
+        "target": "playground",
+        "count": 1
+      },
+      {
+        "action": "collect",
+        "target": "swing_points",
+        "count": 3
+      }
+    ],
+    "rewards": {
+      "coins": 15,
+      "xp": 20,
+      "stars": 1
+    },
+    "time_limit_minutes": 0,
+    "repeatable": true
+  },
+  {
+    "id": "quest_076",
+    "title": "Rainbow Outfit Day",
+    "description": "Create a rainbow-themed outfit! Wear something with every color.",
+    "category": "fashion",
+    "difficulty": "medium",
+    "steps": [
+      {
+        "action": "go_to",
+        "target": "bedroom",
+        "count": 1
+      },
+      {
+        "action": "collect",
+        "target": "colorful_clothes",
+        "count": 5
+      },
+      {
+        "action": "wear",
+        "target": "rainbow_outfit",
+        "count": 1
+      }
+    ],
+    "rewards": {
+      "coins": 30,
+      "xp": 40,
+      "stars": 2
+    },
+    "time_limit_minutes": 0,
+    "repeatable": true
+  },
+  {
+    "id": "quest_077",
+    "title": "Diwali Fireworks Show",
+    "description": "Watch the beautiful Diwali fireworks display! Collect sparklers too.",
+    "category": "adventure",
+    "difficulty": "medium",
+    "steps": [
+      {
+        "action": "go_to",
+        "target": "garden",
+        "count": 1
+      },
+      {
+        "action": "collect",
+        "target": "sparklers",
+        "count": 5
+      },
+      {
+        "action": "collect",
+        "target": "firework_views",
+        "count": 3
+      }
+    ],
+    "rewards": {
+      "coins": 40,
+      "xp": 50,
+      "stars": 2
+    },
+    "time_limit_minutes": 0,
+    "repeatable": true
+  },
+  {
+    "id": "quest_078",
+    "title": "Skee Ball Star",
+    "description": "Roll balls up the ramp and score big points at skee ball!",
+    "category": "adventure",
+    "difficulty": "medium",
+    "steps": [
+      {
+        "action": "go_to",
+        "target": "arcade",
+        "count": 1
+      },
+      {
+        "action": "collect",
+        "target": "game_tokens",
+        "count": 3
+      },
+      {
+        "action": "collect",
+        "target": "skee_ball_tickets",
+        "count": 20
+      }
+    ],
+    "rewards": {
+      "coins": 30,
+      "xp": 40,
+      "stars": 2
+    },
+    "time_limit_minutes": 5,
+    "repeatable": true
+  },
+  {
+    "id": "quest_079",
+    "title": "Vegetable Garden Harvest",
+    "description": "Harvest fresh vegetables from your garden! Tomatoes, carrots, and peppers.",
+    "category": "garden",
+    "difficulty": "easy",
+    "steps": [
+      {
+        "action": "go_to",
+        "target": "garden",
+        "count": 1
+      },
+      {
+        "action": "collect",
+        "target": "vegetables",
+        "count": 6
+      }
+    ],
+    "rewards": {
+      "coins": 20,
+      "xp": 25,
+      "stars": 1
+    },
+    "time_limit_minutes": 0,
+    "repeatable": true
+  },
+  {
+    "id": "quest_080",
+    "title": "Sleepover with Ava",
+    "description": "Have a fun sleepover with Ava! Pillow fights, snacks, and staying up late.",
+    "category": "social",
+    "difficulty": "medium",
+    "steps": [
+      {
+        "action": "talk_to",
+        "target": "Ava",
+        "count": 1
+      },
+      {
+        "action": "go_to",
+        "target": "bedroom",
+        "count": 1
+      },
+      {
+        "action": "collect",
+        "target": "sleepover_snacks",
+        "count": 4
+      }
+    ],
+    "rewards": {
+      "coins": 35,
+      "xp": 45,
+      "stars": 2
+    },
+    "time_limit_minutes": 0,
+    "repeatable": true
+  },
+  {
+    "id": "quest_081",
+    "title": "Kata Practice Session",
+    "description": "Practice your karate kata forms in the garden! Focus and breathe.",
+    "category": "karate",
+    "difficulty": "easy",
+    "steps": [
+      {
+        "action": "go_to",
+        "target": "garden",
+        "count": 1
+      },
+      {
+        "action": "practice",
+        "target": "kata_forms",
+        "count": 5
+      }
+    ],
+    "rewards": {
+      "coins": 20,
+      "xp": 25,
+      "stars": 1
+    },
+    "time_limit_minutes": 0,
+    "repeatable": true
+  },
+  {
+    "id": "quest_082",
+    "title": "Jalebi Sweet Treat",
+    "description": "Make swirly orange jalebis! Crispy, sweet, and soaked in syrup.",
+    "category": "cooking",
+    "difficulty": "hard",
+    "steps": [
+      {
+        "action": "go_to",
+        "target": "kitchen",
+        "count": 1
+      },
+      {
+        "action": "collect",
+        "target": "jalebi_ingredients",
+        "count": 4
+      },
+      {
+        "action": "cook",
+        "target": "jalebis",
+        "count": 1
+      }
+    ],
+    "rewards": {
+      "coins": 50,
+      "xp": 65,
+      "stars": 3
+    },
+    "time_limit_minutes": 10,
+    "repeatable": true
+  },
+  {
+    "id": "quest_083",
+    "title": "Dance Duet with Mia",
+    "description": "Create a dance duet reel with artistic Mia! Combine moves and creativity.",
+    "category": "dance",
+    "difficulty": "medium",
+    "steps": [
+      {
+        "action": "talk_to",
+        "target": "Mia",
+        "count": 1
+      },
+      {
+        "action": "go_to",
+        "target": "living_room",
+        "count": 1
+      },
+      {
+        "action": "dance",
+        "target": "duet_dance",
+        "count": 1
+      }
+    ],
+    "rewards": {
+      "coins": 35,
+      "xp": 45,
+      "stars": 2
+    },
+    "time_limit_minutes": 0,
+    "repeatable": true
+  },
+  {
+    "id": "quest_084",
+    "title": "Giant Stuffed Prize",
+    "description": "Win the giant stuffed animal from the claw machine! The ultimate prize.",
+    "category": "adventure",
+    "difficulty": "hard",
+    "steps": [
+      {
+        "action": "go_to",
+        "target": "arcade",
+        "count": 1
+      },
+      {
+        "action": "collect",
+        "target": "game_tokens",
+        "count": 10
+      },
+      {
+        "action": "collect",
+        "target": "giant_plushie",
+        "count": 1
+      }
+    ],
+    "rewards": {
+      "coins": 60,
+      "xp": 80,
+      "stars": 3
+    },
+    "time_limit_minutes": 0,
+    "repeatable": true
+  },
+  {
+    "id": "quest_085",
+    "title": "Spelling Bee Champion",
+    "description": "Study hard and win the school spelling bee! Spell every word correctly.",
+    "category": "school",
+    "difficulty": "hard",
+    "steps": [
+      {
+        "action": "go_to",
+        "target": "school",
+        "count": 1
+      },
+      {
+        "action": "collect",
+        "target": "spelling_words",
+        "count": 10
+      },
+      {
+        "action": "talk_to",
+        "target": "Teacher",
+        "count": 1
+      }
+    ],
+    "rewards": {
+      "coins": 55,
+      "xp": 70,
+      "stars": 3
+    },
+    "time_limit_minutes": 10,
+    "repeatable": true
+  },
+  {
+    "id": "quest_086",
+    "title": "Cotton's Carrot Garden",
+    "description": "Plant and grow carrots especially for Cotton the bunny! Fresh and yummy.",
+    "category": "garden",
+    "difficulty": "easy",
+    "steps": [
+      {
+        "action": "go_to",
+        "target": "garden",
+        "count": 1
+      },
+      {
+        "action": "collect",
+        "target": "carrot_seeds",
+        "count": 5
+      },
+      {
+        "action": "craft",
+        "target": "planted_carrots",
+        "count": 5
+      }
+    ]
+  }
+]
