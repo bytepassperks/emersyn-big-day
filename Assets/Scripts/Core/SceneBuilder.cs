@@ -167,6 +167,43 @@ namespace EmersynBigDay.Core
             // Start async loading of GLB models and PBR textures
             StartCoroutine(SafeCoroutine(LoadGLBCharactersCoroutine()));
             StartCoroutine(SafeCoroutine(LoadAndApplyRoomTextures(currentRoomIndex)));
+
+            // Claude Bedrock Priority 3: Delayed diagnostic for Android rendering debug
+            StartCoroutine(DiagnoseRendering());
+        }
+
+        /// <summary>
+        /// Claude Bedrock Priority 3: Delayed rendering diagnostic to identify blue screen cause.
+        /// Runs 2 seconds after scene init to capture state after all systems are up.
+        /// </summary>
+        private IEnumerator DiagnoseRendering()
+        {
+            yield return new WaitForSeconds(2f);
+
+            Debug.Log("=== ANDROID RENDER DIAGNOSTIC ===");
+            Debug.Log($"Cameras: {FindObjectsByType<Camera>(FindObjectsSortMode.None).Length}");
+            Debug.Log($"Lights: {FindObjectsByType<Light>(FindObjectsSortMode.None).Length}");
+            Debug.Log($"Renderers: {FindObjectsByType<Renderer>(FindObjectsSortMode.None).Length}");
+            Debug.Log($"Canvas objects: {FindObjectsByType<Canvas>(FindObjectsSortMode.None).Length}");
+            Debug.Log($"Graphics API: {SystemInfo.graphicsDeviceType}");
+            Debug.Log($"Render pipeline asset: {UnityEngine.Rendering.GraphicsSettings.renderPipelineAsset}");
+
+            Camera cam = Camera.main;
+            if (cam != null)
+            {
+                Debug.Log($"Camera position: {cam.transform.position}");
+                Debug.Log($"Camera rotation: {cam.transform.rotation.eulerAngles}");
+                Debug.Log($"Camera culling mask: {cam.cullingMask}");
+                Debug.Log($"Camera clear flags: {cam.clearFlags}");
+                Debug.Log($"Camera background: {cam.backgroundColor}");
+                Debug.Log($"Camera rendering path: {cam.renderingPath}");
+                Debug.Log($"Camera HDR: {cam.allowHDR}, MSAA: {cam.allowMSAA}");
+            }
+            else
+            {
+                Debug.LogError("NO MAIN CAMERA FOUND after scene init!");
+            }
+            Debug.Log("=== END DIAGNOSTIC ===");
         }
 
         /// <summary>
@@ -304,7 +341,13 @@ namespace EmersynBigDay.Core
             // Claude Bedrock fix #1b: Disable HDR and MSAA on camera for mobile compatibility
             mainCamera.allowHDR = false;
             mainCamera.allowMSAA = false;
-            Debug.Log($"[SceneBuilder] Camera rendering path: {mainCamera.renderingPath}, HDR: {mainCamera.allowHDR}, MSAA: {mainCamera.allowMSAA}");
+            // Claude Bedrock Priority 4: Force render ALL layers and disable occlusion culling on Android
+            mainCamera.cullingMask = -1; // Render all layers
+            mainCamera.depth = 0;
+            #if UNITY_ANDROID && !UNITY_EDITOR
+            mainCamera.useOcclusionCulling = false;
+            #endif
+            Debug.Log($"[SceneBuilder] Camera rendering path: {mainCamera.renderingPath}, HDR: {mainCamera.allowHDR}, MSAA: {mainCamera.allowMSAA}, CullingMask: {mainCamera.cullingMask}");
             if (mainCamera.GetComponent<CameraSystem.CameraController>() == null)
             {
                 var ctrl = mainCamera.gameObject.AddComponent<CameraSystem.CameraController>();
