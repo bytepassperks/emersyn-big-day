@@ -139,14 +139,14 @@ public class BuildScript
         PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel25;
         PlayerSettings.Android.targetSdkVersion = AndroidSdkVersions.AndroidApiLevel34;
 
-        // Use Mono backend - IL2CPP crashes in Unity 6 headless batch mode
+        // Use IL2CPP backend - required for ARM64 support on modern Android phones
+        // Mono only supports ARMv7 (32-bit) which is rejected by modern 64-bit-only devices
         PlayerSettings.SetScriptingBackend(
-            UnityEditor.Build.NamedBuildTarget.Android, ScriptingImplementation.Mono2x);
+            UnityEditor.Build.NamedBuildTarget.Android, ScriptingImplementation.IL2CPP);
 
-        // CRITICAL: Target ARM64 (required by modern Android phones)
-        // Mono supports both ARMv7 and ARM64 - include both for max compatibility
-        PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64 | AndroidArchitecture.ARMv7;
-        Debug.Log($"[BUILD] Target architectures: {PlayerSettings.Android.targetArchitectures}");
+        // Target ARM64 only (required by modern Android phones, cleaner than fat APK)
+        PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
+        Debug.Log($"[BUILD] Backend: IL2CPP, Target arch: ARM64");
 
         // Suppress stack traces during build to avoid massive log overhead from URP shader warnings
         var prevWarningTrace = Application.GetStackTraceLogType(LogType.Warning);
