@@ -155,7 +155,7 @@ namespace EmersynBigDay.Core
             if (this.vignette != null) this.vignette.active = vignette;
             if (this.depthOfField != null) this.depthOfField.active = dof;
 
-            QualitySettings.shadows = shadows ? ShadowQuality.All : ShadowQuality.Disable;
+            QualitySettings.shadows = shadows ? UnityEngine.ShadowQuality.All : UnityEngine.ShadowQuality.Disable;
             QualitySettings.antiAliasing = msaa;
 
             // Shadow distance based on quality
@@ -226,7 +226,7 @@ namespace EmersynBigDay.Core
         /// </summary>
         public void AutoDetectQuality()
         {
-            int gpuMemory = SystemInfo.graphicMemorySize;
+            int gpuMemory = SystemInfo.graphicsMemorySize;
             int processorCount = SystemInfo.processorCount;
 
             if (gpuMemory >= 4096 && processorCount >= 6)
