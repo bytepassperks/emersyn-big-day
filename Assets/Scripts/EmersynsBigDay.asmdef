@@ -1,6 +1,6 @@
 {
   "name": "EmersynsBigDay",
-  "rootNamespace": "EmersynsBigDay",
+  "rootNamespace": "EmersynBigDay",
   "references": [
     "glTFast",
     "Unity.Mathematics",

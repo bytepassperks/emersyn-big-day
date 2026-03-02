@@ -99,23 +99,70 @@ namespace EmersynBigDay.Core
         {
             if (isInitialized) return;
             isInitialized = true;
+
+            // Force portrait orientation on Android
+            #if UNITY_ANDROID
+            Screen.orientation = ScreenOrientation.Portrait;
+            Screen.autorotateToPortrait = true;
+            Screen.autorotateToPortraitUpsideDown = false;
+            Screen.autorotateToLandscapeLeft = false;
+            Screen.autorotateToLandscapeRight = false;
+            #endif
+
             Application.targetFrameRate = 60;
             Screen.sleepTimeout = SleepTimeout.NeverSleep;
             QualitySettings.vSyncCount = 0;
             Debug.Log("[SceneBuilder] Starting programmatic scene construction...");
-            baseMat = CreateBaseMaterial();
-            CreateCamera();
-            CreateManagers();
-            SetupLighting();
-            CreateRoomContainer();
-            BuildRoom(0);
-            CreateCharacters();
-            CreateUI();
-            WireUpSystems();
+
+            try
+            {
+                baseMat = CreateBaseMaterial();
+                Debug.Log("[SceneBuilder] BaseMat created OK");
+                CreateCamera();
+                Debug.Log("[SceneBuilder] Camera created OK");
+                CreateManagers();
+                Debug.Log("[SceneBuilder] Managers created OK");
+                SetupLighting();
+                Debug.Log("[SceneBuilder] Lighting setup OK");
+                CreateRoomContainer();
+                BuildRoom(0);
+                Debug.Log("[SceneBuilder] Room built OK");
+                CreateCharacters();
+                Debug.Log("[SceneBuilder] Characters created OK");
+                CreateUI();
+                Debug.Log("[SceneBuilder] UI created OK");
+                WireUpSystems();
+                Debug.Log("[SceneBuilder] Systems wired OK");
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"[SceneBuilder] FATAL ERROR in Awake: {e.Message}\n{e.StackTrace}");
+            }
+
             Debug.Log("[SceneBuilder] Scene fully initialized!");
             // Start async loading of GLB models and PBR textures
-            StartCoroutine(LoadGLBCharactersCoroutine());
-            StartCoroutine(LoadAndApplyRoomTextures(currentRoomIndex));
+            StartCoroutine(SafeCoroutine(LoadGLBCharactersCoroutine()));
+            StartCoroutine(SafeCoroutine(LoadAndApplyRoomTextures(currentRoomIndex)));
+        }
+
+        // Wrapper to catch exceptions in coroutines (which normally fail silently)
+        private IEnumerator SafeCoroutine(IEnumerator coroutine)
+        {
+            while (true)
+            {
+                object current;
+                try
+                {
+                    if (!coroutine.MoveNext()) yield break;
+                    current = coroutine.Current;
+                }
+                catch (System.Exception e)
+                {
+                    Debug.LogError($"[SceneBuilder] Coroutine error: {e.Message}\n{e.StackTrace}");
+                    yield break;
+                }
+                yield return current;
+            }
         }
 
         private Material CreateBaseMaterial()
