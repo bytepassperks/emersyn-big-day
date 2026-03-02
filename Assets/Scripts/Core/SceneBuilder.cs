@@ -88,21 +88,19 @@ namespace EmersynBigDay.Core
 
         private Material CreateBaseMaterial()
         {
-            // CRITICAL FIX: Get shader from a primitive's default material.
-            // Shader.Find() fails in IL2CPP builds because URP shaders get stripped
-            // when no material asset references them. Primitives always have valid materials.
-            var tempPrimitive = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            var defaultMat = tempPrimitive.GetComponent<Renderer>().sharedMaterial;
-            var mat = new Material(defaultMat);
-            Destroy(tempPrimitive);
+            // CRITICAL FIX (Claude Sonnet 4.5 expert recommendation):
+            // Keep primitive alive so shader reference survives IL2CPP stripping.
+            // Destroying the primitive invalidates the shader reference in IL2CPP builds.
+            var refPrimitive = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            refPrimitive.name = "_ShaderReference";
+            refPrimitive.SetActive(false); // Hide but keep alive
+            DontDestroyOnLoad(refPrimitive);
 
-            // Enable URP keywords if available
-            if (mat.shader != null && mat.shader.name.Contains("Universal"))
-            {
-                mat.EnableKeyword("_SURFACE_TYPE_OPAQUE");
-                mat.SetFloat("_Surface", 0); // Opaque
-                mat.SetFloat("_Blend", 0);
-            }
+            var sourceMat = refPrimitive.GetComponent<Renderer>().sharedMaterial;
+            var mat = new Material(sourceMat.shader); // Use shader directly
+            mat.SetFloat("_Surface", 0); // Opaque
+            mat.SetFloat("_Blend", 0);
+            mat.renderQueue = 2000; // Geometry queue
             Debug.Log($"[SceneBuilder] Base material shader: {mat.shader?.name ?? "NULL"}");
             return mat;
         }
@@ -944,8 +942,12 @@ namespace EmersynBigDay.Core
             // Fix #6b: Scale text up 20% for portrait readability
             t.fontSize = Mathf.CeilToInt(fontSize * 1.2f);
             t.color = color;
-            t.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            // Fix text garbling: LegacyRuntime.ttf causes garbled text on Android IL2CPP
+            // Use OS font directly which is always available on Android
+            t.font = Font.CreateDynamicFontFromOSFont("Roboto", fontSize);
             if (t.font == null) t.font = Font.CreateDynamicFontFromOSFont("Arial", fontSize);
+            if (t.font == null) t.font = Font.CreateDynamicFontFromOSFont("sans-serif", fontSize);
+            if (t.font == null) t.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             t.alignment = TextAnchor.MiddleCenter;
             t.horizontalOverflow = HorizontalWrapMode.Overflow;
             return t;
@@ -1009,8 +1011,11 @@ namespace EmersynBigDay.Core
             t.text = label;
             t.fontSize = 22;
             t.color = Color.white;
-            t.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            // Fix text garbling: use OS font on Android
+            t.font = Font.CreateDynamicFontFromOSFont("Roboto", 22);
             if (t.font == null) t.font = Font.CreateDynamicFontFromOSFont("Arial", 22);
+            if (t.font == null) t.font = Font.CreateDynamicFontFromOSFont("sans-serif", 22);
+            if (t.font == null) t.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             t.alignment = TextAnchor.MiddleCenter;
             return obj;
         }

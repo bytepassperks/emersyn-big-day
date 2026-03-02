@@ -92,11 +92,12 @@ namespace EmersynBigDay.Visual
         /// </summary>
         public Material CreateToonMaterial(Color baseColor)
         {
-            // Get shader from primitive's default material (survives IL2CPP shader stripping)
-            var tempPrim = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-            var defaultMat = tempPrim.GetComponent<Renderer>().sharedMaterial;
-            var mat = new Material(defaultMat);
-            Destroy(tempPrim);
+            // Keep primitive alive so shader reference survives IL2CPP (Claude expert fix)
+            var refPrim = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            refPrim.name = "_ToonShaderRef";
+            refPrim.SetActive(false);
+            DontDestroyOnLoad(refPrim);
+            var mat = new Material(refPrim.GetComponent<Renderer>().sharedMaterial.shader);
 
             if (mat.HasProperty("_BaseColor"))
                 mat.SetColor("_BaseColor", baseColor);
