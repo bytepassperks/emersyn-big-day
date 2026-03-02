@@ -114,35 +114,65 @@ namespace EmersynBigDay.Core
             QualitySettings.vSyncCount = 0;
             Debug.Log("[SceneBuilder] Starting programmatic scene construction...");
 
-            try
-            {
-                baseMat = CreateBaseMaterial();
-                Debug.Log("[SceneBuilder] BaseMat created OK");
-                CreateCamera();
-                Debug.Log("[SceneBuilder] Camera created OK");
-                CreateManagers();
-                Debug.Log("[SceneBuilder] Managers created OK");
-                SetupLighting();
-                Debug.Log("[SceneBuilder] Lighting setup OK");
-                CreateRoomContainer();
-                BuildRoom(0);
-                Debug.Log("[SceneBuilder] Room built OK");
-                CreateCharacters();
-                Debug.Log("[SceneBuilder] Characters created OK");
-                CreateUI();
-                Debug.Log("[SceneBuilder] UI created OK");
-                WireUpSystems();
-                Debug.Log("[SceneBuilder] Systems wired OK");
-            }
-            catch (System.Exception e)
-            {
-                Debug.LogError($"[SceneBuilder] FATAL ERROR in Awake: {e.Message}\n{e.StackTrace}");
-            }
+            // CRITICAL: Each phase is independently try-caught so a failure in one
+            // (e.g. a manager system) does NOT prevent room geometry, characters, or UI from rendering.
+            // Previous bug: single try-catch meant ANY exception in CreateManagers() killed ALL rendering.
+
+            try { baseMat = CreateBaseMaterial(); Debug.Log("[SceneBuilder] BaseMat created OK"); }
+            catch (System.Exception e) { Debug.LogError($"[SceneBuilder] BaseMat FAILED: {e.Message}"); baseMat = new Material(Shader.Find("Diffuse") ?? Shader.Find("Mobile/Diffuse")); }
+
+            try { CreateCamera(); Debug.Log("[SceneBuilder] Camera created OK"); }
+            catch (System.Exception e) { Debug.LogError($"[SceneBuilder] Camera FAILED: {e.Message}"); }
+
+            try { CreateManagers(); Debug.Log("[SceneBuilder] Managers created OK"); }
+            catch (System.Exception e) { Debug.LogError($"[SceneBuilder] Managers FAILED (non-fatal): {e.Message}\n{e.StackTrace}"); }
+
+            try { SetupLighting(); Debug.Log("[SceneBuilder] Lighting setup OK"); }
+            catch (System.Exception e) { Debug.LogError($"[SceneBuilder] Lighting FAILED: {e.Message}"); }
+
+            try { CreateRoomContainer(); BuildRoom(0); Debug.Log("[SceneBuilder] Room built OK"); }
+            catch (System.Exception e) { Debug.LogError($"[SceneBuilder] Room FAILED: {e.Message}\n{e.StackTrace}"); }
+
+            try { CreateCharacters(); Debug.Log("[SceneBuilder] Characters created OK"); }
+            catch (System.Exception e) { Debug.LogError($"[SceneBuilder] Characters FAILED: {e.Message}"); }
+
+            try { CreateUI(); Debug.Log("[SceneBuilder] UI created OK"); }
+            catch (System.Exception e) { Debug.LogError($"[SceneBuilder] UI FAILED: {e.Message}"); }
+
+            try { WireUpSystems(); Debug.Log("[SceneBuilder] Systems wired OK"); }
+            catch (System.Exception e) { Debug.LogError($"[SceneBuilder] WireUp FAILED: {e.Message}"); }
+
+            // Claude Bedrock fix: Validate geometry was actually created
+            ValidateGeometry();
 
             Debug.Log("[SceneBuilder] Scene fully initialized!");
             // Start async loading of GLB models and PBR textures
             StartCoroutine(SafeCoroutine(LoadGLBCharactersCoroutine()));
             StartCoroutine(SafeCoroutine(LoadAndApplyRoomTextures(currentRoomIndex)));
+        }
+
+        /// <summary>
+        /// Claude Bedrock fix: Debug validation to confirm geometry, cameras, and UI exist after init.
+        /// </summary>
+        private void ValidateGeometry()
+        {
+            var renderers = FindObjectsByType<MeshRenderer>(FindObjectsSortMode.None);
+            Debug.LogError($"[GEOMETRY CHECK] MeshRenderers: {renderers.Length}");
+            var cameras = FindObjectsByType<Camera>(FindObjectsSortMode.None);
+            Debug.LogError($"[CAMERA CHECK] Cameras: {cameras.Length}");
+            var canvases = FindObjectsByType<Canvas>(FindObjectsSortMode.None);
+            Debug.LogError($"[UI CHECK] Canvases: {canvases.Length}");
+            foreach (var r in renderers)
+            {
+                if (r.material != null && r.material.shader != null)
+                {
+                    if (r.material.shader.name == "Hidden/InternalErrorShader")
+                    {
+                        Debug.LogError($"[SHADER ERROR] {r.name} has broken shader! Fixing...");
+                        r.material.shader = Shader.Find("Mobile/Diffuse") ?? Shader.Find("Sprites/Default");
+                    }
+                }
+            }
         }
 
         // Wrapper to catch exceptions in coroutines (which normally fail silently)
@@ -167,21 +197,46 @@ namespace EmersynBigDay.Core
 
         private Material CreateBaseMaterial()
         {
-            // NUCLEAR FIX: Use Built-in Render Pipeline with Standard shader.
-            // URP renderer reference kept failing in headless Unity 6 builds.
-            // Standard shader is ALWAYS available in Built-in Pipeline.
-            Shader shader = Shader.Find("Standard");
+            // Claude Bedrock fix: Robust shader fallback chain for Android IL2CPP
+            Shader shader = null;
+            string[] shaderNames = {
+                "Standard",
+                "Legacy Shaders/Diffuse",
+                "Mobile/Diffuse",
+                "Unlit/Color",
+                "Sprites/Default"
+            };
+            foreach (string shaderName in shaderNames)
+            {
+                shader = Shader.Find(shaderName);
+                if (shader != null)
+                {
+                    Debug.Log($"[SceneBuilder] Found shader: {shaderName}");
+                    break;
+                }
+                Debug.LogWarning($"[SceneBuilder] Shader not found: {shaderName}");
+            }
+            // Final fallback using primitive's built-in material
             if (shader == null)
             {
-                Debug.LogError("[SceneBuilder] Standard shader not found! Falling back to primitive.");
+                Debug.LogError("[SceneBuilder] All shader lookups failed! Using primitive fallback.");
                 var refPrim = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                refPrim.name = "_ShaderRef";
-                refPrim.SetActive(false);
-                DontDestroyOnLoad(refPrim);
                 shader = refPrim.GetComponent<Renderer>().sharedMaterial.shader;
+                DestroyImmediate(refPrim);
             }
             var mat = new Material(shader);
             mat.renderQueue = 2000;
+            // Claude Bedrock fix: Ensure Standard shader is set to Opaque mode on Android
+            if (shader.name.Contains("Standard"))
+            {
+                mat.SetFloat("_Mode", 0f); // Opaque
+                mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.One);
+                mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.Zero);
+                mat.SetInt("_ZWrite", 1);
+                mat.DisableKeyword("_ALPHATEST_ON");
+                mat.DisableKeyword("_ALPHABLEND_ON");
+                mat.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+            }
             Debug.Log($"[SceneBuilder] Base material shader: {mat.shader?.name ?? "NULL"}");
             return mat;
         }
@@ -189,8 +244,23 @@ namespace EmersynBigDay.Core
         private Material ColorMat(Color c)
         {
             var m = new Material(baseMat);
-            // Built-in Standard shader uses _Color
-            m.color = c;
+            // Claude Bedrock fix: Explicit color property assignment for Android
+            if (m.shader.name.Contains("Standard"))
+            {
+                m.SetColor("_Color", c);
+                m.SetFloat("_Mode", 0f); // Opaque
+                m.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.One);
+                m.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.Zero);
+                m.SetInt("_ZWrite", 1);
+                m.DisableKeyword("_ALPHATEST_ON");
+                m.DisableKeyword("_ALPHABLEND_ON");
+                m.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+            }
+            else
+            {
+                m.color = c;
+            }
+            m.renderQueue = 2000;
             return m;
         }
 
@@ -224,78 +294,99 @@ namespace EmersynBigDay.Core
 
         private void CreateManagers()
         {
-            var gmObj = new GameObject("GameManager");
-            gmObj.AddComponent<GameManager>();
-            DontDestroyOnLoad(gmObj);
+            // Claude Bedrock fix: Each manager creation is independently try-caught
+            // so a failure in one system doesn't prevent all other systems from loading.
+            SafeAddManager("GameManager", () => {
+                var gmObj = new GameObject("GameManager");
+                gmObj.AddComponent<GameManager>();
+                DontDestroyOnLoad(gmObj);
+            });
 
-            var needObj = new GameObject("NeedSystem");
-            needObj.AddComponent<NeedSystem>();
+            SafeAddManager("NeedSystem", () => {
+                new GameObject("NeedSystem").AddComponent<NeedSystem>();
+            });
 
-            var inputObj = new GameObject("InputManager");
-            var inputMgr = inputObj.AddComponent<InputSystem.InputManager>();
-            inputMgr.MainCamera = mainCamera;
+            SafeAddManager("InputManager", () => {
+                var inputObj = new GameObject("InputManager");
+                var inputMgr = inputObj.AddComponent<InputSystem.InputManager>();
+                inputMgr.MainCamera = mainCamera;
+            });
 
-            var audioObj = new GameObject("AudioManager");
-            var audioMgr = audioObj.AddComponent<Audio.AudioManager>();
-            audioMgr.MusicSource = audioObj.AddComponent<AudioSource>();
-            audioMgr.AmbientSource = MakeChildAudio(audioObj, "Ambient");
-            audioMgr.SFXSource = MakeChildAudio(audioObj, "SFX");
-            audioMgr.UISource = MakeChildAudio(audioObj, "UI");
-            audioMgr.FootstepSource = MakeChildAudio(audioObj, "Footstep");
-            DontDestroyOnLoad(audioObj);
+            SafeAddManager("AudioManager", () => {
+                var audioObj = new GameObject("AudioManager");
+                var audioMgr = audioObj.AddComponent<Audio.AudioManager>();
+                audioMgr.MusicSource = audioObj.AddComponent<AudioSource>();
+                audioMgr.AmbientSource = MakeChildAudio(audioObj, "Ambient");
+                audioMgr.SFXSource = MakeChildAudio(audioObj, "SFX");
+                audioMgr.UISource = MakeChildAudio(audioObj, "UI");
+                audioMgr.FootstepSource = MakeChildAudio(audioObj, "Footstep");
+                DontDestroyOnLoad(audioObj);
+            });
 
-            var pObj = new GameObject("ParticleManager");
-            pObj.AddComponent<Particles.ParticleManager>();
+            SafeAddManager("ParticleManager", () => new GameObject("ParticleManager").AddComponent<Particles.ParticleManager>());
 
-            var sObj = new GameObject("SaveManager");
-            sObj.AddComponent<Data.SaveManager>();
-            DontDestroyOnLoad(sObj);
+            SafeAddManager("SaveManager", () => {
+                var sObj = new GameObject("SaveManager");
+                sObj.AddComponent<Data.SaveManager>();
+                DontDestroyOnLoad(sObj);
+            });
 
-            new GameObject("RewardSystem").AddComponent<RewardSystem>();
-            new GameObject("ShopSystem").AddComponent<ShopSystem>();
-            new GameObject("AchievementSystem").AddComponent<AchievementSystem>();
-            new GameObject("DailyEventSystem").AddComponent<DailyEventSystem>();
-            new GameObject("RoomManager").AddComponent<Rooms.RoomManager>();
-            new GameObject("PostProcessing").AddComponent<PostProcessingSetup>();
+            SafeAddManager("RewardSystem", () => new GameObject("RewardSystem").AddComponent<RewardSystem>());
+            SafeAddManager("ShopSystem", () => new GameObject("ShopSystem").AddComponent<ShopSystem>());
+            SafeAddManager("AchievementSystem", () => new GameObject("AchievementSystem").AddComponent<AchievementSystem>());
+            SafeAddManager("DailyEventSystem", () => new GameObject("DailyEventSystem").AddComponent<DailyEventSystem>());
+            SafeAddManager("RoomManager", () => new GameObject("RoomManager").AddComponent<Rooms.RoomManager>());
+            SafeAddManager("PostProcessing", () => new GameObject("PostProcessing").AddComponent<PostProcessingSetup>());
 
             // === Enhancement Systems ===
-            // Visual
-            new GameObject("ToonShading").AddComponent<Visual.ToonShading>();
-            new GameObject("ProceduralParticles").AddComponent<Visual.ProceduralParticles>();
-            new GameObject("DynamicLighting").AddComponent<Visual.DynamicLighting>();
+            SafeAddManager("ToonShading", () => new GameObject("ToonShading").AddComponent<Visual.ToonShading>());
+            SafeAddManager("ProceduralParticles", () => new GameObject("ProceduralParticles").AddComponent<Visual.ProceduralParticles>());
+            SafeAddManager("DynamicLighting", () => new GameObject("DynamicLighting").AddComponent<Visual.DynamicLighting>());
 
-            // Gameplay
-            new GameObject("QuestSystem").AddComponent<Gameplay.QuestSystem>();
-            new GameObject("CollectionSystem").AddComponent<Gameplay.CollectionSystem>();
-            new GameObject("CharacterCustomization").AddComponent<Gameplay.CharacterCustomization>();
-            new GameObject("MiniGameLauncher").AddComponent<Gameplay.MiniGameLauncher>();
-            new GameObject("RoomDecorator").AddComponent<Gameplay.RoomDecorator>();
-            new GameObject("PhotoMode").AddComponent<Gameplay.PhotoMode>();
+            SafeAddManager("QuestSystem", () => new GameObject("QuestSystem").AddComponent<Gameplay.QuestSystem>());
+            SafeAddManager("CollectionSystem", () => new GameObject("CollectionSystem").AddComponent<Gameplay.CollectionSystem>());
+            SafeAddManager("CharacterCustomization", () => new GameObject("CharacterCustomization").AddComponent<Gameplay.CharacterCustomization>());
+            SafeAddManager("MiniGameLauncher", () => new GameObject("MiniGameLauncher").AddComponent<Gameplay.MiniGameLauncher>());
+            SafeAddManager("RoomDecorator", () => new GameObject("RoomDecorator").AddComponent<Gameplay.RoomDecorator>());
+            SafeAddManager("PhotoMode", () => new GameObject("PhotoMode").AddComponent<Gameplay.PhotoMode>());
 
-            // Audio
-            new GameObject("AdaptiveMusicSystem").AddComponent<Audio.AdaptiveMusicSystem>();
-            new GameObject("CharacterVoiceSystem").AddComponent<Audio.CharacterVoiceSystem>();
-            new GameObject("SpatialAudioSystem").AddComponent<Audio.SpatialAudioSystem>();
+            SafeAddManager("AdaptiveMusicSystem", () => new GameObject("AdaptiveMusicSystem").AddComponent<Audio.AdaptiveMusicSystem>());
+            SafeAddManager("CharacterVoiceSystem", () => new GameObject("CharacterVoiceSystem").AddComponent<Audio.CharacterVoiceSystem>());
+            SafeAddManager("SpatialAudioSystem", () => new GameObject("SpatialAudioSystem").AddComponent<Audio.SpatialAudioSystem>());
 
-            // Animation
-            new GameObject("EmotionalAnimator").AddComponent<Animation.EmotionalAnimator>();
-            new GameObject("ActivityAnimations").AddComponent<Animation.ActivityAnimations>();
+            SafeAddManager("EmotionalAnimator", () => new GameObject("EmotionalAnimator").AddComponent<Animation.EmotionalAnimator>());
+            SafeAddManager("ActivityAnimations", () => new GameObject("ActivityAnimations").AddComponent<Animation.ActivityAnimations>());
 
-            // Performance
-            new GameObject("LODManager").AddComponent<Performance.LODManager>();
-            new GameObject("ObjectPoolManager").AddComponent<Performance.ObjectPoolManager>();
-            new GameObject("PerformanceOptimizer").AddComponent<Performance.PerformanceOptimizer>();
+            SafeAddManager("LODManager", () => new GameObject("LODManager").AddComponent<Performance.LODManager>());
+            SafeAddManager("ObjectPoolManager", () => new GameObject("ObjectPoolManager").AddComponent<Performance.ObjectPoolManager>());
+            SafeAddManager("PerformanceOptimizer", () => new GameObject("PerformanceOptimizer").AddComponent<Performance.PerformanceOptimizer>());
 
-            // Systems
-            new GameObject("TutorialSystem").AddComponent<Systems.TutorialSystem>();
-            new GameObject("RoomProgressionSystem").AddComponent<Systems.RoomProgressionSystem>();
-            new GameObject("AnalyticsManager").AddComponent<Systems.AnalyticsManager>();
-            new GameObject("SocialSystem").AddComponent<Systems.SocialSystem>();
-            new GameObject("ParentGate").AddComponent<Systems.ParentGate>();
-            new GameObject("AccessibilityManager").AddComponent<Systems.AccessibilityManager>();
-            new GameObject("AdIntegration").AddComponent<Systems.AdIntegration>();
-            new GameObject("CosmeticPackSystem").AddComponent<Systems.CosmeticPackSystem>();
-            new GameObject("DailyRewardSystem").AddComponent<Systems.DailyRewardSystem>();
+            SafeAddManager("TutorialSystem", () => new GameObject("TutorialSystem").AddComponent<Systems.TutorialSystem>());
+            SafeAddManager("RoomProgressionSystem", () => new GameObject("RoomProgressionSystem").AddComponent<Systems.RoomProgressionSystem>());
+            SafeAddManager("AnalyticsManager", () => new GameObject("AnalyticsManager").AddComponent<Systems.AnalyticsManager>());
+            SafeAddManager("SocialSystem", () => new GameObject("SocialSystem").AddComponent<Systems.SocialSystem>());
+            SafeAddManager("ParentGate", () => new GameObject("ParentGate").AddComponent<Systems.ParentGate>());
+            SafeAddManager("AccessibilityManager", () => new GameObject("AccessibilityManager").AddComponent<Systems.AccessibilityManager>());
+            SafeAddManager("AdIntegration", () => new GameObject("AdIntegration").AddComponent<Systems.AdIntegration>());
+            SafeAddManager("CosmeticPackSystem", () => new GameObject("CosmeticPackSystem").AddComponent<Systems.CosmeticPackSystem>());
+            SafeAddManager("DailyRewardSystem", () => new GameObject("DailyRewardSystem").AddComponent<Systems.DailyRewardSystem>());
+        }
+
+        /// <summary>
+        /// Claude Bedrock fix: Safely adds a manager system with independent error handling.
+        /// A failure in one manager will NOT prevent other managers from loading.
+        /// </summary>
+        private void SafeAddManager(string name, System.Action createAction)
+        {
+            try
+            {
+                createAction();
+                Debug.Log($"[SceneBuilder] Manager OK: {name}");
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"[SceneBuilder] Manager FAILED: {name} - {e.Message}\n{e.StackTrace}");
+            }
         }
 
         private AudioSource MakeChildAudio(GameObject parent, string name)
