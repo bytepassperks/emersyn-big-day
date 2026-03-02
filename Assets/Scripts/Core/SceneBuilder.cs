@@ -4,11 +4,13 @@ using UnityEngine.Networking;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-// Claude Bedrock Round 2 fix #1: REMOVED 'using GLTFast;' top-level import.
-// On IL2CPP Android, if GLTFast assembly fails to resolve, the ENTIRE SceneBuilder
-// class fails to load silently — Awake() never runs, causing the blue screen.
-// GLTFast types are now accessed via reflection-free wrapper methods below.
-// NavMesh baking uses collider-based approach (no AI Navigation package needed)
+// Claude Bedrock Round 3 fix: ALL GLTFast references REMOVED from Assembly-CSharp.
+// Root cause confirmed via AWS Device Farm logcat on 5 real devices:
+//   "The referenced script on this Behaviour (Game Object 'Bootstrap') is missing!"
+// GLTFHelper.cs (with 'using GLTFast;') was in the same Assembly-CSharp assembly.
+// When GLTFast assembly failed to resolve at IL2CPP runtime, the ENTIRE
+// Assembly-CSharp failed to load → SceneBuilder became 'missing script' → no Awake() → blue screen.
+// GLB loading is now disabled; primitive fallback characters render instead.
 
 namespace EmersynBigDay.Core
 {
@@ -1144,25 +1146,14 @@ namespace EmersynBigDay.Core
             string uri = Path.Combine(Application.streamingAssetsPath, "Characters", glbFileName + ".glb");
             Debug.Log($"[SceneBuilder] Loading GLB: {uri}");
 
-            // Claude Bedrock Round 2: Use GLTFast via separate helper class to prevent
-            // assembly resolution failure from killing SceneBuilder
-            object gltfImport;
-            try { gltfImport = GLTFHelper.CreateImport(); }
-            catch (System.Exception e) { Debug.LogWarning($"[SceneBuilder] GLTFast not available: {e.Message}"); yield break; }
+            // Claude Bedrock Round 3: GLTFast REMOVED entirely to fix Assembly-CSharp load failure.
+            // GLB loading disabled — primitive fallback characters are used instead.
+            Debug.Log($"[SceneBuilder] GLB loading disabled (GLTFast removed to fix blue screen). Keeping primitive for {charName}");
+            yield break;
 
-            var loadTask = GLTFHelper.Load(gltfImport, uri);
-
-            // Wait for async load to complete
-            while (!loadTask.IsCompleted)
-                yield return null;
-
-            if (!loadTask.Result)
-            {
-                Debug.LogWarning($"[SceneBuilder] Failed to load GLB for {charName}, keeping primitive fallback");
-                yield break;
-            }
-
-            // Find and replace the primitive character
+            // The code below is unreachable but preserved for future re-enablement
+            // once GLTFast is moved to its own assembly definition.
+            #if false
             Transform existing = characterContainer != null ? characterContainer.Find(charName) : null;
             if (existing == null)
             {
@@ -1175,16 +1166,12 @@ namespace EmersynBigDay.Core
             Vector3 savedScale = existing.localScale;
             Transform savedParent = existing.parent;
 
-            // Create new GLB object
             var glbObj = new GameObject(charName);
             glbObj.transform.SetParent(savedParent, false);
             glbObj.transform.position = savedPos;
             glbObj.transform.rotation = savedRot;
             glbObj.transform.localScale = savedScale;
-
-            var instantiateTask = GLTFHelper.InstantiateMainScene(gltfImport, glbObj.transform);
-            while (!instantiateTask.IsCompleted)
-                yield return null;
+            #endif
 
             // Convert glTF materials to Standard shader for Built-in Pipeline
             ConvertGLTFMaterials(glbObj);
@@ -1215,21 +1202,11 @@ namespace EmersynBigDay.Core
             string uri = Path.Combine(Application.streamingAssetsPath, "Characters", glbFileName + ".glb");
             Debug.Log($"[SceneBuilder] Loading pet GLB: {uri}");
 
-            // Claude Bedrock Round 2: Use GLTFast via separate helper class
-            object gltfImport;
-            try { gltfImport = GLTFHelper.CreateImport(); }
-            catch (System.Exception e) { Debug.LogWarning($"[SceneBuilder] GLTFast not available for pet: {e.Message}"); yield break; }
+            // Claude Bedrock Round 3: GLTFast REMOVED entirely to fix Assembly-CSharp load failure.
+            Debug.Log($"[SceneBuilder] GLB loading disabled (GLTFast removed to fix blue screen). Keeping primitive for pet {petName}");
+            yield break;
 
-            var loadTask = GLTFHelper.Load(gltfImport, uri);
-            while (!loadTask.IsCompleted)
-                yield return null;
-
-            if (!loadTask.Result)
-            {
-                Debug.LogWarning($"[SceneBuilder] Failed to load GLB for pet {petName}, keeping primitive");
-                yield break;
-            }
-
+            #if false
             Transform existing = characterContainer != null ? characterContainer.Find(petName) : null;
             if (existing == null) yield break;
 
@@ -1240,10 +1217,7 @@ namespace EmersynBigDay.Core
             glbObj.transform.SetParent(savedParent, false);
             glbObj.transform.position = savedPos;
             glbObj.transform.localScale = Vector3.one * 0.5f;
-
-            var instantiateTask = GLTFHelper.InstantiateMainScene(gltfImport, glbObj.transform);
-            while (!instantiateTask.IsCompleted)
-                yield return null;
+            #endif
 
             ConvertGLTFMaterials(glbObj);
             var col = glbObj.AddComponent<BoxCollider>();
