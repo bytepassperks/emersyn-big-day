@@ -101,20 +101,28 @@ namespace EmersynBigDay.Core
 
         private void CreateCamera()
         {
-            var camObj = new GameObject("MainCamera");
-            camObj.tag = "MainCamera";
-            mainCamera = camObj.AddComponent<Camera>();
+            // Reuse existing camera from scene if present
+            mainCamera = Camera.main;
+            if (mainCamera == null)
+            {
+                var camObj = new GameObject("MainCamera");
+                camObj.tag = "MainCamera";
+                mainCamera = camObj.AddComponent<Camera>();
+                camObj.AddComponent<AudioListener>();
+            }
             mainCamera.clearFlags = CameraClearFlags.SolidColor;
             mainCamera.backgroundColor = new Color(0.55f, 0.80f, 0.95f);
             mainCamera.fieldOfView = 60f;
             mainCamera.nearClipPlane = 0.1f;
             mainCamera.farClipPlane = 100f;
-            camObj.AddComponent<AudioListener>();
-            var ctrl = camObj.AddComponent<CameraSystem.CameraController>();
-            ctrl.Offset = new Vector3(0f, 3f, -5f);
-            ctrl.CurrentZoom = 6f;
-            camObj.transform.position = new Vector3(0f, 4f, -6f);
-            camObj.transform.LookAt(new Vector3(0f, 1f, 0f));
+            if (mainCamera.GetComponent<CameraSystem.CameraController>() == null)
+            {
+                var ctrl = mainCamera.gameObject.AddComponent<CameraSystem.CameraController>();
+                ctrl.Offset = new Vector3(0f, 3f, -5f);
+                ctrl.CurrentZoom = 6f;
+            }
+            mainCamera.transform.position = new Vector3(0f, 4f, -6f);
+            mainCamera.transform.LookAt(new Vector3(0f, 1f, 0f));
         }
 
         private void CreateManagers()
@@ -163,6 +171,10 @@ namespace EmersynBigDay.Core
 
         private void SetupLighting()
         {
+            // Remove existing lights from the scene to avoid duplicates
+            foreach (var existing in FindObjectsByType<Light>(FindObjectsSortMode.None))
+                Destroy(existing.gameObject);
+
             RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
             RenderSettings.ambientLight = new Color(0.85f, 0.88f, 0.92f);
             RenderSettings.ambientIntensity = 1.1f;
