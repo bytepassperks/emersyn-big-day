@@ -143,22 +143,20 @@ public class BuildScript
         PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel25;
         PlayerSettings.Android.targetSdkVersion = AndroidSdkVersions.AndroidApiLevel34;
 
-        // Switch to Mono backend per Claude 5th analysis:
-        // TMP is a Unity 6 BUILT-IN package that can't be removed.
-        // IL2CPP's serialization validator has false positives for HashSet<uint> in TMP_Settings.
-        // Mono doesn't have this validator issue. Mono supports both ARM64+ARMv7.
+        // Use IL2CPP backend - Google Play standard for 64-bit
+        // TMP built-in source patched to replace HashSet<uint> with List<uint> per Claude 6th analysis
         PlayerSettings.SetScriptingBackend(
-            UnityEditor.Build.NamedBuildTarget.Android, ScriptingImplementation.Mono2x);
+            UnityEditor.Build.NamedBuildTarget.Android, ScriptingImplementation.IL2CPP);
 
-        // Mono supports both architectures
-        PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64 | AndroidArchitecture.ARMv7;
+        // ARM64 only (IL2CPP standard)
+        PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
 
-        // Disable managed stripping to prevent any code stripping issues
+        // Disable managed stripping to prevent code stripping issues
         PlayerSettings.SetManagedStrippingLevel(
             UnityEditor.Build.NamedBuildTarget.Android, ManagedStrippingLevel.Disabled);
         PlayerSettings.stripEngineCode = false;
 
-        Debug.Log($"[BUILD] Backend: Mono, Target arch: ARM64+ARMv7, Stripping: Disabled");
+        Debug.Log($"[BUILD] Backend: IL2CPP, Target arch: ARM64, Stripping: Disabled");
 
         // Suppress stack traces during build to avoid massive log overhead from URP shader warnings
         var prevWarningTrace = Application.GetStackTraceLogType(LogType.Warning);
