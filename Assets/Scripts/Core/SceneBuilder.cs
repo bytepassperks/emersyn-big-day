@@ -1,7 +1,10 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Networking;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
+using GLTFast;
 // NavMesh baking uses collider-based approach (no AI Navigation package needed)
 
 namespace EmersynBigDay.Core
@@ -65,6 +68,32 @@ namespace EmersynBigDay.Core
         };
 
         private Material baseMat;
+        private Dictionary<string, Texture2D> textureCache = new Dictionary<string, Texture2D>();
+        private bool glbLoadingComplete = false;
+
+        // Room texture mappings: room index -> (floor texture path, wall texture path)
+        private static readonly string[][] RoomTexturePaths = {
+            new[] { "rooms/bedroom/bedroom_floor_wood_albedo.png", "rooms/bedroom/bedroom_wall_lavender_albedo.png",
+                    "rooms/bedroom/bedroom_floor_wood_normal.png", "rooms/bedroom/bedroom_wall_lavender_normal.png" },
+            new[] { "rooms/kitchen/kitchen_floor_tile_albedo.png", "rooms/kitchen/kitchen_wall_mint_albedo.png",
+                    "rooms/kitchen/kitchen_floor_tile_normal.png", "rooms/kitchen/kitchen_wall_mint_normal.png" },
+            new[] { "rooms/bathroom/bathroom_floor_tile_albedo.png", "rooms/bathroom/bathroom_wall_blue_albedo.png",
+                    "rooms/bathroom/bathroom_floor_tile_normal.png", "rooms/bathroom/bathroom_wall_blue_normal.png" },
+            new[] { "rooms/park/park_grass_lush_albedo.png", "",
+                    "rooms/park/park_grass_lush_normal.png", "" },
+            new[] { "rooms/school/school_floor_linoleum_albedo.png", "rooms/school/school_wall_green_albedo.png",
+                    "rooms/school/school_floor_linoleum_normal.png", "rooms/school/school_wall_green_normal.png" },
+            new[] { "", "", "", "" }, // Arcade - no textures yet
+            new[] { "", "", "", "" }, // Studio - no textures yet
+            new[] { "rooms/shop/shop_floor_wood_albedo.png", "rooms/shop/shop_wall_warm_albedo.png",
+                    "rooms/shop/shop_floor_wood_normal.png", "rooms/shop/shop_wall_warm_normal.png" },
+            new[] { "rooms/garden/garden_grass_albedo.png", "",
+                    "rooms/garden/garden_grass_normal.png", "" },
+        };
+
+        // GLB character name mappings
+        private static readonly string[] GLBCharacterFiles = { "emersyn", "ava", "mia", "leo" };
+        private static readonly string[] GLBPetFiles = { "cat", "dog", "bunny" };
 
         private void Awake()
         {
@@ -84,6 +113,9 @@ namespace EmersynBigDay.Core
             CreateUI();
             WireUpSystems();
             Debug.Log("[SceneBuilder] Scene fully initialized!");
+            // Start async loading of GLB models and PBR textures
+            StartCoroutine(LoadGLBCharactersCoroutine());
+            StartCoroutine(LoadAndApplyRoomTextures(currentRoomIndex));
         }
 
         private Material CreateBaseMaterial()
@@ -302,6 +334,8 @@ namespace EmersynBigDay.Core
             BuildFurniture(index);
             // Fix #12: Bake NavMesh after room geometry is built
             BakeNavMesh();
+            // Apply PBR textures to room surfaces
+            StartCoroutine(LoadAndApplyRoomTextures(index));
             var rlo = new GameObject("RoomLight");
             rlo.transform.SetParent(roomContainer);
             rlo.transform.position = new Vector3(0, 4, 0);
@@ -866,6 +900,288 @@ namespace EmersynBigDay.Core
             // Interstitial ad between rooms (respects cooldown)
             if (Systems.AdIntegration.Instance != null)
                 Systems.AdIntegration.Instance.ShowInterstitial();
+        }
+
+        // === GLB Model Loading via glTFast ===
+        private IEnumerator LoadGLBCharactersCoroutine()
+        {
+            Debug.Log("[SceneBuilder] Starting GLB character loading...");
+            // Load main characters from GLB
+            for (int i = 0; i < GLBCharacterFiles.Length && i < CharacterNames.Length; i++)
+            {
+                string glbName = GLBCharacterFiles[i];
+                string charName = CharacterNames[i];
+                yield return StartCoroutine(LoadSingleGLBCharacter(glbName, charName, i == 0));
+            }
+            // Load pets from GLB
+            for (int i = 0; i < GLBPetFiles.Length && i < PetNames.Length; i++)
+            {
+                string glbName = GLBPetFiles[i];
+                string petName = PetNames[i];
+                yield return StartCoroutine(LoadSingleGLBPet(glbName, petName));
+            }
+            glbLoadingComplete = true;
+            Debug.Log("[SceneBuilder] GLB character loading complete!");
+        }
+
+        private IEnumerator LoadSingleGLBCharacter(string glbFileName, string charName, bool isMain)
+        {
+            string uri = Path.Combine(Application.streamingAssetsPath, "Characters", glbFileName + ".glb");
+            Debug.Log($"[SceneBuilder] Loading GLB: {uri}");
+
+            var gltfImport = new GltfImport();
+            var loadTask = gltfImport.Load(uri);
+
+            // Wait for async load to complete
+            while (!loadTask.IsCompleted)
+                yield return null;
+
+            if (!loadTask.Result)
+            {
+                Debug.LogWarning($"[SceneBuilder] Failed to load GLB for {charName}, keeping primitive fallback");
+                yield break;
+            }
+
+            // Find and replace the primitive character
+            Transform existing = characterContainer != null ? characterContainer.Find(charName) : null;
+            if (existing == null)
+            {
+                Debug.LogWarning($"[SceneBuilder] Could not find primitive {charName} to replace");
+                yield break;
+            }
+
+            Vector3 savedPos = existing.position;
+            Quaternion savedRot = existing.rotation;
+            Vector3 savedScale = existing.localScale;
+            Transform savedParent = existing.parent;
+
+            // Create new GLB object
+            var glbObj = new GameObject(charName);
+            glbObj.transform.SetParent(savedParent, false);
+            glbObj.transform.position = savedPos;
+            glbObj.transform.rotation = savedRot;
+            glbObj.transform.localScale = savedScale;
+
+            var instantiateTask = gltfImport.InstantiateMainSceneAsync(glbObj.transform);
+            while (!instantiateTask.IsCompleted)
+                yield return null;
+
+            // Convert glTF materials to Standard shader for Built-in Pipeline
+            ConvertGLTFMaterials(glbObj);
+
+            // Add interaction components
+            var col = glbObj.AddComponent<BoxCollider>();
+            col.center = new Vector3(0, 1f, 0);
+            col.size = new Vector3(1f, 2.2f, 0.8f);
+            glbObj.AddComponent<CharacterBob>();
+
+            // Update emersynObj reference if this is the main character
+            if (isMain)
+            {
+                emersynObj = glbObj;
+                if (CameraSystem.CameraController.Instance != null)
+                    CameraSystem.CameraController.Instance.Target = glbObj.transform;
+                if (Gameplay.CharacterCustomization.Instance != null)
+                    Gameplay.CharacterCustomization.Instance.ApplyToCharacter(glbObj);
+            }
+
+            // Destroy primitive version
+            Destroy(existing.gameObject);
+            Debug.Log($"[SceneBuilder] Replaced {charName} with GLB model!");
+        }
+
+        private IEnumerator LoadSingleGLBPet(string glbFileName, string petName)
+        {
+            string uri = Path.Combine(Application.streamingAssetsPath, "Characters", glbFileName + ".glb");
+            Debug.Log($"[SceneBuilder] Loading pet GLB: {uri}");
+
+            var gltfImport = new GltfImport();
+            var loadTask = gltfImport.Load(uri);
+            while (!loadTask.IsCompleted)
+                yield return null;
+
+            if (!loadTask.Result)
+            {
+                Debug.LogWarning($"[SceneBuilder] Failed to load GLB for pet {petName}, keeping primitive");
+                yield break;
+            }
+
+            Transform existing = characterContainer != null ? characterContainer.Find(petName) : null;
+            if (existing == null) yield break;
+
+            Vector3 savedPos = existing.position;
+            Transform savedParent = existing.parent;
+
+            var glbObj = new GameObject(petName);
+            glbObj.transform.SetParent(savedParent, false);
+            glbObj.transform.position = savedPos;
+            glbObj.transform.localScale = Vector3.one * 0.5f;
+
+            var instantiateTask = gltfImport.InstantiateMainSceneAsync(glbObj.transform);
+            while (!instantiateTask.IsCompleted)
+                yield return null;
+
+            ConvertGLTFMaterials(glbObj);
+            var col = glbObj.AddComponent<BoxCollider>();
+            col.center = new Vector3(0, 0.4f, 0);
+            col.size = new Vector3(0.6f, 0.8f, 0.8f);
+            glbObj.AddComponent<CharacterBob>();
+
+            Destroy(existing.gameObject);
+            Debug.Log($"[SceneBuilder] Replaced pet {petName} with GLB model!");
+        }
+
+        private void ConvertGLTFMaterials(GameObject obj)
+        {
+            var renderers = obj.GetComponentsInChildren<Renderer>();
+            Shader standardShader = Shader.Find("Standard");
+            if (standardShader == null) return;
+
+            foreach (var renderer in renderers)
+            {
+                foreach (var mat in renderer.materials)
+                {
+                    if (mat == null) continue;
+                    // Preserve textures from glTF material
+                    Texture mainTex = null;
+                    Texture normalTex = null;
+                    Color baseColor = Color.white;
+
+                    // Try glTF property names
+                    if (mat.HasProperty("_BaseColorTexture")) mainTex = mat.GetTexture("_BaseColorTexture");
+                    if (mainTex == null && mat.HasProperty("baseColorTexture")) mainTex = mat.GetTexture("baseColorTexture");
+                    if (mainTex == null && mat.HasProperty("_MainTex")) mainTex = mat.GetTexture("_MainTex");
+                    if (mat.HasProperty("_NormalTexture")) normalTex = mat.GetTexture("_NormalTexture");
+                    if (normalTex == null && mat.HasProperty("_BumpMap")) normalTex = mat.GetTexture("_BumpMap");
+                    if (mat.HasProperty("_BaseColor")) baseColor = mat.GetColor("_BaseColor");
+                    else if (mat.HasProperty("_Color")) baseColor = mat.GetColor("_Color");
+
+                    // Switch to Standard shader
+                    mat.shader = standardShader;
+                    mat.color = baseColor;
+                    if (mainTex != null) mat.SetTexture("_MainTex", mainTex);
+                    if (normalTex != null)
+                    {
+                        mat.SetTexture("_BumpMap", normalTex);
+                        mat.EnableKeyword("_NORMALMAP");
+                    }
+                    mat.SetFloat("_Glossiness", 0.4f);
+                    mat.SetFloat("_Metallic", 0.0f);
+                    mat.enableInstancing = true;
+                }
+            }
+        }
+
+        // === PBR Texture Loading for Rooms ===
+        private IEnumerator LoadAndApplyRoomTextures(int roomIndex)
+        {
+            if (roomIndex < 0 || roomIndex >= RoomTexturePaths.Length) yield break;
+            var paths = RoomTexturePaths[roomIndex];
+            if (paths == null || paths.Length < 4) yield break;
+
+            string floorAlbedoPath = paths[0];
+            string wallAlbedoPath = paths[1];
+            string floorNormalPath = paths[2];
+            string wallNormalPath = paths[3];
+
+            // Load floor textures
+            if (!string.IsNullOrEmpty(floorAlbedoPath))
+            {
+                Texture2D floorAlbedo = null;
+                Texture2D floorNormal = null;
+                yield return StartCoroutine(LoadTextureFromStreamingAssets(floorAlbedoPath, tex => floorAlbedo = tex));
+                if (!string.IsNullOrEmpty(floorNormalPath))
+                    yield return StartCoroutine(LoadTextureFromStreamingAssets(floorNormalPath, tex => floorNormal = tex));
+
+                if (floorAlbedo != null)
+                {
+                    Material floorMat = CreatePBRMaterial(floorAlbedo, floorNormal);
+                    ApplyMaterialToChild(roomContainer, "Floor", floorMat);
+                }
+            }
+
+            // Load wall textures
+            if (!string.IsNullOrEmpty(wallAlbedoPath))
+            {
+                Texture2D wallAlbedo = null;
+                Texture2D wallNormal = null;
+                yield return StartCoroutine(LoadTextureFromStreamingAssets(wallAlbedoPath, tex => wallAlbedo = tex));
+                if (!string.IsNullOrEmpty(wallNormalPath))
+                    yield return StartCoroutine(LoadTextureFromStreamingAssets(wallNormalPath, tex => wallNormal = tex));
+
+                if (wallAlbedo != null)
+                {
+                    Material wallMat = CreatePBRMaterial(wallAlbedo, wallNormal);
+                    ApplyMaterialToChild(roomContainer, "BackWall", wallMat);
+                    ApplyMaterialToChild(roomContainer, "LeftWall", wallMat);
+                    ApplyMaterialToChild(roomContainer, "RightWall", wallMat);
+                    ApplyMaterialToChild(roomContainer, "Ceiling", wallMat);
+                }
+            }
+
+            Debug.Log($"[SceneBuilder] PBR textures applied to room {RoomNames[roomIndex]}");
+        }
+
+        private IEnumerator LoadTextureFromStreamingAssets(string relativePath, System.Action<Texture2D> callback)
+        {
+            if (textureCache.ContainsKey(relativePath))
+            {
+                callback(textureCache[relativePath]);
+                yield break;
+            }
+
+            string fullPath = Path.Combine(Application.streamingAssetsPath, "Textures", relativePath);
+            using (var request = UnityWebRequestTexture.GetTexture(fullPath))
+            {
+                yield return request.SendWebRequest();
+                if (request.result == UnityWebRequest.Result.Success)
+                {
+                    var tex = DownloadHandlerTexture.GetContent(request);
+                    tex.filterMode = FilterMode.Trilinear;
+                    tex.wrapMode = TextureWrapMode.Repeat;
+                    textureCache[relativePath] = tex;
+                    callback(tex);
+                    Debug.Log($"[SceneBuilder] Loaded texture: {relativePath}");
+                }
+                else
+                {
+                    Debug.LogWarning($"[SceneBuilder] Failed to load texture: {fullPath} - {request.error}");
+                    callback(null);
+                }
+            }
+        }
+
+        private Material CreatePBRMaterial(Texture2D albedo, Texture2D normal)
+        {
+            Material mat = new Material(baseMat);
+            mat.SetTexture("_MainTex", albedo);
+            mat.color = Color.white; // Don't tint, let texture show through
+            if (normal != null)
+            {
+                mat.SetTexture("_BumpMap", normal);
+                mat.EnableKeyword("_NORMALMAP");
+                mat.SetFloat("_BumpScale", 1.0f);
+            }
+            mat.SetFloat("_Glossiness", 0.3f);
+            mat.SetFloat("_Metallic", 0.0f);
+            mat.enableInstancing = true;
+            // Set texture tiling for room scale
+            mat.SetTextureScale("_MainTex", new Vector2(3f, 3f));
+            if (normal != null)
+                mat.SetTextureScale("_BumpMap", new Vector2(3f, 3f));
+            return mat;
+        }
+
+        private void ApplyMaterialToChild(Transform parent, string childName, Material mat)
+        {
+            if (parent == null) return;
+            Transform child = parent.Find(childName);
+            if (child != null)
+            {
+                var renderer = child.GetComponent<Renderer>();
+                if (renderer != null)
+                    renderer.material = mat;
+            }
         }
 
         // Fix #12: NavMesh baking for character pathfinding
