@@ -4,6 +4,7 @@ using UnityEngine.Networking;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.InteropServices;
 // Claude Bedrock Round 3 fix: ALL GLTFast references REMOVED from Assembly-CSharp.
 // Root cause confirmed via AWS Device Farm logcat on 5 real devices:
 //   "The referenced script on this Behaviour (Game Object 'Bootstrap') is missing!"
@@ -16,6 +17,23 @@ namespace EmersynBigDay.Core
 {
     public class SceneBuilder : MonoBehaviour
     {
+        // Claude Bedrock Round 5: Native Android logging to bypass IL2CPP Debug.Log suppression
+        #if UNITY_ANDROID && !UNITY_EDITOR
+        private static void AndroidLog(string msg)
+        {
+            try
+            {
+                using (var logClass = new AndroidJavaClass("android.util.Log"))
+                {
+                    logClass.CallStatic<int>("d", "SCENEBUILDER", msg);
+                }
+            }
+            catch (System.Exception) { /* fallback silently */ }
+        }
+        #else
+        private static void AndroidLog(string msg) { Debug.Log(msg); }
+        #endif
+
         private bool isInitialized = false;
         private Camera mainCamera;
         private Canvas uiCanvas;
@@ -102,6 +120,8 @@ namespace EmersynBigDay.Core
 
         private void Awake()
         {
+            AndroidLog("[SceneBuilder] ===== Awake() CALLED =====");
+
             // Claude Bedrock fix #4: FORCE mobile-safe quality settings on Android BEFORE anything else
             #if UNITY_ANDROID && !UNITY_EDITOR
             QualitySettings.SetQualityLevel(1, true); // Medium quality
@@ -109,7 +129,7 @@ namespace EmersynBigDay.Core
             QualitySettings.shadows = ShadowQuality.HardOnly;
             QualitySettings.shadowResolution = ShadowResolution.Low;
             QualitySettings.softParticles = false;
-            Debug.Log("[SceneBuilder] Android quality settings forced to Medium/safe");
+            AndroidLog("[SceneBuilder] Android quality settings forced to Medium/safe");
             #endif
 
             if (isInitialized) return;
@@ -128,47 +148,52 @@ namespace EmersynBigDay.Core
             Screen.sleepTimeout = SleepTimeout.NeverSleep;
             QualitySettings.vSyncCount = 0;
 
-            // Claude Bedrock fix #5: Log graphics API for debugging
+            // Claude Bedrock Round 5: Log graphics info via native Android logging
             #if UNITY_ANDROID && !UNITY_EDITOR
-            Debug.Log($"[SceneBuilder] Graphics API: {SystemInfo.graphicsDeviceType}");
-            Debug.Log($"[SceneBuilder] Graphics device: {SystemInfo.graphicsDeviceName}");
-            Debug.Log($"[SceneBuilder] Color space: {QualitySettings.activeColorSpace}");
+            AndroidLog($"[SceneBuilder] Graphics API: {SystemInfo.graphicsDeviceType}");
+            AndroidLog($"[SceneBuilder] Graphics device: {SystemInfo.graphicsDeviceName}");
+            AndroidLog($"[SceneBuilder] Color space: {QualitySettings.activeColorSpace}");
+            AndroidLog($"[SceneBuilder] Screen: {Screen.width}x{Screen.height}");
             #endif
 
-            Debug.Log("[SceneBuilder] Starting programmatic scene construction...");
+            // Claude Bedrock Round 5: Warm up ALL shaders before creating any geometry
+            AndroidLog("[SceneBuilder] Warming up shaders...");
+            Shader.WarmupAllShaders();
+            AndroidLog("[SceneBuilder] Shader warmup complete");
+
+            AndroidLog("[SceneBuilder] Starting programmatic scene construction...");
 
             // CRITICAL: Each phase is independently try-caught so a failure in one
             // (e.g. a manager system) does NOT prevent room geometry, characters, or UI from rendering.
-            // Previous bug: single try-catch meant ANY exception in CreateManagers() killed ALL rendering.
 
-            try { baseMat = CreateBaseMaterial(); Debug.Log("[SceneBuilder] BaseMat created OK"); }
-            catch (System.Exception e) { Debug.LogError($"[SceneBuilder] BaseMat FAILED: {e.Message}"); baseMat = new Material(Shader.Find("Diffuse") ?? Shader.Find("Mobile/Diffuse")); }
+            try { baseMat = CreateBaseMaterial(); AndroidLog("[SceneBuilder] BaseMat created OK"); }
+            catch (System.Exception e) { AndroidLog($"[SceneBuilder] BaseMat FAILED: {e.Message}"); baseMat = CreateEmergencyMaterial(); }
 
-            try { CreateCamera(); Debug.Log("[SceneBuilder] Camera created OK"); }
-            catch (System.Exception e) { Debug.LogError($"[SceneBuilder] Camera FAILED: {e.Message}"); }
+            try { CreateCamera(); AndroidLog("[SceneBuilder] Camera created OK"); }
+            catch (System.Exception e) { AndroidLog($"[SceneBuilder] Camera FAILED: {e.Message}"); }
 
-            try { CreateManagers(); Debug.Log("[SceneBuilder] Managers created OK"); }
-            catch (System.Exception e) { Debug.LogError($"[SceneBuilder] Managers FAILED (non-fatal): {e.Message}\n{e.StackTrace}"); }
+            try { CreateManagers(); AndroidLog("[SceneBuilder] Managers created OK"); }
+            catch (System.Exception e) { AndroidLog($"[SceneBuilder] Managers FAILED (non-fatal): {e.Message}"); }
 
-            try { SetupLighting(); Debug.Log("[SceneBuilder] Lighting setup OK"); }
-            catch (System.Exception e) { Debug.LogError($"[SceneBuilder] Lighting FAILED: {e.Message}"); }
+            try { SetupLighting(); AndroidLog("[SceneBuilder] Lighting setup OK"); }
+            catch (System.Exception e) { AndroidLog($"[SceneBuilder] Lighting FAILED: {e.Message}"); }
 
-            try { CreateRoomContainer(); BuildRoom(0); Debug.Log("[SceneBuilder] Room built OK"); }
-            catch (System.Exception e) { Debug.LogError($"[SceneBuilder] Room FAILED: {e.Message}\n{e.StackTrace}"); }
+            try { CreateRoomContainer(); BuildRoom(0); AndroidLog("[SceneBuilder] Room built OK"); }
+            catch (System.Exception e) { AndroidLog($"[SceneBuilder] Room FAILED: {e.Message}"); }
 
-            try { CreateCharacters(); Debug.Log("[SceneBuilder] Characters created OK"); }
-            catch (System.Exception e) { Debug.LogError($"[SceneBuilder] Characters FAILED: {e.Message}"); }
+            try { CreateCharacters(); AndroidLog("[SceneBuilder] Characters created OK"); }
+            catch (System.Exception e) { AndroidLog($"[SceneBuilder] Characters FAILED: {e.Message}"); }
 
-            try { CreateUI(); Debug.Log("[SceneBuilder] UI created OK"); }
-            catch (System.Exception e) { Debug.LogError($"[SceneBuilder] UI FAILED: {e.Message}"); }
+            try { CreateUI(); AndroidLog("[SceneBuilder] UI created OK"); }
+            catch (System.Exception e) { AndroidLog($"[SceneBuilder] UI FAILED: {e.Message}"); }
 
-            try { WireUpSystems(); Debug.Log("[SceneBuilder] Systems wired OK"); }
-            catch (System.Exception e) { Debug.LogError($"[SceneBuilder] WireUp FAILED: {e.Message}"); }
+            try { WireUpSystems(); AndroidLog("[SceneBuilder] Systems wired OK"); }
+            catch (System.Exception e) { AndroidLog($"[SceneBuilder] WireUp FAILED: {e.Message}"); }
 
             // Claude Bedrock fix: Validate geometry was actually created
             ValidateGeometry();
 
-            Debug.Log("[SceneBuilder] Scene fully initialized!");
+            AndroidLog("[SceneBuilder] Scene fully initialized!");
             // Start async loading of GLB models and PBR textures
             StartCoroutine(SafeCoroutine(LoadGLBCharactersCoroutine()));
             StartCoroutine(SafeCoroutine(LoadAndApplyRoomTextures(currentRoomIndex)));
@@ -185,30 +210,40 @@ namespace EmersynBigDay.Core
         {
             yield return new WaitForSeconds(2f);
 
-            Debug.Log("=== ANDROID RENDER DIAGNOSTIC ===");
-            Debug.Log($"Cameras: {FindObjectsByType<Camera>(FindObjectsSortMode.None).Length}");
-            Debug.Log($"Lights: {FindObjectsByType<Light>(FindObjectsSortMode.None).Length}");
-            Debug.Log($"Renderers: {FindObjectsByType<Renderer>(FindObjectsSortMode.None).Length}");
-            Debug.Log($"Canvas objects: {FindObjectsByType<Canvas>(FindObjectsSortMode.None).Length}");
-            Debug.Log($"Graphics API: {SystemInfo.graphicsDeviceType}");
-            Debug.Log($"Render pipeline asset: {UnityEngine.Rendering.GraphicsSettings.renderPipelineAsset}");
+            AndroidLog("=== ANDROID RENDER DIAGNOSTIC ===");
+            AndroidLog($"Cameras: {FindObjectsByType<Camera>(FindObjectsSortMode.None).Length}");
+            AndroidLog($"Lights: {FindObjectsByType<Light>(FindObjectsSortMode.None).Length}");
+            AndroidLog($"Renderers: {FindObjectsByType<Renderer>(FindObjectsSortMode.None).Length}");
+            AndroidLog($"Canvas objects: {FindObjectsByType<Canvas>(FindObjectsSortMode.None).Length}");
+            AndroidLog($"Graphics API: {SystemInfo.graphicsDeviceType}");
+            AndroidLog($"Render pipeline asset: {UnityEngine.Rendering.GraphicsSettings.renderPipelineAsset}");
 
             Camera cam = Camera.main;
             if (cam != null)
             {
-                Debug.Log($"Camera position: {cam.transform.position}");
-                Debug.Log($"Camera rotation: {cam.transform.rotation.eulerAngles}");
-                Debug.Log($"Camera culling mask: {cam.cullingMask}");
-                Debug.Log($"Camera clear flags: {cam.clearFlags}");
-                Debug.Log($"Camera background: {cam.backgroundColor}");
-                Debug.Log($"Camera rendering path: {cam.renderingPath}");
-                Debug.Log($"Camera HDR: {cam.allowHDR}, MSAA: {cam.allowMSAA}");
+                AndroidLog($"Camera position: {cam.transform.position}");
+                AndroidLog($"Camera rotation: {cam.transform.rotation.eulerAngles}");
+                AndroidLog($"Camera culling mask: {cam.cullingMask}");
+                AndroidLog($"Camera clear flags: {cam.clearFlags}");
+                AndroidLog($"Camera background: {cam.backgroundColor}");
+                AndroidLog($"Camera rendering path: {cam.renderingPath}");
+                AndroidLog($"Camera HDR: {cam.allowHDR}, MSAA: {cam.allowMSAA}");
             }
             else
             {
-                Debug.LogError("NO MAIN CAMERA FOUND after scene init!");
+                AndroidLog("NO MAIN CAMERA FOUND after scene init!");
             }
-            Debug.Log("=== END DIAGNOSTIC ===");
+
+            // Claude Bedrock Round 5: Log all renderer shader states
+            var allRenderers = FindObjectsByType<Renderer>(FindObjectsSortMode.None);
+            foreach (var r in allRenderers)
+            {
+                if (r.material != null && r.material.shader != null)
+                    AndroidLog($"Renderer: {r.name} shader={r.material.shader.name} visible={r.isVisible}");
+                else
+                    AndroidLog($"Renderer: {r.name} has NULL material or shader!");
+            }
+            AndroidLog("=== END DIAGNOSTIC ===");
         }
 
         /// <summary>
@@ -217,22 +252,35 @@ namespace EmersynBigDay.Core
         private void ValidateGeometry()
         {
             var renderers = FindObjectsByType<MeshRenderer>(FindObjectsSortMode.None);
-            Debug.LogError($"[GEOMETRY CHECK] MeshRenderers: {renderers.Length}");
+            AndroidLog($"[GEOMETRY CHECK] MeshRenderers: {renderers.Length}");
             var cameras = FindObjectsByType<Camera>(FindObjectsSortMode.None);
-            Debug.LogError($"[CAMERA CHECK] Cameras: {cameras.Length}");
+            AndroidLog($"[CAMERA CHECK] Cameras: {cameras.Length}");
             var canvases = FindObjectsByType<Canvas>(FindObjectsSortMode.None);
-            Debug.LogError($"[UI CHECK] Canvases: {canvases.Length}");
+            AndroidLog($"[UI CHECK] Canvases: {canvases.Length}");
+            int fixedCount = 0;
             foreach (var r in renderers)
             {
                 if (r.material != null && r.material.shader != null)
                 {
                     if (r.material.shader.name == "Hidden/InternalErrorShader")
                     {
-                        Debug.LogError($"[SHADER ERROR] {r.name} has broken shader! Fixing...");
-                        r.material.shader = Shader.Find("Mobile/Diffuse") ?? Shader.Find("Sprites/Default");
+                        AndroidLog($"[SHADER ERROR] {r.name} has broken shader! Fixing...");
+                        // Claude Bedrock Round 5: Use primitive material as fallback instead of Shader.Find
+                        var tempPrim = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                        r.material = new Material(tempPrim.GetComponent<Renderer>().sharedMaterial);
+                        r.material.color = Color.magenta; // Bright color to show fixed shaders
+                        DestroyImmediate(tempPrim);
+                        fixedCount++;
                     }
                 }
+                else if (r.material == null)
+                {
+                    AndroidLog($"[MATERIAL NULL] {r.name} has no material! Creating one...");
+                    r.material = CreateEmergencyMaterial();
+                    fixedCount++;
+                }
             }
+            AndroidLog($"[GEOMETRY VALIDATE] Fixed {fixedCount} broken materials");
         }
 
         // Wrapper to catch exceptions in coroutines (which normally fail silently)
@@ -255,10 +303,32 @@ namespace EmersynBigDay.Core
             }
         }
 
+        // Claude Bedrock Round 5: Emergency material when all else fails
+        private Material CreateEmergencyMaterial()
+        {
+            AndroidLog("[SceneBuilder] Creating EMERGENCY material from primitive");
+            var refPrim = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            var emergencyMat = new Material(refPrim.GetComponent<Renderer>().sharedMaterial);
+            DestroyImmediate(refPrim);
+            emergencyMat.color = new Color(0.8f, 0.8f, 0.8f, 1f);
+            return emergencyMat;
+        }
+
         private Material CreateBaseMaterial()
         {
-            // Claude Bedrock fix: Robust shader fallback chain for Android IL2CPP
+            // Claude Bedrock Round 5: PRIORITIZE Mobile/Diffuse shader on Android
+            // Standard shader silently fails on many Android GPUs with IL2CPP
             Shader shader = null;
+            #if UNITY_ANDROID && !UNITY_EDITOR
+            string[] shaderNames = {
+                "Mobile/Diffuse",
+                "Mobile/VertexLit",
+                "Unlit/Color",
+                "Legacy Shaders/Diffuse",
+                "Standard",
+                "Sprites/Default"
+            };
+            #else
             string[] shaderNames = {
                 "Standard",
                 "Legacy Shaders/Diffuse",
@@ -266,27 +336,26 @@ namespace EmersynBigDay.Core
                 "Unlit/Color",
                 "Sprites/Default"
             };
+            #endif
             foreach (string shaderName in shaderNames)
             {
                 shader = Shader.Find(shaderName);
                 if (shader != null)
                 {
-                    Debug.Log($"[SceneBuilder] Found shader: {shaderName}");
+                    AndroidLog($"[SceneBuilder] Found shader: {shaderName}");
                     break;
                 }
-                Debug.LogWarning($"[SceneBuilder] Shader not found: {shaderName}");
+                AndroidLog($"[SceneBuilder] Shader NOT found: {shaderName}");
             }
             // Final fallback using primitive's built-in material
             if (shader == null)
             {
-                Debug.LogError("[SceneBuilder] All shader lookups failed! Using primitive fallback.");
-                var refPrim = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                shader = refPrim.GetComponent<Renderer>().sharedMaterial.shader;
-                DestroyImmediate(refPrim);
+                AndroidLog("[SceneBuilder] All shader lookups failed! Using primitive fallback.");
+                return CreateEmergencyMaterial();
             }
             var mat = new Material(shader);
             mat.renderQueue = 2000;
-            // Claude Bedrock fix: Ensure Standard shader is set to Opaque mode on Android
+            // Only set Standard shader properties if Standard shader was selected
             if (shader.name.Contains("Standard"))
             {
                 mat.SetFloat("_Mode", 0f); // Opaque
@@ -297,17 +366,19 @@ namespace EmersynBigDay.Core
                 mat.DisableKeyword("_ALPHABLEND_ON");
                 mat.DisableKeyword("_ALPHAPREMULTIPLY_ON");
             }
-            Debug.Log($"[SceneBuilder] Base material shader: {mat.shader?.name ?? "NULL"}");
+            AndroidLog($"[SceneBuilder] Base material shader: {mat.shader?.name ?? "NULL"}");
             return mat;
         }
 
         private Material ColorMat(Color c)
         {
             var m = new Material(baseMat);
-            // Claude Bedrock fix: Explicit color property assignment for Android
+            // Claude Bedrock Round 5: Set color via both .color and _Color for all shader types
+            m.color = c;
+            if (m.HasProperty("_Color"))
+                m.SetColor("_Color", c);
             if (m.shader.name.Contains("Standard"))
             {
-                m.SetColor("_Color", c);
                 m.SetFloat("_Mode", 0f); // Opaque
                 m.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.One);
                 m.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.Zero);
@@ -315,10 +386,6 @@ namespace EmersynBigDay.Core
                 m.DisableKeyword("_ALPHATEST_ON");
                 m.DisableKeyword("_ALPHABLEND_ON");
                 m.DisableKeyword("_ALPHAPREMULTIPLY_ON");
-            }
-            else
-            {
-                m.color = c;
             }
             m.renderQueue = 2000;
             return m;
@@ -453,11 +520,11 @@ namespace EmersynBigDay.Core
             try
             {
                 createAction();
-                Debug.Log($"[SceneBuilder] Manager OK: {name}");
+                AndroidLog($"[SceneBuilder] Manager OK: {name}");
             }
             catch (System.Exception e)
             {
-                Debug.LogError($"[SceneBuilder] Manager FAILED: {name} - {e.Message}\n{e.StackTrace}");
+                AndroidLog($"[SceneBuilder] Manager FAILED: {name} - {e.Message}");
             }
         }
 
