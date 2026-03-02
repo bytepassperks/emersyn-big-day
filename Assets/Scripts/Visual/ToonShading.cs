@@ -116,7 +116,7 @@ namespace EmersynBigDay.Visual
             }
 
             // URP keywords
-            if (shader != null && shader.name.Contains("Universal"))
+            if (mat.shader != null && mat.shader.name.Contains("Universal"))
             {
                 mat.EnableKeyword("_SURFACE_TYPE_OPAQUE");
                 mat.SetFloat("_Surface", 0);
