@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.AI; // Fix #12: NavMesh baking
 
 namespace EmersynBigDay.Core
 {
@@ -266,6 +267,8 @@ namespace EmersynBigDay.Core
                 mainCamera.backgroundColor = new Color(0.55f, 0.80f, 0.95f);
             }
             BuildFurniture(index);
+            // Fix #12: Bake NavMesh after room geometry is built
+            BakeNavMesh();
             var rlo = new GameObject("RoomLight");
             rlo.transform.SetParent(roomContainer);
             rlo.transform.position = new Vector3(0, 4, 0);
@@ -636,6 +639,9 @@ namespace EmersynBigDay.Core
                 GameManager.Instance.ChangeState(GameState.Playing);
         }
 
+        // Fix #29: Cache NeedSystem reference instead of FindFirstObjectByType every frame
+        private NeedSystem cachedNeedSystem;
+
         private void Update()
         {
             var gm = GameManager.Instance;
@@ -647,7 +653,10 @@ namespace EmersynBigDay.Core
                 if (dayText != null) dayText.text = "Day " + gm.CurrentDay;
                 if (xpBar != null) xpBar.value = gm.XPToNextLevel > 0 ? (float)gm.XP / gm.XPToNextLevel : 0f;
             }
-            var ns = FindFirstObjectByType<NeedSystem>();
+            // Fix #29: Use cached reference, only re-find if null
+            if (cachedNeedSystem == null)
+                cachedNeedSystem = FindFirstObjectByType<NeedSystem>();
+            var ns = cachedNeedSystem;
             if (ns != null && needBars != null)
             {
                 for (int i = 0; i < NeedNames.Length && i < needBars.Length; i++)
@@ -693,7 +702,10 @@ namespace EmersynBigDay.Core
 
         private void OnActionButton(int idx)
         {
-            var ns = FindFirstObjectByType<NeedSystem>();
+            // Fix #29: Use cached NeedSystem reference
+            if (cachedNeedSystem == null)
+                cachedNeedSystem = FindFirstObjectByType<NeedSystem>();
+            var ns = cachedNeedSystem;
             if (ns == null) return;
             switch (idx)
             {
@@ -712,6 +724,23 @@ namespace EmersynBigDay.Core
         {
             int next = (currentRoomIndex + dir + RoomNames.Length) % RoomNames.Length;
             BuildRoom(next);
+        }
+
+        // Fix #12: NavMesh baking for character pathfinding
+        private void BakeNavMesh()
+        {
+            // Add NavMeshSurface to floor if not already present
+            var floor = roomContainer.Find("Floor");
+            if (floor != null)
+            {
+                var surface = floor.GetComponent<NavMeshSurface>();
+                if (surface == null)
+                    surface = floor.gameObject.AddComponent<NavMeshSurface>();
+                surface.collectObjects = CollectObjects.Children;
+                surface.useGeometry = NavMeshCollectGeometry.PhysicsColliders;
+                // Build synchronously — room is small enough
+                surface.BuildNavMesh();
+            }
         }
 
         private GameObject MakeCube(string name, Vector3 pos, Vector3 scale, Color color, Transform parent)
@@ -762,7 +791,7 @@ namespace EmersynBigDay.Core
             r.sizeDelta = new Vector2(200, 40);
             var t = obj.AddComponent<Text>();
             t.text = text;
-            // Fix #10b: Scale text up 20% for portrait readability
+            // Fix #6b: Scale text up 20% for portrait readability
             t.fontSize = Mathf.CeilToInt(fontSize * 1.2f);
             t.color = color;
             t.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
