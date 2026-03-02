@@ -88,19 +88,21 @@ namespace EmersynBigDay.Core
 
         private Material CreateBaseMaterial()
         {
-            // CRITICAL FIX (Claude Sonnet 4.5 expert recommendation):
-            // Keep primitive alive so shader reference survives IL2CPP stripping.
-            // Destroying the primitive invalidates the shader reference in IL2CPP builds.
-            var refPrimitive = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            refPrimitive.name = "_ShaderReference";
-            refPrimitive.SetActive(false); // Hide but keep alive
-            DontDestroyOnLoad(refPrimitive);
-
-            var sourceMat = refPrimitive.GetComponent<Renderer>().sharedMaterial;
-            var mat = new Material(sourceMat.shader); // Use shader directly
-            mat.SetFloat("_Surface", 0); // Opaque
-            mat.SetFloat("_Blend", 0);
-            mat.renderQueue = 2000; // Geometry queue
+            // NUCLEAR FIX: Use Built-in Render Pipeline with Standard shader.
+            // URP renderer reference kept failing in headless Unity 6 builds.
+            // Standard shader is ALWAYS available in Built-in Pipeline.
+            Shader shader = Shader.Find("Standard");
+            if (shader == null)
+            {
+                Debug.LogError("[SceneBuilder] Standard shader not found! Falling back to primitive.");
+                var refPrim = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                refPrim.name = "_ShaderRef";
+                refPrim.SetActive(false);
+                DontDestroyOnLoad(refPrim);
+                shader = refPrim.GetComponent<Renderer>().sharedMaterial.shader;
+            }
+            var mat = new Material(shader);
+            mat.renderQueue = 2000;
             Debug.Log($"[SceneBuilder] Base material shader: {mat.shader?.name ?? "NULL"}");
             return mat;
         }
@@ -108,13 +110,8 @@ namespace EmersynBigDay.Core
         private Material ColorMat(Color c)
         {
             var m = new Material(baseMat);
-            // Fix #1: Use _BaseColor for URP instead of _Color
-            if (m.HasProperty("_BaseColor"))
-                m.SetColor("_BaseColor", c);
-            else if (m.HasProperty("_Color"))
-                m.color = c;
-            else
-                m.color = c;
+            // Built-in Standard shader uses _Color
+            m.color = c;
             return m;
         }
 
@@ -235,7 +232,7 @@ namespace EmersynBigDay.Core
             foreach (var existing in FindObjectsByType<Light>(FindObjectsSortMode.None))
                 Destroy(existing.gameObject);
 
-            // Fix #8: Defer RenderSettings to coroutine (after URP pipeline init)
+            // Apply RenderSettings (Built-in Pipeline - no deferred init needed)
             StartCoroutine(SetupRenderSettingsDeferred());
 
             var lo = new GameObject("MainDirectionalLight");
@@ -246,9 +243,7 @@ namespace EmersynBigDay.Core
             ml.shadows = LightShadows.Soft;
             ml.shadowStrength = 0.6f;
             lo.transform.rotation = Quaternion.Euler(45f, -30f, 0f);
-            // Fix #3: Light layer masks for URP
             ml.cullingMask = ~0;
-            ml.renderingLayerMask = ~0;
 
             var fo = new GameObject("FillLight");
             var fl = fo.AddComponent<Light>();
@@ -257,9 +252,7 @@ namespace EmersynBigDay.Core
             fl.intensity = 0.4f;
             fl.shadows = LightShadows.None;
             fo.transform.rotation = Quaternion.Euler(30f, 150f, 0f);
-            // Fix #3: Light layer masks for URP
             fl.cullingMask = ~0;
-            fl.renderingLayerMask = ~0;
 
             var ro = new GameObject("RimLight");
             var rl = ro.AddComponent<Light>();
@@ -268,12 +261,10 @@ namespace EmersynBigDay.Core
             rl.intensity = 0.3f;
             rl.shadows = LightShadows.None;
             ro.transform.rotation = Quaternion.Euler(-20f, 180f, 0f);
-            // Fix #3: Light layer masks for URP
             rl.cullingMask = ~0;
-            rl.renderingLayerMask = ~0;
         }
 
-        // Fix #8: Apply RenderSettings after URP pipeline initializes
+        // Apply RenderSettings after frame renders
         private IEnumerator SetupRenderSettingsDeferred()
         {
             yield return new WaitForEndOfFrame();

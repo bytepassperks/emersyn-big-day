@@ -42,7 +42,7 @@ namespace EmersynBigDay.Visual
 
         /// <summary>
         /// Apply toon shading effect to all renderers in the scene.
-        /// Uses URP Lit shader with modified properties for a cartoon look.
+        /// Uses Standard shader (Built-in Pipeline) with modified properties for a cartoon look.
         /// </summary>
         public void ApplyToonShadingToScene()
         {
@@ -92,20 +92,24 @@ namespace EmersynBigDay.Visual
         /// </summary>
         public Material CreateToonMaterial(Color baseColor)
         {
-            // Keep primitive alive so shader reference survives IL2CPP (Claude expert fix)
-            var refPrim = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-            refPrim.name = "_ToonShaderRef";
-            refPrim.SetActive(false);
-            DontDestroyOnLoad(refPrim);
-            var mat = new Material(refPrim.GetComponent<Renderer>().sharedMaterial.shader);
+            // NUCLEAR FIX: Use Shader.Find("Standard") for Built-in Pipeline (per Claude expert guidance)
+            Shader shader = Shader.Find("Standard");
+            if (shader == null)
+            {
+                Debug.LogError("[ToonShading] Standard shader not found! Falling back to primitive.");
+                var refPrim = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                refPrim.name = "_ToonShaderRef";
+                refPrim.SetActive(false);
+                DontDestroyOnLoad(refPrim);
+                shader = refPrim.GetComponent<Renderer>().sharedMaterial.shader;
+            }
+            var mat = new Material(shader);
 
-            if (mat.HasProperty("_BaseColor"))
-                mat.SetColor("_BaseColor", baseColor);
-            else
-                mat.color = baseColor;
+            // Standard shader uses _Color, not _BaseColor
+            mat.color = baseColor;
 
-            if (mat.HasProperty("_Smoothness"))
-                mat.SetFloat("_Smoothness", 0.65f);
+            if (mat.HasProperty("_Glossiness"))
+                mat.SetFloat("_Glossiness", 0.65f);
             if (mat.HasProperty("_Metallic"))
                 mat.SetFloat("_Metallic", 0f);
 
@@ -114,14 +118,6 @@ namespace EmersynBigDay.Visual
             {
                 mat.SetColor("_EmissionColor", baseColor * 0.08f);
                 mat.EnableKeyword("_EMISSION");
-            }
-
-            // URP keywords
-            if (mat.shader != null && mat.shader.name.Contains("Universal"))
-            {
-                mat.EnableKeyword("_SURFACE_TYPE_OPAQUE");
-                mat.SetFloat("_Surface", 0);
-                mat.SetFloat("_Blend", 0);
             }
 
             return mat;
