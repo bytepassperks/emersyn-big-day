@@ -29,6 +29,16 @@ public class BuildScript
         EditorApplication.update += OnEditorUpdate;
     }
 
+    /// <summary>
+    /// Direct build method for -quit batch mode (no frame waiting).
+    /// Use: -executeMethod BuildScript.BuildDirect
+    /// </summary>
+    public static void BuildDirect()
+    {
+        Debug.Log("BuildScript.BuildDirect called - building immediately...");
+        DoBuild();
+    }
+
     private static void OnEditorUpdate()
     {
         _frameCount++;
