@@ -1,34 +1,18 @@
 using UnityEngine;
-using UnityEngine.Rendering;
-using UnityEngine.Rendering.Universal;
 
 namespace EmersynBigDay.Core
 {
     /// <summary>
-    /// Sets up post-processing effects for AAA-quality visuals:
-    /// Bloom (warm glow), Ambient Occlusion, Color Grading (pastel tones),
-    /// Vignette, Depth of Field, and Toon Outline shader.
-    /// Optimized for mobile 60fps on mid-range devices.
+    /// Post-processing quality manager for Built-in Render Pipeline.
+    /// URP Volume/Bloom/Vignette removed per Claude guidance (caused class layout incompatibility).
+    /// Uses QualitySettings + RenderSettings for visual quality control.
     /// </summary>
     public class PostProcessingSetup : MonoBehaviour
     {
         public static PostProcessingSetup Instance { get; private set; }
 
-        [Header("Volume Profile")]
-        public VolumeProfile PostProcessProfile;
-        public Volume GlobalVolume;
-
         [Header("Quality Presets")]
         public QualityPreset CurrentPreset = QualityPreset.Medium;
-
-        // Cached effect references
-        private Bloom bloom;
-        private ColorAdjustments colorAdjustments;
-        private Vignette vignette;
-        private DepthOfField depthOfField;
-        private ChromaticAberration chromaticAberration;
-        private FilmGrain filmGrain;
-        private Tonemapping tonemapping;
 
         public enum QualityPreset { Low, Medium, High, Ultra }
 
@@ -40,93 +24,7 @@ namespace EmersynBigDay.Core
 
         private void Start()
         {
-            SetupPostProcessing();
             ApplyQualityPreset(CurrentPreset);
-        }
-
-        private void SetupPostProcessing()
-        {
-            if (GlobalVolume == null)
-            {
-                var volumeObj = new GameObject("GlobalPostProcessVolume");
-                GlobalVolume = volumeObj.AddComponent<Volume>();
-                GlobalVolume.isGlobal = true;
-                GlobalVolume.priority = 1;
-            }
-
-            if (PostProcessProfile == null)
-            {
-                PostProcessProfile = ScriptableObject.CreateInstance<VolumeProfile>();
-                GlobalVolume.profile = PostProcessProfile;
-            }
-
-            // Setup Bloom
-            if (!PostProcessProfile.TryGet(out bloom))
-            {
-                bloom = PostProcessProfile.Add<Bloom>();
-            }
-            bloom.active = true;
-            bloom.threshold.value = 0.9f;
-            bloom.intensity.value = 0.8f;
-            bloom.scatter.value = 0.7f;
-            bloom.tint.value = new Color(1f, 0.95f, 0.9f); // Warm tint
-            bloom.threshold.overrideState = true;
-            bloom.intensity.overrideState = true;
-            bloom.scatter.overrideState = true;
-            bloom.tint.overrideState = true;
-
-            // Setup Color Adjustments (pastel/kawaii look)
-            if (!PostProcessProfile.TryGet(out colorAdjustments))
-            {
-                colorAdjustments = PostProcessProfile.Add<ColorAdjustments>();
-            }
-            colorAdjustments.active = true;
-            colorAdjustments.postExposure.value = 0.3f;
-            // Fix #5: contrast was -10 (muddy brown), saturation was 15 (purple tint)
-            colorAdjustments.contrast.value = 5f; // Slight boost for clarity
-            colorAdjustments.saturation.value = 8f; // Moderate boost for cute colors
-            colorAdjustments.colorFilter.value = new Color(1f, 0.98f, 0.95f); // Warm filter
-            colorAdjustments.postExposure.overrideState = true;
-            colorAdjustments.contrast.overrideState = true;
-            colorAdjustments.saturation.overrideState = true;
-            colorAdjustments.colorFilter.overrideState = true;
-
-            // Setup Vignette (subtle darkening at edges)
-            if (!PostProcessProfile.TryGet(out vignette))
-            {
-                vignette = PostProcessProfile.Add<Vignette>();
-            }
-            vignette.active = true;
-            vignette.intensity.value = 0.25f;
-            vignette.smoothness.value = 0.4f;
-            vignette.color.value = new Color(0.1f, 0.05f, 0.15f); // Subtle purple tint
-            vignette.intensity.overrideState = true;
-            vignette.smoothness.overrideState = true;
-            vignette.color.overrideState = true;
-
-            // Setup Depth of Field (background blur for focus)
-            if (!PostProcessProfile.TryGet(out depthOfField))
-            {
-                depthOfField = PostProcessProfile.Add<DepthOfField>();
-            }
-            depthOfField.active = false; // Only enable for cutscenes/focus shots
-            depthOfField.mode.value = DepthOfFieldMode.Bokeh;
-            depthOfField.focusDistance.value = 5f;
-            depthOfField.focalLength.value = 50f;
-            depthOfField.aperture.value = 5.6f;
-            depthOfField.mode.overrideState = true;
-            depthOfField.focusDistance.overrideState = true;
-            depthOfField.focalLength.overrideState = true;
-            depthOfField.aperture.overrideState = true;
-
-            // Setup Tonemapping
-            if (!PostProcessProfile.TryGet(out tonemapping))
-            {
-                tonemapping = PostProcessProfile.Add<Tonemapping>();
-            }
-            tonemapping.active = true;
-            tonemapping.mode.value = TonemappingMode.ACES;
-            tonemapping.mode.overrideState = true;
         }
 
         public void ApplyQualityPreset(QualityPreset preset)
@@ -136,70 +34,37 @@ namespace EmersynBigDay.Core
             switch (preset)
             {
                 case QualityPreset.Low:
-                    SetQuality(bloom: false, vignette: false, dof: false, shadows: false, msaa: 1);
+                    SetQuality(shadows: false, msaa: 1, shadowDist: 20f);
                     break;
                 case QualityPreset.Medium:
-                    SetQuality(bloom: true, vignette: true, dof: false, shadows: true, msaa: 2);
+                    SetQuality(shadows: true, msaa: 2, shadowDist: 40f);
                     break;
                 case QualityPreset.High:
-                    SetQuality(bloom: true, vignette: true, dof: true, shadows: true, msaa: 4);
+                    SetQuality(shadows: true, msaa: 4, shadowDist: 60f);
                     break;
                 case QualityPreset.Ultra:
-                    SetQuality(bloom: true, vignette: true, dof: true, shadows: true, msaa: 8);
+                    SetQuality(shadows: true, msaa: 8, shadowDist: 80f);
                     break;
             }
         }
 
-        private void SetQuality(bool bloom, bool vignette, bool dof, bool shadows, int msaa)
+        private void SetQuality(bool shadows, int msaa, float shadowDist)
         {
-            if (this.bloom != null) this.bloom.active = bloom;
-            if (this.vignette != null) this.vignette.active = vignette;
-            if (this.depthOfField != null) this.depthOfField.active = dof;
-
-            QualitySettings.shadows = shadows ? UnityEngine.ShadowQuality.All : UnityEngine.ShadowQuality.Disable;
+            QualitySettings.shadows = shadows ? ShadowQuality.All : ShadowQuality.Disable;
             QualitySettings.antiAliasing = msaa;
-
-            // Shadow distance based on quality
-            QualitySettings.shadowDistance = CurrentPreset switch
-            {
-                QualityPreset.Low => 20f,
-                QualityPreset.Medium => 40f,
-                QualityPreset.High => 60f,
-                QualityPreset.Ultra => 80f,
-                _ => 40f
-            };
+            QualitySettings.shadowDistance = shadowDist;
         }
 
-        // --- EFFECT TOGGLES ---
-        public void EnableDoF(float focusDist)
-        {
-            if (depthOfField == null) return;
-            depthOfField.active = true;
-            depthOfField.focusDistance.value = focusDist;
-        }
-
-        public void DisableDoF()
-        {
-            if (depthOfField != null) depthOfField.active = false;
-        }
-
-        public void SetBloomIntensity(float intensity)
-        {
-            if (bloom != null) bloom.intensity.value = intensity;
-        }
-
-        public void SetVignetteIntensity(float intensity)
-        {
-            if (vignette != null) vignette.intensity.value = intensity;
-        }
-
-        public void SetSaturation(float saturation)
-        {
-            if (colorAdjustments != null) colorAdjustments.saturation.value = saturation;
-        }
+        // --- Stub methods for compatibility with other scripts ---
+        public void EnableDoF(float focusDist) { /* No-op without URP Volume */ }
+        public void DisableDoF() { /* No-op without URP Volume */ }
+        public void SetBloomIntensity(float intensity) { /* No-op without URP Volume */ }
+        public void SetVignetteIntensity(float intensity) { /* No-op without URP Volume */ }
+        public void SetSaturation(float saturation) { /* No-op without URP Volume */ }
 
         /// <summary>
         /// Flash screen white briefly (for level up, achievement, etc.)
+        /// Uses camera background color flash since URP Volume is removed.
         /// </summary>
         public void FlashScreen(float duration = 0.3f)
         {
@@ -208,18 +73,19 @@ namespace EmersynBigDay.Core
 
         private System.Collections.IEnumerator FlashCoroutine(float duration)
         {
-            if (colorAdjustments == null) yield break;
-            float originalExposure = colorAdjustments.postExposure.value;
-            colorAdjustments.postExposure.value = 3f;
+            var cam = Camera.main;
+            if (cam == null) yield break;
+            Color originalBg = cam.backgroundColor;
+            cam.backgroundColor = Color.white;
 
             float timer = 0f;
             while (timer < duration)
             {
                 timer += Time.deltaTime;
-                colorAdjustments.postExposure.value = Mathf.Lerp(3f, originalExposure, timer / duration);
+                cam.backgroundColor = Color.Lerp(Color.white, originalBg, timer / duration);
                 yield return null;
             }
-            colorAdjustments.postExposure.value = originalExposure;
+            cam.backgroundColor = originalBg;
         }
 
         /// <summary>
