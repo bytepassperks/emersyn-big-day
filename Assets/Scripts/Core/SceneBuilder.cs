@@ -4,7 +4,10 @@ using UnityEngine.Networking;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using GLTFast;
+// Claude Bedrock Round 2 fix #1: REMOVED 'using GLTFast;' top-level import.
+// On IL2CPP Android, if GLTFast assembly fails to resolve, the ENTIRE SceneBuilder
+// class fails to load silently — Awake() never runs, causing the blue screen.
+// GLTFast types are now accessed via reflection-free wrapper methods below.
 // NavMesh baking uses collider-based approach (no AI Navigation package needed)
 
 namespace EmersynBigDay.Core
@@ -1141,8 +1144,13 @@ namespace EmersynBigDay.Core
             string uri = Path.Combine(Application.streamingAssetsPath, "Characters", glbFileName + ".glb");
             Debug.Log($"[SceneBuilder] Loading GLB: {uri}");
 
-            var gltfImport = new GltfImport();
-            var loadTask = gltfImport.Load(uri);
+            // Claude Bedrock Round 2: Use GLTFast via separate helper class to prevent
+            // assembly resolution failure from killing SceneBuilder
+            object gltfImport;
+            try { gltfImport = GLTFHelper.CreateImport(); }
+            catch (System.Exception e) { Debug.LogWarning($"[SceneBuilder] GLTFast not available: {e.Message}"); yield break; }
+
+            var loadTask = GLTFHelper.Load(gltfImport, uri);
 
             // Wait for async load to complete
             while (!loadTask.IsCompleted)
@@ -1174,7 +1182,7 @@ namespace EmersynBigDay.Core
             glbObj.transform.rotation = savedRot;
             glbObj.transform.localScale = savedScale;
 
-            var instantiateTask = gltfImport.InstantiateMainSceneAsync(glbObj.transform);
+            var instantiateTask = GLTFHelper.InstantiateMainScene(gltfImport, glbObj.transform);
             while (!instantiateTask.IsCompleted)
                 yield return null;
 
@@ -1207,8 +1215,12 @@ namespace EmersynBigDay.Core
             string uri = Path.Combine(Application.streamingAssetsPath, "Characters", glbFileName + ".glb");
             Debug.Log($"[SceneBuilder] Loading pet GLB: {uri}");
 
-            var gltfImport = new GltfImport();
-            var loadTask = gltfImport.Load(uri);
+            // Claude Bedrock Round 2: Use GLTFast via separate helper class
+            object gltfImport;
+            try { gltfImport = GLTFHelper.CreateImport(); }
+            catch (System.Exception e) { Debug.LogWarning($"[SceneBuilder] GLTFast not available for pet: {e.Message}"); yield break; }
+
+            var loadTask = GLTFHelper.Load(gltfImport, uri);
             while (!loadTask.IsCompleted)
                 yield return null;
 
@@ -1229,7 +1241,7 @@ namespace EmersynBigDay.Core
             glbObj.transform.position = savedPos;
             glbObj.transform.localScale = Vector3.one * 0.5f;
 
-            var instantiateTask = gltfImport.InstantiateMainSceneAsync(glbObj.transform);
+            var instantiateTask = GLTFHelper.InstantiateMainScene(gltfImport, glbObj.transform);
             while (!instantiateTask.IsCompleted)
                 yield return null;
 
