@@ -169,29 +169,39 @@ public class BuildScript
 
     private static void DoBuild()
     {
-        // CRITICAL: Call the internal SetCompileScriptsOutputDirectory to prevent
-        // segfault in BuildPipeline::GetCompatibleTargetAssemblies
+        var buildStartTime = DateTime.Now;
+        Debug.Log($"[BUILD] ========== BUILD STARTED at {buildStartTime:HH:mm:ss} ==========");
+
+        // Phase 1: Compile scripts output directory
+        Debug.Log("[BUILD] Phase 1/8: Ensuring compile scripts output directory...");
         EnsureCompileScriptsOutputDirectory();
+        Debug.Log($"[BUILD] Phase 1/8 DONE ({(DateTime.Now - buildStartTime).TotalSeconds:F1}s elapsed)");
+
         string projectRoot = Path.GetFullPath(Path.Combine(Application.dataPath, ".."));
         string buildDir = Path.Combine(projectRoot, "Builds");
         string buildPath = Path.Combine(buildDir, "EmersynsBigDay.apk");
 
-        Debug.Log($"Project root: {projectRoot}");
-        Debug.Log($"Build output: {buildPath}");
+        Debug.Log($"[BUILD] Project root: {projectRoot}");
+        Debug.Log($"[BUILD] Build output: {buildPath}");
+
+        // Log render pipeline info
+        Debug.Log($"[BUILD] Current Render Pipeline: {UnityEngine.Rendering.GraphicsSettings.currentRenderPipeline?.name ?? "Built-in (null)"}");
+        Debug.Log($"[BUILD] Default Render Pipeline: {UnityEngine.Rendering.GraphicsSettings.defaultRenderPipeline?.name ?? "Built-in (null)"}");
+        Debug.Log($"[BUILD] Quality Level: {QualitySettings.GetQualityLevel()} ({QualitySettings.names[QualitySettings.GetQualityLevel()]})");
 
         if (!Directory.Exists(buildDir))
         {
             Directory.CreateDirectory(buildDir);
-            Debug.Log($"Created build directory: {buildDir}");
+            Debug.Log($"[BUILD] Created build directory: {buildDir}");
         }
 
-        // Get all scenes from EditorBuildSettings
+        // Phase 2: Discover scenes
+        Debug.Log("[BUILD] Phase 2/8: Discovering scenes...");
         string[] scenes = EditorBuildSettings.scenes
             .Where(s => s.enabled)
             .Select(s => s.path)
             .ToArray();
 
-        // If no scenes in build settings, use our known scenes
         if (scenes.Length == 0)
         {
             string[] candidateScenes = new string[]
@@ -219,38 +229,34 @@ public class BuildScript
 
         if (scenes.Length == 0)
         {
-            Debug.LogError("No scenes found to build! Aborting.");
+            Debug.LogError("[BUILD] FATAL: No scenes found to build! Aborting.");
             EditorApplication.Exit(1);
             return;
         }
 
-        Debug.Log($"Building Android APK with {scenes.Length} scenes:");
+        Debug.Log($"[BUILD] Phase 2/8 DONE - Found {scenes.Length} scenes ({(DateTime.Now - buildStartTime).TotalSeconds:F1}s elapsed):");
         foreach (string scene in scenes)
         {
-            Debug.Log($"  Scene: {scene}");
+            Debug.Log($"[BUILD]   Scene: {scene}");
         }
 
+        // Phase 3: Pre-initialize PlayerSettings
+        Debug.Log("[BUILD] Phase 3/8: Pre-initializing PlayerSettings...");
         // WORKAROUND: Force-initialize the EditorOnlyPlayerSettings scripting backend map
-        // by calling SetScriptingBackend BEFORE BuildPlayer. The native map at offset 0x24d0
-        // is uninitialized in batch mode, causing a segfault in GetPlatformScriptingBackend.
-        // Calling Set first may lazily initialize the map via a different native code path.
         try
         {
-            Debug.Log("Pre-initializing PlayerSettings for Android...");
             PlayerSettings.SetScriptingBackend(
                 UnityEditor.Build.NamedBuildTarget.Android, ScriptingImplementation.IL2CPP);
-            Debug.Log("SetScriptingBackend succeeded.");
-            
-            // Also pre-read to test if the map is now accessible
             var backend = PlayerSettings.GetScriptingBackend(UnityEditor.Build.NamedBuildTarget.Android);
-            Debug.Log($"GetScriptingBackend returned: {backend}");
+            Debug.Log($"[BUILD] Phase 3/8 DONE - ScriptingBackend: {backend} ({(DateTime.Now - buildStartTime).TotalSeconds:F1}s elapsed)");
         }
         catch (Exception ex)
         {
-            Debug.LogWarning($"PlayerSettings pre-init failed: {ex.Message}");
+            Debug.LogWarning($"[BUILD] Phase 3/8 WARNING: PlayerSettings pre-init failed: {ex.Message}");
         }
 
-        // Configure Android settings
+        // Phase 4: Configure Android settings
+        Debug.Log("[BUILD] Phase 4/8: Configuring Android settings...");
         PlayerSettings.SetApplicationIdentifier(
             UnityEditor.Build.NamedBuildTarget.Android, "com.bytepassperks.emersynsbigday");
         PlayerSettings.companyName = "BytePassPerks";
@@ -259,11 +265,10 @@ public class BuildScript
         PlayerSettings.Android.bundleVersionCode = 1;
         PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel25;
         PlayerSettings.Android.targetSdkVersion = AndroidSdkVersions.AndroidApiLevel34;
+        Debug.Log($"[BUILD] Phase 4/8 DONE ({(DateTime.Now - buildStartTime).TotalSeconds:F1}s elapsed)");
 
-        // CRITICAL: Do NOT set targetGroup. In Unity 6, BuildTargetGroup is deprecated.
-        // Setting it triggers the broken EditorOnlyPlayerSettings code path in batch mode,
-        // causing a segfault in GetPlatformScriptingBackend (addr:0x24d0).
-        // game-ci/unity-builder also omits targetGroup — Unity infers it from target.
+        // Phase 5: Prepare build options
+        Debug.Log("[BUILD] Phase 5/8: Preparing build options...");
         BuildPlayerOptions buildPlayerOptions = new BuildPlayerOptions
         {
             scenes = scenes,
@@ -274,36 +279,60 @@ public class BuildScript
             subtarget = (int)0
 #endif
         };
+        Debug.Log($"[BUILD] Phase 5/8 DONE ({(DateTime.Now - buildStartTime).TotalSeconds:F1}s elapsed)");
 
+        // Phase 6: BuildPlayer (shader compilation + IL2CPP + Gradle)
+        Debug.Log("[BUILD] Phase 6/8: Starting BuildPipeline.BuildPlayer...");
+        Debug.Log("[BUILD]   This phase includes: shader compilation, IL2CPP C++ compilation, Gradle APK packaging");
+        Debug.Log("[BUILD]   Expected duration: 8-15 minutes");
         try
         {
             BuildReport report = BuildPipeline.BuildPlayer(buildPlayerOptions);
             BuildSummary summary = report.summary;
+            Debug.Log($"[BUILD] Phase 6/8 DONE ({(DateTime.Now - buildStartTime).TotalSeconds:F1}s elapsed)");
 
+            // Phase 7: Analyze build report
+            Debug.Log("[BUILD] Phase 7/8: Analyzing build report...");
+            Debug.Log($"[BUILD]   Result: {summary.result}");
+            Debug.Log($"[BUILD]   Total size: {summary.totalSize} bytes ({summary.totalSize / (1024 * 1024)} MB)");
+            Debug.Log($"[BUILD]   Total errors: {summary.totalErrors}");
+            Debug.Log($"[BUILD]   Total warnings: {summary.totalWarnings}");
+            Debug.Log($"[BUILD]   Build time: {summary.totalTime}");
+
+            // Log all build steps with timing
+            Debug.Log("[BUILD]   Build steps:");
+            foreach (var step in report.steps)
+            {
+                Debug.Log($"[BUILD]     Step: {step.name} (duration: {step.duration})");
+                foreach (var msg in step.messages)
+                {
+                    if (msg.type == LogType.Error || msg.type == LogType.Exception)
+                    {
+                        Debug.LogError($"[BUILD]       ERROR [{step.name}]: {msg.content}");
+                    }
+                }
+            }
+
+            // Phase 8: Exit
             if (summary.result == BuildResult.Succeeded)
             {
-                Debug.Log($"Build succeeded: {summary.totalSize} bytes, output: {buildPath}");
+                var totalTime = DateTime.Now - buildStartTime;
+                Debug.Log($"[BUILD] ========== BUILD SUCCEEDED in {totalTime.TotalMinutes:F1} minutes ==========");
+                Debug.Log($"[BUILD] APK at: {buildPath}");
                 EditorApplication.Exit(0);
             }
             else
             {
-                Debug.LogError($"Build failed with {summary.totalErrors} errors");
-                foreach (var step in report.steps)
-                {
-                    foreach (var msg in step.messages)
-                    {
-                        if (msg.type == LogType.Error || msg.type == LogType.Exception)
-                        {
-                            Debug.LogError($"  [{step.name}] {msg.content}");
-                        }
-                    }
-                }
+                Debug.LogError($"[BUILD] ========== BUILD FAILED with {summary.totalErrors} errors ==========");
                 EditorApplication.Exit(1);
             }
         }
         catch (System.Exception ex)
         {
-            Debug.LogError($"Build threw exception: {ex.Message}\n{ex.StackTrace}");
+            Debug.LogError($"[BUILD] ========== BUILD EXCEPTION ==========");
+            Debug.LogError($"[BUILD] Exception: {ex.Message}");
+            Debug.LogError($"[BUILD] StackTrace: {ex.StackTrace}");
+            Debug.LogError($"[BUILD] Elapsed: {(DateTime.Now - buildStartTime).TotalSeconds:F1}s");
             EditorApplication.Exit(1);
         }
     }
