@@ -82,8 +82,9 @@ namespace EmersynBigDay.Core
             }
             colorAdjustments.active = true;
             colorAdjustments.postExposure.value = 0.3f;
-            colorAdjustments.contrast.value = -10f; // Slightly reduced for soft look
-            colorAdjustments.saturation.value = 15f; // Boosted for cute vibrant colors
+            // Fix #5: contrast was -10 (muddy brown), saturation was 15 (purple tint)
+            colorAdjustments.contrast.value = 5f; // Slight boost for clarity
+            colorAdjustments.saturation.value = 8f; // Moderate boost for cute colors
             colorAdjustments.colorFilter.value = new Color(1f, 0.98f, 0.95f); // Warm filter
             colorAdjustments.postExposure.overrideState = true;
             colorAdjustments.contrast.overrideState = true;

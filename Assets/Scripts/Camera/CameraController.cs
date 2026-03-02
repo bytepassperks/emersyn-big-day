@@ -18,8 +18,9 @@ namespace EmersynBigDay.CameraSystem
         public float RotationSpeed = 3f;
 
         [Header("Spring Settings")]
-        public float SpringStiffness = 50f;
-        public float SpringDamping = 10f;
+        // Fix #10: Softer spring for smoother camera (was 50/10 - too jittery)
+        public float SpringStiffness = 30f;
+        public float SpringDamping = 8f;
         private Vector3 springVelocity = Vector3.zero;
 
         [Header("Zoom")]

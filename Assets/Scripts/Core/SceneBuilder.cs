@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using System.Collections;
 using System.Collections.Generic;
 
 namespace EmersynBigDay.Core
@@ -89,13 +90,27 @@ namespace EmersynBigDay.Core
             Shader shader = Shader.Find("Universal Render Pipeline/Lit");
             if (shader == null) shader = Shader.Find("Standard");
             if (shader == null) shader = Shader.Find("Diffuse");
-            return new Material(shader);
+            var mat = new Material(shader);
+            // Fix #7: Enable URP material keywords
+            if (shader != null && shader.name.Contains("Universal"))
+            {
+                mat.EnableKeyword("_SURFACE_TYPE_OPAQUE");
+                mat.SetFloat("_Surface", 0); // Opaque
+                mat.SetFloat("_Blend", 0);
+            }
+            return mat;
         }
 
         private Material ColorMat(Color c)
         {
             var m = new Material(baseMat);
-            m.color = c;
+            // Fix #1: Use _BaseColor for URP instead of _Color
+            if (m.HasProperty("_BaseColor"))
+                m.SetColor("_BaseColor", c);
+            else if (m.HasProperty("_Color"))
+                m.color = c;
+            else
+                m.color = c;
             return m;
         }
 
@@ -112,7 +127,8 @@ namespace EmersynBigDay.Core
             }
             mainCamera.clearFlags = CameraClearFlags.SolidColor;
             mainCamera.backgroundColor = new Color(0.55f, 0.80f, 0.95f);
-            mainCamera.fieldOfView = 60f;
+            // Fix #2/#4: FOV 50 for portrait 1080x1920
+            mainCamera.fieldOfView = 50f;
             mainCamera.nearClipPlane = 0.1f;
             mainCamera.farClipPlane = 100f;
             if (mainCamera.GetComponent<CameraSystem.CameraController>() == null)
@@ -121,8 +137,9 @@ namespace EmersynBigDay.Core
                 ctrl.Offset = new Vector3(0f, 3f, -5f);
                 ctrl.CurrentZoom = 6f;
             }
-            mainCamera.transform.position = new Vector3(0f, 4f, -6f);
-            mainCamera.transform.LookAt(new Vector3(0f, 1f, 0f));
+            // Fix #2: Camera position for portrait — pull back and up to see room
+            mainCamera.transform.position = new Vector3(0f, 5f, -8f);
+            mainCamera.transform.LookAt(new Vector3(0f, 1.5f, 0f));
         }
 
         private void CreateManagers()
@@ -175,9 +192,8 @@ namespace EmersynBigDay.Core
             foreach (var existing in FindObjectsByType<Light>(FindObjectsSortMode.None))
                 Destroy(existing.gameObject);
 
-            RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
-            RenderSettings.ambientLight = new Color(0.85f, 0.88f, 0.92f);
-            RenderSettings.ambientIntensity = 1.1f;
+            // Fix #8: Defer RenderSettings to coroutine (after URP pipeline init)
+            StartCoroutine(SetupRenderSettingsDeferred());
 
             var lo = new GameObject("MainDirectionalLight");
             var ml = lo.AddComponent<Light>();
@@ -187,6 +203,9 @@ namespace EmersynBigDay.Core
             ml.shadows = LightShadows.Soft;
             ml.shadowStrength = 0.6f;
             lo.transform.rotation = Quaternion.Euler(45f, -30f, 0f);
+            // Fix #3: Light layer masks for URP
+            ml.cullingMask = ~0;
+            ml.renderingLayerMask = ~0;
 
             var fo = new GameObject("FillLight");
             var fl = fo.AddComponent<Light>();
@@ -195,6 +214,9 @@ namespace EmersynBigDay.Core
             fl.intensity = 0.4f;
             fl.shadows = LightShadows.None;
             fo.transform.rotation = Quaternion.Euler(30f, 150f, 0f);
+            // Fix #3: Light layer masks for URP
+            fl.cullingMask = ~0;
+            fl.renderingLayerMask = ~0;
 
             var ro = new GameObject("RimLight");
             var rl = ro.AddComponent<Light>();
@@ -203,6 +225,18 @@ namespace EmersynBigDay.Core
             rl.intensity = 0.3f;
             rl.shadows = LightShadows.None;
             ro.transform.rotation = Quaternion.Euler(-20f, 180f, 0f);
+            // Fix #3: Light layer masks for URP
+            rl.cullingMask = ~0;
+            rl.renderingLayerMask = ~0;
+        }
+
+        // Fix #8: Apply RenderSettings after URP pipeline initializes
+        private IEnumerator SetupRenderSettingsDeferred()
+        {
+            yield return new WaitForEndOfFrame();
+            RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
+            RenderSettings.ambientLight = new Color(0.85f, 0.88f, 0.92f);
+            RenderSettings.ambientIntensity = 1.1f;
         }
 
         private void CreateRoomContainer()
@@ -250,7 +284,8 @@ namespace EmersynBigDay.Core
             switch (ri)
             {
                 case 0:
-                    MakeCube("Bed", new Vector3(-2, 0.5f, 2), new Vector3(2.5f, 1f, 3f), new Color(0.9f, 0.6f, 0.7f), p);
+                    // Fix #9: Furniture scales increased for proper room proportions
+                    MakeCube("Bed", new Vector3(-2, 0.5f, 2), new Vector3(3f, 0.8f, 4f), new Color(0.9f, 0.6f, 0.7f), p);
                     MakeCube("Pillow", new Vector3(-2, 1.1f, 3.2f), new Vector3(1.5f, 0.4f, 0.6f), Color.white, p);
                     MakeCube("Wardrobe", new Vector3(4, 1.5f, 4), new Vector3(2f, 3f, 1f), new Color(0.8f, 0.6f, 0.4f), p);
                     MakeCube("Nightstand", new Vector3(-4, 0.4f, 3), new Vector3(0.8f, 0.8f, 0.8f), new Color(0.85f, 0.65f, 0.45f), p);
@@ -361,7 +396,8 @@ namespace EmersynBigDay.Core
         {
             var root = new GameObject(cName);
             root.transform.position = pos;
-            root.transform.localScale = Vector3.one * scale;
+            // Fix #11: Characters scaled up 30% to be visible relative to rooms
+            root.transform.localScale = Vector3.one * scale * 1.3f;
             Color skin = new Color(1f, 0.88f, 0.78f);
 
             var body = GameObject.CreatePrimitive(PrimitiveType.Capsule);
@@ -474,7 +510,14 @@ namespace EmersynBigDay.Core
             sc.matchWidthOrHeight = 0.5f;
             co.AddComponent<GraphicRaycaster>();
 
-            var topBar = MakePanel("TopBar", co.transform, new Vector2(0, -40), new Vector2(1000, 70));
+            // Fix #4: TopBar anchored to TOP of screen (stretch horizontal)
+            var topBar = MakePanel("TopBar", co.transform, new Vector2(0, -40), new Vector2(0, 70));
+            var topBarRect = topBar.GetComponent<RectTransform>();
+            topBarRect.anchorMin = new Vector2(0, 1);
+            topBarRect.anchorMax = new Vector2(1, 1);
+            topBarRect.pivot = new Vector2(0.5f, 1);
+            topBarRect.anchoredPosition = new Vector2(0, -10);
+            topBarRect.sizeDelta = new Vector2(-40, 70); // 20px padding on each side
             SetPanelColor(topBar, new Color(0, 0, 0, 0.4f));
             UIText("CoinLbl", topBar.transform, new Vector2(-420, 0), "Coins:", 22, Color.white);
             coinText = UIText("CoinVal", topBar.transform, new Vector2(-350, 0), "100", 28, new Color(1f, 0.85f, 0.2f));
@@ -483,12 +526,30 @@ namespace EmersynBigDay.Core
             levelText = UIText("Level", topBar.transform, new Vector2(100, 0), "Lv.1", 28, new Color(0.5f, 1f, 0.5f));
             dayText = UIText("Day", topBar.transform, new Vector2(300, 0), "Day 1", 28, Color.white);
 
-            var xpBg = MakePanel("XPBg", co.transform, new Vector2(0, -85), new Vector2(900, 16));
+            // Fix #4: XP bar anchored below top bar
+            var xpBg = MakePanel("XPBg", co.transform, new Vector2(0, -85), new Vector2(0, 16));
+            var xpBgRect = xpBg.GetComponent<RectTransform>();
+            xpBgRect.anchorMin = new Vector2(0.05f, 1);
+            xpBgRect.anchorMax = new Vector2(0.95f, 1);
+            xpBgRect.pivot = new Vector2(0.5f, 1);
+            xpBgRect.anchoredPosition = new Vector2(0, -85);
+            xpBgRect.sizeDelta = new Vector2(0, 16);
             SetPanelColor(xpBg, new Color(0.2f, 0.2f, 0.2f, 0.6f));
             xpBar = MakeSlider("XPBar", xpBg.transform, Vector2.zero, new Vector2(880, 12), new Color(0.3f, 0.9f, 0.3f));
 
-            roomNameText = UIText("RoomName", co.transform, new Vector2(0, -120), "Bedroom", 36, Color.white);
-            moodText = UIText("Mood", co.transform, new Vector2(0, -155), "Mood: Happy", 24, new Color(1f, 0.9f, 0.3f));
+            // Fix #6: Increase spacing between room name and mood text (was 35px, now 50px)
+            roomNameText = UIText("RoomName", co.transform, new Vector2(0, -110), "Bedroom", 36, Color.white);
+            var rnRect = roomNameText.GetComponent<RectTransform>();
+            rnRect.anchorMin = new Vector2(0.5f, 1);
+            rnRect.anchorMax = new Vector2(0.5f, 1);
+            rnRect.pivot = new Vector2(0.5f, 1);
+            rnRect.anchoredPosition = new Vector2(0, -110);
+            moodText = UIText("Mood", co.transform, new Vector2(0, -160), "Mood: Happy", 24, new Color(1f, 0.9f, 0.3f));
+            var mRect = moodText.GetComponent<RectTransform>();
+            mRect.anchorMin = new Vector2(0.5f, 1);
+            mRect.anchorMax = new Vector2(0.5f, 1);
+            mRect.pivot = new Vector2(0.5f, 1);
+            mRect.anchoredPosition = new Vector2(0, -160);
 
             CreateNeedBars(co.transform);
             CreateActionButtons(co.transform);
@@ -500,12 +561,15 @@ namespace EmersynBigDay.Core
             int n = NeedNames.Length;
             needBars = new Slider[n];
             needLabels = new Text[n];
-            var panel = MakePanel("NeedPanel", ct, Vector2.zero, new Vector2(1000, 250));
+            // Fix #4: Need panel anchored to bottom, stretch horizontal
+            var panel = MakePanel("NeedPanel", ct, Vector2.zero, new Vector2(0, 250));
             SetPanelColor(panel, new Color(0, 0, 0, 0.35f));
             var pr = panel.GetComponent<RectTransform>();
-            pr.anchorMin = new Vector2(0.5f, 0);
-            pr.anchorMax = new Vector2(0.5f, 0);
-            pr.anchoredPosition = new Vector2(0, 280);
+            pr.anchorMin = new Vector2(0, 0);
+            pr.anchorMax = new Vector2(1, 0);
+            pr.pivot = new Vector2(0.5f, 0);
+            pr.anchoredPosition = new Vector2(0, 140);
+            pr.sizeDelta = new Vector2(-40, 250);
             for (int i = 0; i < n; i++)
             {
                 float y = 100 - i * 28;
@@ -524,14 +588,16 @@ namespace EmersynBigDay.Core
                 new Color(1f, 0.6f, 0.2f), new Color(1f, 0.3f, 0.6f), new Color(0.3f, 0.7f, 1f),
                 new Color(0.6f, 0.4f, 0.9f), new Color(1f, 0.85f, 0.2f), new Color(0.9f, 0.3f, 0.5f)
             };
+            // Fix #4: Buttons distributed evenly at bottom
             for (int i = 0; i < labels.Length; i++)
             {
-                float x = -375f + i * 150f;
-                var btn = MakeButton(labels[i] + "Btn", ct, new Vector2(x, 80), new Vector2(120, 50), labels[i], colors[i]);
+                float normalizedX = (i + 0.5f) / labels.Length; // Evenly spaced 0..1
+                var btn = MakeButton(labels[i] + "Btn", ct, Vector2.zero, new Vector2(140, 55), labels[i], colors[i]);
                 var r = btn.GetComponent<RectTransform>();
-                r.anchorMin = new Vector2(0.5f, 0);
-                r.anchorMax = new Vector2(0.5f, 0);
-                r.anchoredPosition = new Vector2(x, 80);
+                r.anchorMin = new Vector2(normalizedX, 0);
+                r.anchorMax = new Vector2(normalizedX, 0);
+                r.pivot = new Vector2(0.5f, 0);
+                r.anchoredPosition = new Vector2(0, 70);
                 int idx = i;
                 btn.GetComponent<Button>().onClick.AddListener(() => OnActionButton(idx));
             }
@@ -539,18 +605,19 @@ namespace EmersynBigDay.Core
 
         private void CreateRoomNavButtons(Transform ct)
         {
-            var left = MakeButton("Prev", ct, Vector2.zero, new Vector2(80, 120), "<", new Color(0.3f, 0.3f, 0.3f, 0.6f));
+            // Fix #13: Larger room nav buttons for touch
+            var left = MakeButton("Prev", ct, Vector2.zero, new Vector2(100, 150), "<", new Color(0.3f, 0.3f, 0.3f, 0.6f));
             var lr = left.GetComponent<RectTransform>();
             lr.anchorMin = new Vector2(0, 0.5f);
             lr.anchorMax = new Vector2(0, 0.5f);
-            lr.anchoredPosition = new Vector2(50, 0);
+            lr.anchoredPosition = new Vector2(60, 0); // More padding from edge
             left.GetComponent<Button>().onClick.AddListener(() => ChangeRoom(-1));
 
-            var right = MakeButton("Next", ct, Vector2.zero, new Vector2(80, 120), ">", new Color(0.3f, 0.3f, 0.3f, 0.6f));
+            var right = MakeButton("Next", ct, Vector2.zero, new Vector2(100, 150), ">", new Color(0.3f, 0.3f, 0.3f, 0.6f));
             var rr = right.GetComponent<RectTransform>();
             rr.anchorMin = new Vector2(1, 0.5f);
             rr.anchorMax = new Vector2(1, 0.5f);
-            rr.anchoredPosition = new Vector2(-50, 0);
+            rr.anchoredPosition = new Vector2(-60, 0); // More padding from edge
             right.GetComponent<Button>().onClick.AddListener(() => ChangeRoom(1));
         }
 
@@ -695,7 +762,8 @@ namespace EmersynBigDay.Core
             r.sizeDelta = new Vector2(200, 40);
             var t = obj.AddComponent<Text>();
             t.text = text;
-            t.fontSize = fontSize;
+            // Fix #10b: Scale text up 20% for portrait readability
+            t.fontSize = Mathf.CeilToInt(fontSize * 1.2f);
             t.color = color;
             t.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             if (t.font == null) t.font = Font.CreateDynamicFontFromOSFont("Arial", fontSize);
