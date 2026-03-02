@@ -24,6 +24,7 @@ namespace EmersynBigDay.Animation
         private EmotionalState targetState;
         private float targetIntensity;
         private float idleTimer;
+        private Core.NeedSystem cachedNeedSystem;
 
         public event Action<EmotionalState, float> OnStateChanged;
 
@@ -47,8 +48,9 @@ namespace EmersynBigDay.Animation
         /// </summary>
         private void UpdateStateFromNeeds()
         {
-            var needSystem = FindFirstObjectByType<Core.NeedSystem>();
-            if (needSystem == null) return;
+            if (cachedNeedSystem == null) cachedNeedSystem = FindObjectOfType<Core.NeedSystem>();
+            if (cachedNeedSystem == null) return;
+            var needSystem = cachedNeedSystem;
 
             string moodState = needSystem.GetMoodState();
             float overallMood = needSystem.GetOverallMood();
@@ -90,7 +92,7 @@ namespace EmersynBigDay.Animation
             }
 
             // Check specific needs for special states
-            var hungerNeed = needSystem.GetNeed("Hunger");
+            var hungerNeed = needSystem.GetNeed("Hunger");  
             if (hungerNeed != null && hungerNeed.IsCritical)
             {
                 newState = EmotionalState.Hungry;
@@ -214,6 +216,11 @@ namespace EmersynBigDay.Animation
         private void ClearForceState()
         {
             // Let UpdateStateFromNeeds take over again
+        }
+
+        private void OnDestroy()
+        {
+            OnStateChanged = null;
         }
 
         public string GetAnimationForState()

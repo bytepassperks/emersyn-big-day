@@ -34,15 +34,18 @@ namespace EmersynBigDay.Animation
         public float WagAmplitude = 30f;
 
         private Vector3 originalPosition;
+        private Vector3 originalScale;
         private Vector3 originalChestScale;
         private Quaternion originalHeadRotation;
         private bool isAnticipating;
         private float anticipationTimer;
         private float breathPhase;
+        private Coroutine currentBounce;
 
         private void Start()
         {
             originalPosition = transform.localPosition;
+            originalScale = transform.localScale;
             if (ChestBone != null) originalChestScale = ChestBone.localScale;
             if (HeadBone != null) originalHeadRotation = HeadBone.localRotation;
             breathPhase = Random.Range(0f, Mathf.PI * 2f); // Offset so not all characters breathe in sync
@@ -127,7 +130,7 @@ namespace EmersynBigDay.Animation
                 isAnticipating = false;
             }
 
-            transform.localScale = Vector3.Scale(transform.localScale, scale);
+            transform.localScale = Vector3.Scale(originalScale, scale);
         }
 
         /// <summary>
@@ -135,7 +138,8 @@ namespace EmersynBigDay.Animation
         /// </summary>
         public void TriggerHappyBounce()
         {
-            StartCoroutine(HappyBounceCoroutine());
+            if (currentBounce != null) StopCoroutine(currentBounce);
+            currentBounce = StartCoroutine(HappyBounceCoroutine());
         }
 
         private System.Collections.IEnumerator HappyBounceCoroutine()

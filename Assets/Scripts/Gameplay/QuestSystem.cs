@@ -27,6 +27,13 @@ namespace EmersynBigDay.Gameplay
         public event Action<Quest> OnQuestCompleted;
         public event Action<Quest> OnQuestProgress;
 
+        private void OnDestroy()
+        {
+            OnQuestStarted = null;
+            OnQuestCompleted = null;
+            OnQuestProgress = null;
+        }
+
         public List<Quest> ActiveQuests => activeQuests;
         public int TotalCompleted => totalQuestsCompleted;
 

@@ -29,18 +29,28 @@ namespace EmersynBigDay.Performance
         private int currentQualityLevel = 2; // 0=Low, 1=Med, 2=High
         private float[] fpsHistory = new float[30];
         private int fpsIndex;
+        private float lodUpdateTimer;
+        private const float LOD_UPDATE_INTERVAL = 0.1f; // 10 times per second is enough
 
         private void Awake()
         {
             if (Instance != null && Instance != this) { Destroy(gameObject); return; }
             Instance = this;
             mainCamera = Camera.main;
+            // Initialize FPS history with target FPS to avoid division issues
+            for (int i = 0; i < fpsHistory.Length; i++)
+                fpsHistory[i] = TargetFPS;
         }
 
         private void Update()
         {
             TrackFPS();
-            UpdateLODs();
+            lodUpdateTimer += Time.deltaTime;
+            if (lodUpdateTimer >= LOD_UPDATE_INTERVAL)
+            {
+                lodUpdateTimer = 0f;
+                UpdateLODs();
+            }
 
             if (AutoAdjustQuality)
             {

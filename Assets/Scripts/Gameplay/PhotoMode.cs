@@ -37,7 +37,7 @@ namespace EmersynBigDay.Gameplay
         public void EnterPhotoMode()
         {
             IsActive = true;
-            if (photoCamera == null)
+            if (photoCamera == null && Camera.main != null)
             {
                 var camObj = new GameObject("PhotoCamera");
                 camObj.transform.SetParent(transform);
@@ -137,6 +137,14 @@ namespace EmersynBigDay.Gameplay
                         float hue = (float)i / pixels.Length;
                         Color rainbow = Color.HSVToRGB(hue % 1f, 0.3f, 1f);
                         pixels[i] = Color.Lerp(pixels[i], rainbow, 0.15f);
+                        break;
+                    case PhotoFilter.Dreamy:
+                        pixels[i] = Color.Lerp(pixels[i], new Color(1f, 0.95f, 1f), 0.3f);
+                        break;
+                    case PhotoFilter.Pastel:
+                        pixels[i].r = Mathf.Lerp(pixels[i].r, 0.9f, 0.4f);
+                        pixels[i].g = Mathf.Lerp(pixels[i].g, 0.85f, 0.4f);
+                        pixels[i].b = Mathf.Lerp(pixels[i].b, 0.95f, 0.4f);
                         break;
                 }
             }

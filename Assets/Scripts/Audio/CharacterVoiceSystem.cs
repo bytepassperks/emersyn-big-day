@@ -104,6 +104,8 @@ namespace EmersynBigDay.Audio
             {
                 voiceSource.pitch = pitch;
                 voiceSource.PlayOneShot(clip, VoiceVolume);
+                // Destroy clip after playback to prevent memory leak
+                StartCoroutine(DestroyClipDelayed(clip, clip.length + 0.5f));
             }
         }
 
@@ -177,6 +179,12 @@ namespace EmersynBigDay.Audio
             AudioClip clip = AudioClip.Create("voice", sampleCount, 1, sampleRate, false);
             clip.SetData(samples, 0);
             return clip;
+        }
+
+        private System.Collections.IEnumerator DestroyClipDelayed(AudioClip clip, float delay)
+        {
+            yield return new WaitForSeconds(delay);
+            if (clip != null) Destroy(clip);
         }
 
         /// <summary>

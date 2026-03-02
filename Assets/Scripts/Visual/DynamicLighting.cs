@@ -52,7 +52,7 @@ namespace EmersynBigDay.Visual
 
         private void Update()
         {
-            if (EnableDayNightCycle)
+            if (EnableDayNightCycle && DayDuration > 0f)
             {
                 CurrentTimeOfDay += Time.deltaTime / DayDuration;
                 if (CurrentTimeOfDay >= 1f) CurrentTimeOfDay -= 1f;
@@ -63,7 +63,7 @@ namespace EmersynBigDay.Visual
         private void SetupLights()
         {
             // Find existing main directional light
-            var lights = FindObjectsByType<Light>(FindObjectsSortMode.None);
+            var lights = FindObjectsOfType<Light>();
             foreach (var l in lights)
             {
                 if (l.type == LightType.Directional && mainLight == null)
@@ -131,7 +131,7 @@ namespace EmersynBigDay.Visual
             RenderSettings.ambientLight = ambient;
 
             // Camera background for outdoors
-            if (!isIndoor)
+            if (!isIndoor && Camera.main != null)
             {
                 Camera.main.backgroundColor = Color.Lerp(
                     new Color(0.55f, 0.80f, 0.95f),
@@ -141,7 +141,7 @@ namespace EmersynBigDay.Visual
             }
         }
 
-        public void SetRoomLighting(int roomIndex, bool outdoor)
+        public void SetRoomLighting(int roomIndex, bool outdoor, Vector3 roomCenter = default)
         {
             isIndoor = !outdoor;
 
@@ -159,6 +159,8 @@ namespace EmersynBigDay.Visual
             {
                 roomAccentLight.color = accent;
                 roomAccentLight.intensity = outdoor ? 0f : 0.5f;
+                if (roomCenter != default)
+                    roomAccentLight.transform.position = roomCenter + Vector3.up * 4f;
             }
         }
 

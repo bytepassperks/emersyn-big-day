@@ -22,6 +22,12 @@ namespace EmersynBigDay.Animation
         public event System.Action<string> OnActivityStarted;
         public event System.Action<string> OnActivityEnded;
 
+        private void OnDestroy()
+        {
+            OnActivityStarted = null;
+            OnActivityEnded = null;
+        }
+
         private void Awake()
         {
             if (Instance != null && Instance != this) { Destroy(gameObject); return; }
@@ -141,7 +147,7 @@ namespace EmersynBigDay.Animation
             }
 
             // Apply need effect on completion
-            var needSystem = FindFirstObjectByType<Core.NeedSystem>();
+            var needSystem = FindObjectOfType<Core.NeedSystem>();
             if (needSystem != null && !string.IsNullOrEmpty(anim.NeedAffected))
             {
                 needSystem.ModifyNeed(anim.NeedAffected, anim.NeedDelta);

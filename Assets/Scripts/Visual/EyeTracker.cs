@@ -37,6 +37,11 @@ namespace EmersynBigDay.Visual
 
         private void Update()
         {
+            if (mainCamera == null)
+            {
+                mainCamera = Camera.main;
+                if (mainCamera == null && lookTarget == null && !trackTouch) return;
+            }
             UpdateEyeTracking();
             UpdateBlinking();
         }

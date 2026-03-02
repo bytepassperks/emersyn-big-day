@@ -74,7 +74,12 @@ namespace EmersynBigDay.Audio
         /// </summary>
         public void PlayAt(AudioClip clip, Vector3 position, float volume = 1f, float pitch = 1f)
         {
-            if (clip == null || sourcePool.Count == 0) return;
+            if (clip == null) return;
+            if (sourcePool.Count == 0)
+            {
+                Debug.LogWarning("[SpatialAudio] All sources busy, skipping sound");
+                return;
+            }
 
             var src = sourcePool.Dequeue();
             src.gameObject.SetActive(true);
@@ -98,6 +103,14 @@ namespace EmersynBigDay.Audio
             // Generate procedural footstep
             AudioClip clip = GenerateFootstepClip(surfaceType);
             PlayAt(clip, position, 0.3f, pitch);
+            // Destroy generated clip after playback
+            if (clip != null) StartCoroutine(DestroyClipDelayed(clip, 0.5f));
+        }
+
+        private System.Collections.IEnumerator DestroyClipDelayed(AudioClip clip, float delay)
+        {
+            yield return new WaitForSeconds(delay);
+            if (clip != null) Destroy(clip);
         }
 
         /// <summary>

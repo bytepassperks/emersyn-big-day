@@ -37,7 +37,6 @@ namespace EmersynBigDay.Gameplay
         {
             if (Instance != null && Instance != this) { Destroy(gameObject); return; }
             Instance = this;
-            mainCamera = Camera.main;
         }
 
         private void Update()
@@ -105,6 +104,7 @@ namespace EmersynBigDay.Gameplay
 
         private void UpdatePreview()
         {
+            if (mainCamera == null) mainCamera = Camera.main;
             if (previewObject == null || mainCamera == null) return;
 
             // Raycast from touch/mouse to ground
@@ -157,7 +157,7 @@ namespace EmersynBigDay.Gameplay
 
             Vector3 worldPos = GridToWorld(gridPos);
             var instance = Instantiate(SelectedFurniture, worldPos, Quaternion.identity);
-            instance.name = $"Furniture_{gridPos.x}_{gridPos.y}";
+            instance.name = "Furniture_Placed";
 
             var placed = new PlacedFurniture
             {

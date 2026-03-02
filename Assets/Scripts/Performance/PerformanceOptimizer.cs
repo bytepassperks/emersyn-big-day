@@ -113,11 +113,11 @@ namespace EmersynBigDay.Performance
         /// </summary>
         public void OptimizeTextures()
         {
-            var renderers = FindObjectsByType<Renderer>(FindObjectsSortMode.None);
+            var renderers = FindObjectsOfType<Renderer>();
             foreach (var r in renderers)
             {
                 if (r == null) continue;
-                foreach (var mat in r.materials)
+                foreach (var mat in r.sharedMaterials)
                 {
                     if (mat == null) continue;
                     // Enable GPU instancing on all materials
@@ -133,7 +133,7 @@ namespace EmersynBigDay.Performance
         {
             if (!EnableBatching) return;
 
-            var allObjects = FindObjectsByType<MeshRenderer>(FindObjectsSortMode.None);
+            var allObjects = FindObjectsOfType<MeshRenderer>();
             foreach (var mr in allObjects)
             {
                 if (mr == null) continue;
