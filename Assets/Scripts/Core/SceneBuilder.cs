@@ -1411,23 +1411,23 @@ namespace EmersynBigDay.Core
         }
 
         /// <summary>
-        /// Round 14 (Claude 4.5 Bedrock): Parse GLB binary JSON to extract baseColorFactor values
-        /// BEFORE GLTFast converts them. GLTFast 6.7.1 converts to Standard(Instance) with _Color=white,
-        /// losing all baseColorFactor data. This method parses the raw GLB binary to get the real colors.
+        /// Round 15 (Claude 4.5 Bedrock): Parse GLB binary JSON to extract material name → baseColorFactor mapping.
+        /// Parses ONLY the "materials" array in the GLB JSON, matching material names to their baseColorFactor.
+        /// GLTFast preserves material names, so we can match by name after instantiation.
         /// </summary>
-        private System.Collections.Generic.List<Color> ParseBaseColorFactorsFromGLB(byte[] glbData)
+        private System.Collections.Generic.Dictionary<string, Color> ParseMaterialColorsFromGLB(byte[] glbData)
         {
-            var colors = new System.Collections.Generic.List<Color>();
+            var materials = new System.Collections.Generic.Dictionary<string, Color>();
             try
             {
-                if (glbData == null || glbData.Length < 20) return colors;
+                if (glbData == null || glbData.Length < 20) return materials;
 
                 // GLB format: 12-byte header (magic + version + length)
                 uint magic = System.BitConverter.ToUInt32(glbData, 0);
                 if (magic != 0x46546C67) // "glTF" in little-endian
                 {
                     AndroidLog("[SceneBuilder] Not a valid GLB file");
-                    return colors;
+                    return materials;
                 }
 
                 // JSON chunk starts at offset 12
@@ -1436,93 +1436,201 @@ namespace EmersynBigDay.Core
                 if (jsonChunkType != 0x4E4F534A) // "JSON"
                 {
                     AndroidLog("[SceneBuilder] GLB JSON chunk not found");
-                    return colors;
+                    return materials;
                 }
 
                 string json = System.Text.Encoding.UTF8.GetString(glbData, 20, (int)jsonChunkLength);
 
-                // Parse baseColorFactor values using regex
-                var matches = System.Text.RegularExpressions.Regex.Matches(
-                    json, @"""baseColorFactor""\s*:\s*\[\s*([\d.eE+-]+)\s*,\s*([\d.eE+-]+)\s*,\s*([\d.eE+-]+)\s*,\s*([\d.eE+-]+)\s*\]");
+                // Parse the "materials" array section specifically
+                var materialsMatch = System.Text.RegularExpressions.Regex.Match(
+                    json, @"""materials""\s*:\s*\[(.*?)\]",
+                    System.Text.RegularExpressions.RegexOptions.Singleline);
 
-                foreach (System.Text.RegularExpressions.Match match in matches)
+                if (!materialsMatch.Success)
                 {
-                    float r = float.Parse(match.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture);
-                    float g = float.Parse(match.Groups[2].Value, System.Globalization.CultureInfo.InvariantCulture);
-                    float b = float.Parse(match.Groups[3].Value, System.Globalization.CultureInfo.InvariantCulture);
-                    float a = float.Parse(match.Groups[4].Value, System.Globalization.CultureInfo.InvariantCulture);
-                    colors.Add(new Color(r, g, b, a));
+                    AndroidLog("[SceneBuilder] No materials array found in GLB JSON");
+                    return materials;
                 }
 
-                // Also parse material names for logging
-                var nameMatches = System.Text.RegularExpressions.Regex.Matches(
-                    json, @"""name""\s*:\s*""([^""]+)""");
-                for (int i = 0; i < colors.Count && i < nameMatches.Count; i++)
+                string materialsJson = materialsMatch.Groups[1].Value;
+
+                // Match individual material objects - use balanced brace matching
+                // Each material has "name" and optionally "pbrMetallicRoughness" with "baseColorFactor"
+                int depth = 0;
+                int objStart = -1;
+                for (int i = 0; i < materialsJson.Length; i++)
                 {
-                    AndroidLog($"[SceneBuilder] GLB parsed mat[{i}] '{nameMatches[i].Groups[1].Value}': baseColorFactor=({colors[i].r:F2},{colors[i].g:F2},{colors[i].b:F2},{colors[i].a:F2})");
+                    if (materialsJson[i] == '{')
+                    {
+                        if (depth == 0) objStart = i;
+                        depth++;
+                    }
+                    else if (materialsJson[i] == '}')
+                    {
+                        depth--;
+                        if (depth == 0 && objStart >= 0)
+                        {
+                            string matContent = materialsJson.Substring(objStart, i - objStart + 1);
+
+                            // Extract material name
+                            var nameMatch = System.Text.RegularExpressions.Regex.Match(
+                                matContent, @"""name""\s*:\s*""([^""]+)""");
+
+                            // Extract baseColorFactor
+                            var colorMatch = System.Text.RegularExpressions.Regex.Match(
+                                matContent, @"""baseColorFactor""\s*:\s*\[\s*([\d.eE+-]+)\s*,\s*([\d.eE+-]+)\s*,\s*([\d.eE+-]+)\s*,\s*([\d.eE+-]+)\s*\]");
+
+                            if (nameMatch.Success && colorMatch.Success)
+                            {
+                                string matName = nameMatch.Groups[1].Value;
+                                float r = float.Parse(colorMatch.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture);
+                                float g = float.Parse(colorMatch.Groups[2].Value, System.Globalization.CultureInfo.InvariantCulture);
+                                float b = float.Parse(colorMatch.Groups[3].Value, System.Globalization.CultureInfo.InvariantCulture);
+                                float a = float.Parse(colorMatch.Groups[4].Value, System.Globalization.CultureInfo.InvariantCulture);
+                                Color color = new Color(r, g, b, a);
+                                materials[matName] = color;
+                                AndroidLog($"[SceneBuilder] GLB material '{matName}': baseColorFactor=({r:F2},{g:F2},{b:F2},{a:F2})");
+                            }
+                            else if (nameMatch.Success)
+                            {
+                                AndroidLog($"[SceneBuilder] GLB material '{nameMatch.Groups[1].Value}': no baseColorFactor");
+                            }
+                            objStart = -1;
+                        }
+                    }
                 }
+
+                AndroidLog($"[SceneBuilder] Parsed {materials.Count} materials with baseColorFactor from GLB");
             }
             catch (System.Exception ex)
             {
                 AndroidLog($"[SceneBuilder] GLB parse error: {ex.Message}");
             }
-            return colors;
+            return materials;
         }
 
         /// <summary>
-        /// Apply parsed baseColorFactor colors to instantiated GLB materials.
-        /// GLTFast converts all materials to Standard(Instance) with _Color=white.
-        /// We override _Color with the actual colors from the GLB binary.
+        /// Round 15 (Claude 4.5 Bedrock): Apply parsed baseColorFactor colors by matching material NAMES.
+        /// Key fixes over Round 14:
+        /// 1. Name-based matching (not order-based) - GLTFast preserves material names from GLB
+        /// 2. Use sharedMaterials to modify the ACTUAL materials (not copies)
+        /// 3. Force Standard shader with white _MainTex so _Color tinting works
+        /// 4. Renderer refresh to force visual update
         /// </summary>
         private void ApplyParsedMaterialColors(GameObject obj, byte[] glbData)
         {
-            var parsedColors = ParseBaseColorFactorsFromGLB(glbData);
-            if (parsedColors.Count == 0)
+            var parsedMaterials = ParseMaterialColorsFromGLB(glbData);
+            if (parsedMaterials.Count == 0)
             {
-                AndroidLog("[SceneBuilder] No baseColorFactor found in GLB, skipping color fix");
+                AndroidLog("[SceneBuilder] No materials with baseColorFactor found in GLB, skipping color fix");
                 return;
             }
 
             var renderers = obj.GetComponentsInChildren<Renderer>();
-            int colorIndex = 0;
-            int applied = 0;
+            int totalApplied = 0;
+            int totalRenderers = 0;
+
+            // Create a 1x1 white texture for _MainTex (ensures _Color tinting works)
+            Texture2D whiteTex = new Texture2D(1, 1);
+            whiteTex.SetPixel(0, 0, Color.white);
+            whiteTex.Apply();
 
             foreach (var renderer in renderers)
             {
                 renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
                 renderer.receiveShadows = true;
+                totalRenderers++;
 
-                var materials = renderer.materials;
-                for (int m = 0; m < materials.Length; m++)
+                // Use sharedMaterials to modify the ACTUAL materials, not copies
+                var sharedMats = renderer.sharedMaterials;
+                bool anyChanged = false;
+
+                for (int m = 0; m < sharedMats.Length; m++)
                 {
-                    if (colorIndex < parsedColors.Count)
+                    var mat = sharedMats[m];
+                    if (mat == null) continue;
+
+                    // Try exact name match first, then try without "(Instance)" suffix
+                    string matName = mat.name;
+                    string cleanName = matName.Replace(" (Instance)", "");
+
+                    Color targetColor = Color.white;
+                    bool foundMatch = false;
+
+                    if (parsedMaterials.ContainsKey(matName))
                     {
-                        var mat = materials[m];
-                        if (mat != null)
+                        targetColor = parsedMaterials[matName];
+                        foundMatch = true;
+                    }
+                    else if (parsedMaterials.ContainsKey(cleanName))
+                    {
+                        targetColor = parsedMaterials[cleanName];
+                        foundMatch = true;
+                    }
+                    else
+                    {
+                        // Try partial match - material name contains parsed name or vice versa
+                        foreach (var kvp in parsedMaterials)
                         {
-                            Color c = parsedColors[colorIndex];
-                            mat.SetColor("_Color", c);
-
-                            // Ensure opaque rendering mode
-                            mat.SetFloat("_Mode", 0);
-                            mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.One);
-                            mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.Zero);
-                            mat.SetInt("_ZWrite", 1);
-                            mat.DisableKeyword("_ALPHATEST_ON");
-                            mat.DisableKeyword("_ALPHABLEND_ON");
-                            mat.DisableKeyword("_ALPHAPREMULTIPLY_ON");
-                            mat.renderQueue = -1;
-
-                            materials[m] = mat;
-                            AndroidLog($"[SceneBuilder] Applied color ({c.r:F2},{c.g:F2},{c.b:F2},{c.a:F2}) to material {colorIndex}");
-                            applied++;
+                            if (cleanName.Contains(kvp.Key) || kvp.Key.Contains(cleanName))
+                            {
+                                targetColor = kvp.Value;
+                                foundMatch = true;
+                                AndroidLog($"[SceneBuilder] Partial match: material '{matName}' matched to parsed '{kvp.Key}'");
+                                break;
+                            }
                         }
                     }
-                    colorIndex++;
+
+                    if (foundMatch)
+                    {
+                        // Force Standard shader if not already
+                        if (standardShader != null && mat.shader != standardShader)
+                        {
+                            mat.shader = standardShader;
+                        }
+
+                        // Set white texture so _Color tinting works correctly
+                        if (mat.HasProperty("_MainTex"))
+                        {
+                            mat.SetTexture("_MainTex", whiteTex);
+                        }
+
+                        // Apply the parsed color
+                        mat.SetColor("_Color", targetColor);
+
+                        // Ensure opaque rendering mode
+                        mat.SetFloat("_Mode", 0f);
+                        mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.One);
+                        mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.Zero);
+                        mat.SetInt("_ZWrite", 1);
+                        mat.DisableKeyword("_ALPHATEST_ON");
+                        mat.DisableKeyword("_ALPHABLEND_ON");
+                        mat.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+                        mat.renderQueue = -1;
+
+                        // Set metallic/smoothness for proper PBR look
+                        if (mat.HasProperty("_Metallic")) mat.SetFloat("_Metallic", 0f);
+                        if (mat.HasProperty("_Glossiness")) mat.SetFloat("_Glossiness", 0.5f);
+
+                        AndroidLog($"[SceneBuilder] Applied color ({targetColor.r:F2},{targetColor.g:F2},{targetColor.b:F2},{targetColor.a:F2}) to material '{matName}' on renderer '{renderer.name}'");
+                        totalApplied++;
+                        anyChanged = true;
+                    }
+                    else
+                    {
+                        AndroidLog($"[SceneBuilder] NO MATCH for material '{matName}' (clean='{cleanName}') in parsed materials");
+                    }
                 }
-                renderer.materials = materials;
+
+                // Force renderer refresh to ensure visual update
+                if (anyChanged)
+                {
+                    renderer.enabled = false;
+                    renderer.enabled = true;
+                }
             }
-            AndroidLog($"[SceneBuilder] Round 14: Applied {applied} parsed baseColorFactor colors to {renderers.Length} renderers");
+            AndroidLog($"[SceneBuilder] Round 15: Applied {totalApplied} colors by name matching across {totalRenderers} renderers");
         }
 
         // === PBR Texture Loading for Rooms ===
