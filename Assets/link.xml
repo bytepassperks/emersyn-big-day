@@ -4,9 +4,11 @@
   <assembly fullname="EmersynsBigDay.MiniGames" preserve="all"/>
   <assembly fullname="EmersynsBigDay.AI" preserve="all"/>
 
-  <!-- Preserve GLTFast assemblies (still used as fallback) -->
+  <!-- Round 41: GLTFast assemblies - CRITICAL for runtime GLB loading -->
   <assembly fullname="glTFast" preserve="all"/>
   <assembly fullname="glTFast.Runtime" preserve="all"/>
+  <assembly fullname="GLTFast" preserve="all"/>
+  <assembly fullname="GLTFast.Runtime" preserve="all"/>
 
   <!-- Preserve Unity core assemblies - CRITICAL for runtime Mesh/Material creation -->
   <assembly fullname="UnityEngine.CoreModule" preserve="all"/>
@@ -23,6 +25,9 @@
   <assembly fullname="UnityEngine.UnityWebRequestTextureModule" preserve="all"/>
   <assembly fullname="UnityEngine.JSONSerializeModule" preserve="all"/>
 
+  <!-- Round 41: Preserve AndroidJNI for native Android logging -->
+  <assembly fullname="UnityEngine.AndroidJNIModule" preserve="all"/>
+
   <!-- Round 36: Explicitly preserve Mesh/Material/MeshFilter/MeshRenderer for runtime GLB parsing -->
   <assembly fullname="UnityEngine">
     <type fullname="UnityEngine.Mesh" preserve="all"/>
@@ -31,9 +36,13 @@
     <type fullname="UnityEngine.Material" preserve="all"/>
     <type fullname="UnityEngine.Shader" preserve="all"/>
     <type fullname="UnityEngine.Rendering.IndexFormat" preserve="all"/>
+    <type fullname="UnityEngine.AndroidJavaClass" preserve="all"/>
+    <type fullname="UnityEngine.AndroidJavaObject" preserve="all"/>
   </assembly>
 
   <!-- Preserve JSON serialization -->
   <assembly fullname="Newtonsoft.Json" preserve="all"/>
   <assembly fullname="Unity.Mathematics" preserve="all"/>
+  <assembly fullname="Unity.Collections" preserve="all"/>
+  <assembly fullname="Unity.Jobs" preserve="all"/>
 </linker>

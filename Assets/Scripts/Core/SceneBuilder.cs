@@ -21,10 +21,13 @@ namespace EmersynBigDay.Core
 {
     public class SceneBuilder : MonoBehaviour
     {
-        // Claude Bedrock Round 5: Native Android logging to bypass IL2CPP Debug.Log suppression
-        #if UNITY_ANDROID && !UNITY_EDITOR
+        // Round 41 (Claude 4.5 Bedrock): Use Debug.Log as PRIMARY logging.
+        // AndroidJavaClass("android.util.Log") was being stripped by IL2CPP, causing
+        // ALL log output to silently disappear on Android. Debug.Log works reliably.
         private static void AndroidLog(string msg)
         {
+            Debug.Log(msg);
+            #if UNITY_ANDROID && !UNITY_EDITOR
             try
             {
                 using (var logClass = new AndroidJavaClass("android.util.Log"))
@@ -32,11 +35,9 @@ namespace EmersynBigDay.Core
                     logClass.CallStatic<int>("d", "SCENEBUILDER", msg);
                 }
             }
-            catch (System.Exception) { /* fallback silently */ }
+            catch (System.Exception) { /* native log failed, Debug.Log already captured it */ }
+            #endif
         }
-        #else
-        private static void AndroidLog(string msg) { Debug.Log(msg); }
-        #endif
 
         private bool isInitialized = false;
         private Camera mainCamera;
@@ -1280,360 +1281,300 @@ namespace EmersynBigDay.Core
         }
 
         // === Character Model Loading ===
-        // Round 36 (Claude 4.5 Bedrock): RUNTIME GLB binary parsing.
-        // After 35 rounds of trying editor-time prefab conversion (all failed in batch mode),
-        // Bedrock confirmed: parse GLB binary DIRECTLY at runtime on Android.
-        // No GLTFast, no prefabs, no AssetDatabase. Pure C# binary parsing + Mesh/Material creation.
-        // Shader.Find("Standard") works at runtime on Android (fails only in -nographics batch mode).
+        // Round 41 (Claude 4.5 Bedrock): Use GLTFast for proper GLB loading.
+        // After 40 rounds, Bedrock diagnosed: custom binary parser + AndroidJavaClass logging both
+        // silently fail on Android. GLTFast handles mesh creation, coordinate conversion, and
+        // materials correctly. Debug.Log is the reliable logging method.
         private IEnumerator LoadGLBCharactersCoroutine()
         {
-            AndroidLog("[SceneBuilder] Round 36: Starting RUNTIME GLB binary parsing (no prefabs, no GLTFast)...");
+            AndroidLog("[SceneBuilder] R41: Starting GLTFast-based GLB loading...");
             
-            // Load main characters via direct GLB binary parsing
+            // Load main characters via GLTFast
             for (int i = 0; i < GLBCharacterFiles.Length && i < CharacterNames.Length; i++)
             {
-                yield return StartCoroutine(RuntimeParseAndReplaceCharacter(
+                AndroidLog($"[SceneBuilder] R41: Loading character {i}: {GLBCharacterFiles[i]} -> {CharacterNames[i]}");
+                yield return StartCoroutine(LoadAndReplaceWithGLTFast(
                     GLBCharacterFiles[i], CharacterNames[i], i == 0, false));
                 yield return null;
             }
             
-            // Load pets via direct GLB binary parsing
+            // Load pets via GLTFast
             for (int i = 0; i < GLBPetFiles.Length && i < PetNames.Length; i++)
             {
-                yield return StartCoroutine(RuntimeParseAndReplaceCharacter(
+                AndroidLog($"[SceneBuilder] R41: Loading pet {i}: {GLBPetFiles[i]} -> {PetNames[i]}");
+                yield return StartCoroutine(LoadAndReplaceWithGLTFast(
                     GLBPetFiles[i], PetNames[i], false, true));
                 yield return null;
             }
             
             glbLoadingComplete = true;
-            AndroidLog("[SceneBuilder] Round 36: Runtime GLB parsing complete!");
+            AndroidLog("[SceneBuilder] R41: All GLTFast GLB loading complete!");
         }
 
         /// <summary>
-        /// Round 36 (Claude 4.5 Bedrock): Runtime GLB binary parser.
-        /// Reads GLB from StreamingAssets via UnityWebRequest, parses binary mesh data,
-        /// creates Unity Mesh/Material objects at runtime. No editor APIs needed.
+        /// Round 41 (Claude 4.5 Bedrock): GLTFast-based GLB loader.
+        /// Loads GLB bytes via UnityWebRequest, parses with GLTFast, instantiates scene,
+        /// then replaces the procedural placeholder. GLTFast handles coordinate conversion,
+        /// mesh creation, and material setup correctly.
         /// </summary>
-        private IEnumerator RuntimeParseAndReplaceCharacter(string glbName, string displayName, bool isMain, bool isPet)
+        private IEnumerator LoadAndReplaceWithGLTFast(string glbName, string displayName, bool isMain, bool isPet)
         {
-            // Step 1: Load GLB bytes from StreamingAssets (UnityWebRequest required on Android)
-            // Round 40 (Claude 4.5 Bedrock): Path.Combine corrupts jar:file:// URI on Android!
-            // Must use string concatenation instead of Path.Combine for Android StreamingAssets
-            #if UNITY_ANDROID && !UNITY_EDITOR
-            string uri = Application.streamingAssetsPath + "/Characters/" + glbName + ".glb";
-            #else
-            string uri = System.IO.Path.Combine(Application.streamingAssetsPath, "Characters", glbName + ".glb");
-            #endif
-            AndroidLog($"[GLBRuntime] Loading {glbName}.glb from {uri}");
+            AndroidLog($"[GLBRuntime] R41: START loading {glbName} -> {displayName}");
             
+            // Step 1: Load GLB bytes from StreamingAssets
             byte[] glbData = null;
-            using (var request = UnityWebRequest.Get(uri))
+            try
             {
-                yield return request.SendWebRequest();
-                if (request.result != UnityWebRequest.Result.Success)
+                #if UNITY_ANDROID && !UNITY_EDITOR
+                string uri = Application.streamingAssetsPath + "/Characters/" + glbName + ".glb";
+                #else
+                string uri = "file://" + Path.Combine(Application.streamingAssetsPath, "Characters", glbName + ".glb");
+                #endif
+                AndroidLog($"[GLBRuntime] R41: Step 1 - Loading from URI: {uri}");
+                
+                using (var request = UnityWebRequest.Get(uri))
                 {
-                    AndroidLog($"[GLBRuntime] FAILED to load {glbName}: {request.error}");
+                    request.timeout = 30;
+                    yield return request.SendWebRequest();
+                    if (request.result != UnityWebRequest.Result.Success)
+                    {
+                        AndroidLog($"[GLBRuntime] R41: FAILED to load {glbName}: {request.error} code={request.responseCode}");
+                        yield break;
+                    }
+                    glbData = request.downloadHandler.data;
+                    AndroidLog($"[GLBRuntime] R41: Step 1 OK - Loaded {glbData.Length} bytes for {glbName}");
+                }
+            }
+            catch (System.Exception e)
+            {
+                AndroidLog($"[GLBRuntime] R41: Step 1 EXCEPTION loading {glbName}: {e.Message}\n{e.StackTrace}");
+                yield break;
+            }
+
+            if (glbData == null || glbData.Length < 12)
+            {
+                AndroidLog($"[GLBRuntime] R41: {glbName} data is null or too small ({glbData?.Length ?? 0} bytes)");
+                yield break;
+            }
+
+            // Step 2: Parse with GLTFast
+            GltfImport gltf = null;
+            bool loadSuccess = false;
+            try
+            {
+                AndroidLog($"[GLBRuntime] R41: Step 2 - Creating GltfImport for {glbName}");
+                gltf = new GltfImport(materialGenerator: new StandardColorMaterialGenerator());
+                
+                var loadTask = gltf.LoadGltfBinary(glbData);
+                while (!loadTask.IsCompleted)
+                {
+                    yield return null;
+                }
+                
+                if (loadTask.IsFaulted)
+                {
+                    AndroidLog($"[GLBRuntime] R41: Step 2 FAULTED for {glbName}: {loadTask.Exception?.Message}");
                     yield break;
                 }
-                glbData = request.downloadHandler.data;
-                AndroidLog($"[GLBRuntime] Loaded {glbName}: {glbData.Length} bytes");
+                loadSuccess = loadTask.Result;
+                AndroidLog($"[GLBRuntime] R41: Step 2 result for {glbName}: {loadSuccess}");
             }
-
-            // Step 2: Validate GLB header
-            if (glbData == null || glbData.Length < 20)
+            catch (System.Exception e)
             {
-                AndroidLog($"[GLBRuntime] {glbName}: data too small");
-                yield break;
-            }
-            uint magic = System.BitConverter.ToUInt32(glbData, 0);
-            if (magic != 0x46546C67) // "glTF"
-            {
-                AndroidLog($"[GLBRuntime] {glbName}: invalid magic {magic:X8}");
+                AndroidLog($"[GLBRuntime] R41: Step 2 EXCEPTION for {glbName}: {e.Message}\n{e.StackTrace}");
                 yield break;
             }
 
-            // Step 3: Extract JSON chunk and binary chunk
-            uint jsonLen = System.BitConverter.ToUInt32(glbData, 12);
-            string json = System.Text.Encoding.UTF8.GetString(glbData, 20, (int)jsonLen);
-            int binOffset = 20 + (int)jsonLen;
-            while (binOffset % 4 != 0) binOffset++;
-            uint binLen = System.BitConverter.ToUInt32(glbData, binOffset);
-            byte[] binBuf = new byte[binLen];
-            System.Array.Copy(glbData, binOffset + 8, binBuf, 0, (int)binLen);
-
-            // Step 4: Parse JSON sections
-            var accessors = GLBParseAccessors(json);
-            var bufferViews = GLBParseBufferViews(json);
-            var materials = GLBParseMaterials(json);
-            var meshes = GLBParseMeshes(json);
-            AndroidLog($"[GLBRuntime] {glbName}: {meshes.Count} meshes, {materials.Count} mats, {accessors.Count} accessors");
-
-            // Step 5: Create materials at runtime
-            // Round 39 (Claude 4.5 Bedrock): AAA cartoon materials with HSV saturation boost + emission glow
-            Shader std = Shader.Find("Standard");
-            if (std == null)
+            if (!loadSuccess || gltf == null)
             {
-                AndroidLog($"[GLBRuntime] WARNING: Standard shader not found, using fallback");
-                std = Shader.Find("Unlit/Color");
+                AndroidLog($"[GLBRuntime] R41: GLTFast failed to parse {glbName}");
+                yield break;
             }
-            Material[] matArray = new Material[materials.Count];
-            for (int m = 0; m < materials.Count; m++)
+
+            // Step 3: Instantiate the GLTFast scene into a new root GameObject
+            GameObject glbRoot = null;
+            try
             {
-                var md = materials[m];
-                Material mat = new Material(std);
-                string matName = md.name ?? (glbName + "_mat_" + m);
-                mat.name = matName;
-
-                // Round 39: HSV-based color enhancement for cartoon vibrancy
-                Color.RGBToHSV(md.color, out float h, out float s, out float v);
-                s = Mathf.Clamp01(s * 1.4f); // Increase saturation 40%
-                v = Mathf.Clamp01(v * 1.1f); // Slightly brighter
-                Color enhanced = Color.HSVToRGB(h, s, v);
-                // Apply gamma correction for cartoon pop
-                enhanced.r = Mathf.Pow(enhanced.r, 0.75f);
-                enhanced.g = Mathf.Pow(enhanced.g, 0.75f);
-                enhanced.b = Mathf.Pow(enhanced.b, 0.75f);
-                enhanced.a = md.color.a;
-                mat.SetColor("_Color", enhanced);
-
-                // Round 39: Per-material glossiness for realistic cartoon look
-                mat.SetFloat("_Metallic", 0.0f);
-                string nameLower = matName.ToLower();
-                if (nameLower.Contains("hair"))
-                    mat.SetFloat("_Glossiness", 0.8f); // Shiny hair
-                else if (nameLower.Contains("eye"))
-                    mat.SetFloat("_Glossiness", 0.9f); // Very shiny eyes
-                else if (nameLower.Contains("body") || nameLower.Contains("skin"))
-                    mat.SetFloat("_Glossiness", 0.3f); // Soft matte skin
-                else if (nameLower.Contains("shoe"))
-                    mat.SetFloat("_Glossiness", 0.7f); // Shiny shoes
-                else
-                    mat.SetFloat("_Glossiness", 0.5f); // Medium for outfits
-
-                // Round 39: Subtle emission for cartoon glow effect
-                mat.EnableKeyword("_EMISSION");
-                mat.globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive;
-                if (nameLower.Contains("body") || nameLower.Contains("skin"))
-                    mat.SetColor("_EmissionColor", Color.white * 0.05f); // Subtle skin glow
-                else if (nameLower.Contains("eye"))
-                    mat.SetColor("_EmissionColor", enhanced * 0.15f); // Eye sparkle
-                else
-                    mat.SetColor("_EmissionColor", enhanced * 0.08f); // General glow
-
-                if (md.color.a < 0.99f)
+                AndroidLog($"[GLBRuntime] R41: Step 3 - Instantiating {glbName} scene");
+                glbRoot = new GameObject(displayName + "_GLB");
+                
+                var instantiateTask = gltf.InstantiateMainSceneAsync(glbRoot.transform);
+                while (!instantiateTask.IsCompleted)
                 {
-                    mat.SetFloat("_Mode", 2f);
-                    mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
-                    mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
-                    mat.SetInt("_ZWrite", 0);
-                    mat.EnableKeyword("_ALPHABLEND_ON");
-                    mat.renderQueue = 3000;
+                    yield return null;
                 }
-                matArray[m] = mat;
-                AndroidLog($"[GLBRuntime] {glbName}: Mat '{matName}' enhanced=({enhanced.r:F2},{enhanced.g:F2},{enhanced.b:F2}) gloss={mat.GetFloat("_Glossiness"):F1}");
+                
+                if (instantiateTask.IsFaulted)
+                {
+                    AndroidLog($"[GLBRuntime] R41: Step 3 FAULTED for {glbName}: {instantiateTask.Exception?.Message}");
+                    if (glbRoot != null) Destroy(glbRoot);
+                    yield break;
+                }
+                
+                bool instantiateSuccess = instantiateTask.Result;
+                AndroidLog($"[GLBRuntime] R41: Step 3 instantiate result for {glbName}: {instantiateSuccess}");
+                
+                if (!instantiateSuccess)
+                {
+                    AndroidLog($"[GLBRuntime] R41: InstantiateMainSceneAsync returned false for {glbName}");
+                    if (glbRoot != null) Destroy(glbRoot);
+                    yield break;
+                }
+            }
+            catch (System.Exception e)
+            {
+                AndroidLog($"[GLBRuntime] R41: Step 3 EXCEPTION for {glbName}: {e.Message}\n{e.StackTrace}");
+                if (glbRoot != null) Destroy(glbRoot);
+                yield break;
             }
 
-            // Step 6: Create meshes and build GameObject hierarchy
-            GameObject root = new GameObject(displayName + "_GLB");
+            // Step 4: Count renderers and log mesh info
+            int rendererCount = 0;
             int totalVerts = 0;
-            int totalTris = 0;
-            for (int mi = 0; mi < meshes.Count; mi++)
+            try
             {
-                var msh = meshes[mi];
-                for (int pi = 0; pi < msh.prims.Count; pi++)
+                var renderers = glbRoot.GetComponentsInChildren<Renderer>(true);
+                rendererCount = renderers.Length;
+                var meshFilters = glbRoot.GetComponentsInChildren<MeshFilter>(true);
+                foreach (var mf in meshFilters)
                 {
-                    var prim = msh.prims[pi];
-                    if (!prim.attrs.ContainsKey("POSITION")) continue;
-                    int posIdx = prim.attrs["POSITION"];
-                    if (posIdx < 0 || posIdx >= accessors.Count) continue;
-                    var acc = accessors[posIdx];
-                    if (acc.bv < 0 || acc.bv >= bufferViews.Count) continue;
-                    var bv = bufferViews[acc.bv];
-                    int stride = bv.stride > 0 ? bv.stride : 12;
-                    int off = bv.offset + acc.offset;
-
-                    // Read vertices (flip Z for glTF right-hand -> Unity left-hand)
-                    Vector3[] verts = new Vector3[acc.count];
-                    for (int v = 0; v < acc.count; v++)
-                    {
-                        int ix = off + v * stride;
-                        if (ix + 12 > binBuf.Length) break;
-                        verts[v] = new Vector3(
-                            System.BitConverter.ToSingle(binBuf, ix),
-                            System.BitConverter.ToSingle(binBuf, ix + 4),
-                            -System.BitConverter.ToSingle(binBuf, ix + 8));
-                    }
-
-                    Mesh mesh = new Mesh();
-                    mesh.name = glbName + "_mesh_" + mi + "_" + pi;
-                    if (verts.Length > 65535) mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
-                    mesh.vertices = verts;
-                    totalVerts += verts.Length;
-
-                    // Normals
-                    if (prim.attrs.ContainsKey("NORMAL"))
-                    {
-                        int nIdx = prim.attrs["NORMAL"];
-                        if (nIdx >= 0 && nIdx < accessors.Count)
-                        {
-                            var na = accessors[nIdx];
-                            if (na.bv >= 0 && na.bv < bufferViews.Count)
-                            {
-                                var nb = bufferViews[na.bv];
-                                int ns = nb.stride > 0 ? nb.stride : 12;
-                                int no2 = nb.offset + na.offset;
-                                Vector3[] norms = new Vector3[na.count];
-                                for (int v = 0; v < na.count; v++)
-                                {
-                                    int ix = no2 + v * ns;
-                                    if (ix + 12 > binBuf.Length) break;
-                                    norms[v] = new Vector3(
-                                        System.BitConverter.ToSingle(binBuf, ix),
-                                        System.BitConverter.ToSingle(binBuf, ix + 4),
-                                        -System.BitConverter.ToSingle(binBuf, ix + 8));
-                                }
-                                mesh.normals = norms;
-                            }
-                        }
-                    }
-
-                    // UVs
-                    if (prim.attrs.ContainsKey("TEXCOORD_0"))
-                    {
-                        int uIdx = prim.attrs["TEXCOORD_0"];
-                        if (uIdx >= 0 && uIdx < accessors.Count)
-                        {
-                            var ua = accessors[uIdx];
-                            if (ua.bv >= 0 && ua.bv < bufferViews.Count)
-                            {
-                                var ub = bufferViews[ua.bv];
-                                int us = ub.stride > 0 ? ub.stride : 8;
-                                int uo = ub.offset + ua.offset;
-                                Vector2[] uvs = new Vector2[ua.count];
-                                for (int v = 0; v < ua.count; v++)
-                                {
-                                    int ix = uo + v * us;
-                                    if (ix + 8 > binBuf.Length) break;
-                                    uvs[v] = new Vector2(
-                                        System.BitConverter.ToSingle(binBuf, ix),
-                                        1f - System.BitConverter.ToSingle(binBuf, ix + 4));
-                                }
-                                mesh.uv = uvs;
-                            }
-                        }
-                    }
-
-                    // Indices
-                    if (prim.idxAcc >= 0 && prim.idxAcc < accessors.Count)
-                    {
-                        var ia = accessors[prim.idxAcc];
-                        if (ia.bv >= 0 && ia.bv < bufferViews.Count)
-                        {
-                            var ib = bufferViews[ia.bv];
-                            int io2 = ib.offset + ia.offset;
-                            int[] tris = new int[ia.count];
-                            for (int t = 0; t < ia.count; t++)
-                            {
-                                if (ia.compType == 5123) // UNSIGNED_SHORT
-                                {
-                                    int ix = io2 + t * 2;
-                                    if (ix + 2 <= binBuf.Length) tris[t] = System.BitConverter.ToUInt16(binBuf, ix);
-                                }
-                                else if (ia.compType == 5125) // UNSIGNED_INT
-                                {
-                                    int ix = io2 + t * 4;
-                                    if (ix + 4 <= binBuf.Length) tris[t] = (int)System.BitConverter.ToUInt32(binBuf, ix);
-                                }
-                                else // UNSIGNED_BYTE
-                                {
-                                    int ix = io2 + t;
-                                    if (ix < binBuf.Length) tris[t] = binBuf[ix];
-                                }
-                            }
-                            // Reverse winding for left-handed coord system
-                            for (int t = 0; t < tris.Length - 2; t += 3)
-                            {
-                                int tmp = tris[t]; tris[t] = tris[t + 2]; tris[t + 2] = tmp;
-                            }
-                            mesh.triangles = tris;
-                            totalTris += tris.Length / 3;
-                        }
-                    }
-
-                    mesh.RecalculateBounds();
-                    if (mesh.normals == null || mesh.normals.Length == 0) mesh.RecalculateNormals();
-                    mesh.RecalculateTangents();
-
-                    // Create child GameObject with mesh
-                    string goName = msh.name ?? ("mesh_" + mi + "_" + pi);
-                    GameObject go = new GameObject(goName);
-                    go.transform.SetParent(root.transform);
-                    go.AddComponent<MeshFilter>().sharedMesh = mesh;
-                    MeshRenderer mr = go.AddComponent<MeshRenderer>();
-                    if (prim.matIdx >= 0 && prim.matIdx < matArray.Length)
-                        mr.sharedMaterial = matArray[prim.matIdx];
-                    else if (matArray.Length > 0)
-                        mr.sharedMaterial = matArray[0];
-                    else
-                        mr.sharedMaterial = new Material(std);
-                    mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
-                    mr.receiveShadows = true;
+                    if (mf.sharedMesh != null) totalVerts += mf.sharedMesh.vertexCount;
                 }
-                yield return null; // Spread across frames to avoid hitching
+                AndroidLog($"[GLBRuntime] R41: Step 4 - {glbName} has {rendererCount} renderers, {totalVerts} total verts");
             }
-
-            AndroidLog($"[GLBRuntime] {glbName}: Built {totalVerts} verts, {totalTris} tris");
-
-            // Step 7: Replace the primitive placeholder
-            // Round 39 (Claude 4.5 Bedrock): Scale 2.8x for characters (~3.1 units tall), 2.0x for pets
-            // Characters need to be clearly visible focal point in 12x10 room
-            float glbScale = isPet ? 2.0f : 2.8f;
-            Transform existing = characterContainer != null ? characterContainer.Find(displayName) : null;
-            if (existing == null)
+            catch (System.Exception e)
             {
-                AndroidLog($"[GLBRuntime] Placeholder '{displayName}' not found, placing at origin");
-                root.transform.SetParent(characterContainer);
-                root.name = displayName;
-                root.transform.localScale = Vector3.one * glbScale;
+                AndroidLog($"[GLBRuntime] R41: Step 4 EXCEPTION for {glbName}: {e.Message}");
             }
-            else
+
+            // Step 5: Apply AAA cartoon material enhancements to GLTFast-created materials
+            try
             {
-                Vector3 savedPos = existing.position;
-                Quaternion savedRot = existing.rotation;
-                Transform savedParent = existing.parent;
-
-                root.name = displayName;
-                root.transform.SetParent(savedParent, false);
-                root.transform.position = savedPos;
-                root.transform.rotation = savedRot;
-                root.transform.localScale = Vector3.one * glbScale;
-
-                Destroy(existing.gameObject);
+                AndroidLog($"[GLBRuntime] R41: Step 5 - Enhancing materials for {glbName}");
+                var renderers = glbRoot.GetComponentsInChildren<Renderer>(true);
+                foreach (var renderer in renderers)
+                {
+                    var mats = renderer.materials; // Get copy of materials array
+                    for (int m = 0; m < mats.Length; m++)
+                    {
+                        if (mats[m] == null) continue;
+                        Material mat = mats[m];
+                        
+                        // HSV saturation boost for cartoon vibrancy
+                        if (mat.HasProperty("_Color"))
+                        {
+                            Color origColor = mat.color;
+                            Color.RGBToHSV(origColor, out float h, out float s, out float v);
+                            s = Mathf.Clamp01(s * 1.4f);
+                            v = Mathf.Clamp01(v * 1.1f);
+                            Color enhanced = Color.HSVToRGB(h, s, v);
+                            enhanced.r = Mathf.Pow(enhanced.r, 0.75f);
+                            enhanced.g = Mathf.Pow(enhanced.g, 0.75f);
+                            enhanced.b = Mathf.Pow(enhanced.b, 0.75f);
+                            enhanced.a = origColor.a;
+                            mat.color = enhanced;
+                            
+                            string matName = mat.name.ToLower();
+                            // Per-material glossiness
+                            if (mat.HasProperty("_Glossiness"))
+                            {
+                                if (matName.Contains("hair")) mat.SetFloat("_Glossiness", 0.8f);
+                                else if (matName.Contains("eye")) mat.SetFloat("_Glossiness", 0.9f);
+                                else if (matName.Contains("body") || matName.Contains("skin")) mat.SetFloat("_Glossiness", 0.3f);
+                                else if (matName.Contains("shoe")) mat.SetFloat("_Glossiness", 0.7f);
+                                else mat.SetFloat("_Glossiness", 0.5f);
+                            }
+                            
+                            // Subtle emission glow
+                            if (mat.HasProperty("_EmissionColor"))
+                            {
+                                mat.EnableKeyword("_EMISSION");
+                                mat.globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive;
+                                if (matName.Contains("eye"))
+                                    mat.SetColor("_EmissionColor", enhanced * 0.15f);
+                                else
+                                    mat.SetColor("_EmissionColor", enhanced * 0.08f);
+                            }
+                            
+                            AndroidLog($"[GLBRuntime] R41: Mat '{mat.name}' color=({enhanced.r:F2},{enhanced.g:F2},{enhanced.b:F2})");
+                        }
+                    }
+                    renderer.materials = mats; // Apply modified materials back
+                    renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
+                    renderer.receiveShadows = true;
+                }
             }
-            AndroidLog($"[GLBRuntime] {displayName} scale={glbScale}, bounds approx {totalVerts} verts");
-
-            // Step 8: Add interaction components
-            // Round 37: Collider sizes adjusted for GLB model bounds (~1.1 tall, ~0.7 wide in local space)
-            if (root.GetComponent<BoxCollider>() == null)
+            catch (System.Exception e)
             {
-                var col = root.AddComponent<BoxCollider>();
-                if (isPet) { col.center = new Vector3(0, 0.25f, 0); col.size = new Vector3(0.5f, 0.5f, 0.6f); }
-                else { col.center = new Vector3(0, 0.55f, 0); col.size = new Vector3(0.8f, 1.2f, 0.8f); }
+                AndroidLog($"[GLBRuntime] R41: Step 5 EXCEPTION for {glbName}: {e.Message}");
             }
-            if (root.GetComponent<CharacterBob>() == null)
-                root.AddComponent<CharacterBob>();
 
-            // Step 9: Update main character reference
+            // Step 6: Replace the procedural placeholder with GLTFast model
+            try
+            {
+                AndroidLog($"[GLBRuntime] R41: Step 6 - Replacing placeholder for {displayName}");
+                float glbScale = isPet ? 2.0f : 2.8f;
+                Transform existing = characterContainer != null ? characterContainer.Find(displayName) : null;
+                
+                if (existing != null)
+                {
+                    AndroidLog($"[GLBRuntime] R41: Found placeholder '{displayName}' at {existing.position}");
+                    Vector3 savedPos = existing.position;
+                    Quaternion savedRot = existing.rotation;
+                    Transform savedParent = existing.parent;
+
+                    glbRoot.name = displayName;
+                    glbRoot.transform.SetParent(savedParent, false);
+                    glbRoot.transform.position = savedPos;
+                    glbRoot.transform.rotation = savedRot;
+                    glbRoot.transform.localScale = Vector3.one * glbScale;
+
+                    // CRITICAL: Actually destroy the procedural placeholder
+                    AndroidLog($"[GLBRuntime] R41: DESTROYING placeholder '{displayName}'");
+                    Destroy(existing.gameObject);
+                }
+                else
+                {
+                    AndroidLog($"[GLBRuntime] R41: No placeholder found for '{displayName}', placing in container");
+                    glbRoot.transform.SetParent(characterContainer);
+                    glbRoot.name = displayName;
+                    glbRoot.transform.localScale = Vector3.one * glbScale;
+                }
+                AndroidLog($"[GLBRuntime] R41: {displayName} scale={glbScale}");
+            }
+            catch (System.Exception e)
+            {
+                AndroidLog($"[GLBRuntime] R41: Step 6 EXCEPTION for {glbName}: {e.Message}\n{e.StackTrace}");
+            }
+
+            // Step 7: Add interaction components
+            try
+            {
+                if (glbRoot.GetComponent<BoxCollider>() == null)
+                {
+                    var col = glbRoot.AddComponent<BoxCollider>();
+                    if (isPet) { col.center = new Vector3(0, 0.25f, 0); col.size = new Vector3(0.5f, 0.5f, 0.6f); }
+                    else { col.center = new Vector3(0, 0.55f, 0); col.size = new Vector3(0.8f, 1.2f, 0.8f); }
+                }
+                if (glbRoot.GetComponent<CharacterBob>() == null)
+                    glbRoot.AddComponent<CharacterBob>();
+            }
+            catch (System.Exception e)
+            {
+                AndroidLog($"[GLBRuntime] R41: Step 7 EXCEPTION: {e.Message}");
+            }
+
+            // Step 8: Update main character reference
             if (isMain)
             {
-                emersynObj = root;
+                emersynObj = glbRoot;
                 if (CameraSystem.CameraController.Instance != null)
-                    CameraSystem.CameraController.Instance.Target = root.transform;
+                    CameraSystem.CameraController.Instance.Target = glbRoot.transform;
                 if (Gameplay.CharacterCustomization.Instance != null)
-                    Gameplay.CharacterCustomization.Instance.ApplyToCharacter(root);
+                    Gameplay.CharacterCustomization.Instance.ApplyToCharacter(glbRoot);
             }
 
-            AndroidLog($"[GLBRuntime] SUCCESS: {displayName} replaced with {totalVerts} verts, {totalTris} tris, {matArray.Length} mats!");
+            AndroidLog($"[GLBRuntime] R41: SUCCESS: {displayName} loaded with GLTFast! {rendererCount} renderers, {totalVerts} verts");
         }
 
         // ===== GLB Runtime Parsing Helpers =====
@@ -2864,6 +2805,12 @@ namespace EmersynBigDay.Core
         private Shader m_StandardShader;
         private Texture2D m_WhiteTex;
         private GLTFast.Logging.ICodeLogger m_Logger;
+
+        // Round 41: Parameterless constructor for GLTFast direct usage (colors come from PBR data)
+        public StandardColorMaterialGenerator()
+        {
+            m_MaterialColors = new System.Collections.Generic.Dictionary<string, Color>();
+        }
 
         public StandardColorMaterialGenerator(System.Collections.Generic.Dictionary<string, Color> materialColors)
         {
