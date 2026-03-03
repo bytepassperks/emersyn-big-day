@@ -221,7 +221,9 @@ namespace EmersynBigDay.CameraSystem
         {
             currentYaw = 0f;
             currentPitch = DefaultPitch;
-            CurrentZoom = 28f; // Round 26: Match default zoom
+            // Round 27: Adaptive zoom on reset based on screen aspect
+            float resetAspect = (float)Screen.width / Screen.height;
+            CurrentZoom = resetAspect < 0.6f ? 18f : 28f;
             frameCount = 0; // Round 25: Reset to force exact position again
             springVelocity = Vector3.zero;
             isTransitioning = false;

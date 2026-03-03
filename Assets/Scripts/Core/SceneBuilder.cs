@@ -454,8 +454,12 @@ namespace EmersynBigDay.Core
             mainCamera.clearFlags = CameraClearFlags.SolidColor;
             // Round 20 (Claude 4.5 Bedrock): Soft pink background to match room aesthetic
             mainCamera.backgroundColor = new Color(0.95f, 0.88f, 0.92f);
-            // Round 26: FOV 60 — wider to see full room including side walls
-            mainCamera.fieldOfView = 60f;
+            // Round 27: Adaptive FOV based on screen aspect ratio
+            // Phones (aspect ~0.46) need wider FOV; tablets (aspect ~0.75) use base FOV
+            float aspect = (float)Screen.width / Screen.height;
+            float adaptiveFOV = aspect < 0.6f ? 75f : 60f; // Wider FOV on narrow phones
+            mainCamera.fieldOfView = adaptiveFOV;
+            Debug.Log($"[SceneBuilder] Screen {Screen.width}x{Screen.height} aspect={aspect:F2} FOV={adaptiveFOV}");
             mainCamera.nearClipPlane = 0.1f;
             mainCamera.farClipPlane = 100f;
             // Claude Bedrock fix #1: FORCE Forward rendering - Deferred fails silently on Android GPUs
@@ -473,20 +477,29 @@ namespace EmersynBigDay.Core
             if (mainCamera.GetComponent<CameraSystem.CameraController>() == null)
             {
                 var ctrl = mainCamera.gameObject.AddComponent<CameraSystem.CameraController>();
-                // Round 26: Pull camera WAY back and up for true Sims 4 dollhouse view
+                // Round 27: Adaptive camera based on screen aspect ratio
+                // Phones (narrow, aspect<0.6) need closer zoom; tablets use full zoom
+                float camAspect = (float)Screen.width / Screen.height;
+                float adaptiveZoom = camAspect < 0.6f ? 18f : 28f; // Closer on phones
+                float adaptivePitch = camAspect < 0.6f ? 45f : 50f; // Slightly less steep on phones
                 ctrl.MinZoom = 8f;
                 ctrl.MaxZoom = 50f;
-                ctrl.CurrentZoom = 28f; // Round 26: Far enough to see entire room
-                ctrl.DefaultPitch = 50f; // Round 26: 50° pitch looks DOWN at floor
+                ctrl.CurrentZoom = adaptiveZoom;
+                ctrl.DefaultPitch = adaptivePitch;
                 ctrl.SpringStiffness = 200f;
                 ctrl.SpringDamping = 40f;
-                ctrl.Offset = new Vector3(0f, 18f, -18f);
+                ctrl.Offset = new Vector3(0f, 14f, -14f);
+                Debug.Log($"[SceneBuilder] Camera adaptive: aspect={camAspect:F2} zoom={adaptiveZoom} pitch={adaptivePitch}");
             }
-            // Round 26: Camera at (0, 21.4, -18) for true Sims 4 dollhouse view
-            float pitchRad = 50f * Mathf.Deg2Rad;
-            Vector3 camDir = new Vector3(0f, Mathf.Sin(pitchRad), -Mathf.Cos(pitchRad));
-            mainCamera.transform.position = camDir * 28f;
+            // Round 27: Adaptive initial camera position
+            float initAspect = (float)Screen.width / Screen.height;
+            float initZoom = initAspect < 0.6f ? 18f : 28f;
+            float initPitch = initAspect < 0.6f ? 45f : 50f;
+            float initPitchRad = initPitch * Mathf.Deg2Rad;
+            Vector3 camDir = new Vector3(0f, Mathf.Sin(initPitchRad), -Mathf.Cos(initPitchRad));
+            mainCamera.transform.position = camDir * initZoom;
             mainCamera.transform.LookAt(new Vector3(0f, 1.0f, 0f)); // Look at floor level
+            Debug.Log($"[SceneBuilder] Initial camera pos={mainCamera.transform.position} zoom={initZoom} pitch={initPitch}");
         }
 
         private void CreateManagers()
