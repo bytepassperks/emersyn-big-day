@@ -1320,8 +1320,11 @@ namespace EmersynBigDay.Core
 
             AndroidLog($"[SceneBuilder] GLB instantiated for {charName}");
 
-            // Step 5: Convert glTF materials to Standard shader for proper PBR on Built-in Pipeline
-            ConvertGLTFMaterials(glbObj);
+            // Round 12 (Claude 4.5 Bedrock): DO NOT convert GLTFast materials!
+            // GLTFast 6.7.1 uses its own Built-in RP compatible PBR shaders natively.
+            // Converting to Standard shader DESTROYS texture references, causing white models.
+            // Instead, just enable shadows on GLTFast's native materials.
+            EnableGLTFShadows(glbObj);
 
             // Step 6: Add interaction components
             var col = glbObj.AddComponent<BoxCollider>();
@@ -1397,7 +1400,8 @@ namespace EmersynBigDay.Core
                 yield break;
             }
 
-            ConvertGLTFMaterials(glbObj);
+            // Round 12: Use GLTFast native materials, just enable shadows
+            EnableGLTFShadows(glbObj);
             var col = glbObj.AddComponent<BoxCollider>();
             col.center = new Vector3(0, 0.4f, 0);
             col.size = new Vector3(0.6f, 0.8f, 0.8f);
@@ -1408,89 +1412,30 @@ namespace EmersynBigDay.Core
         }
 
         /// <summary>
-        /// Round 11: Convert glTF materials to Standard shader for proper PBR rendering.
-        /// GLTFast uses its own shader internally; we convert to Standard for consistency
-        /// with Built-in Render Pipeline lighting and shadows.
+        /// Round 12 (Claude 4.5 Bedrock): DO NOT convert GLTFast materials to Standard shader.
+        /// GLTFast 6.7.1 uses its own Built-in RP compatible PBR shaders that already support
+        /// lighting, shadows, and proper texture rendering. Converting to Standard shader
+        /// DESTROYS the internal texture references, causing white/untextured models.
+        /// Instead, just enable shadow casting/receiving on the native GLTFast materials.
         /// </summary>
-        private void ConvertGLTFMaterials(GameObject obj)
+        private void EnableGLTFShadows(GameObject obj)
         {
             var renderers = obj.GetComponentsInChildren<Renderer>();
-            if (standardShader == null)
-            {
-                AndroidLog("[SceneBuilder] Standard shader NULL - cannot convert glTF materials");
-                return;
-            }
-
+            int texCount = 0;
             foreach (var renderer in renderers)
             {
-                var materials = renderer.materials;
-                for (int m = 0; m < materials.Length; m++)
+                // Enable shadows on GLTFast's native materials
+                renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
+                renderer.receiveShadows = true;
+
+                // Log material info for diagnostics
+                foreach (var mat in renderer.sharedMaterials)
                 {
-                    var mat = materials[m];
-                    if (mat == null) continue;
-
-                    // Preserve textures and colors from glTF material before switching shader
-                    Texture mainTex = null;
-                    Texture normalTex = null;
-                    Texture occlusionTex = null;
-                    Texture metallicTex = null;
-                    Color baseColor = Color.white;
-                    float metallic = 0f;
-                    float smoothness = 0.5f;
-
-                    // Try glTFast property names first, then standard names
-                    if (mat.HasProperty("_BaseColorTexture")) mainTex = mat.GetTexture("_BaseColorTexture");
-                    if (mainTex == null && mat.HasProperty("baseColorTexture")) mainTex = mat.GetTexture("baseColorTexture");
-                    if (mainTex == null && mat.HasProperty("_MainTex")) mainTex = mat.GetTexture("_MainTex");
-                    if (mainTex == null && mat.HasProperty("_BaseMap")) mainTex = mat.GetTexture("_BaseMap");
-
-                    if (mat.HasProperty("_NormalTexture")) normalTex = mat.GetTexture("_NormalTexture");
-                    if (normalTex == null && mat.HasProperty("_BumpMap")) normalTex = mat.GetTexture("_BumpMap");
-                    if (normalTex == null && mat.HasProperty("normalTexture")) normalTex = mat.GetTexture("normalTexture");
-
-                    if (mat.HasProperty("_OcclusionTexture")) occlusionTex = mat.GetTexture("_OcclusionTexture");
-                    if (occlusionTex == null && mat.HasProperty("_OcclusionMap")) occlusionTex = mat.GetTexture("_OcclusionMap");
-
-                    if (mat.HasProperty("_MetallicGlossMap")) metallicTex = mat.GetTexture("_MetallicGlossMap");
-
-                    if (mat.HasProperty("_BaseColor")) baseColor = mat.GetColor("_BaseColor");
-                    else if (mat.HasProperty("_Color")) baseColor = mat.GetColor("_Color");
-
-                    if (mat.HasProperty("_Metallic")) metallic = mat.GetFloat("_Metallic");
-                    if (mat.HasProperty("_Glossiness")) smoothness = mat.GetFloat("_Glossiness");
-                    else if (mat.HasProperty("_Smoothness")) smoothness = mat.GetFloat("_Smoothness");
-
-                    // Switch to Standard shader
-                    mat.shader = standardShader;
-                    mat.color = baseColor;
-
-                    // Apply textures
-                    if (mainTex != null)
-                        mat.SetTexture("_MainTex", mainTex);
-                    if (normalTex != null)
-                    {
-                        mat.SetTexture("_BumpMap", normalTex);
-                        mat.EnableKeyword("_NORMALMAP");
-                        mat.SetFloat("_BumpScale", 1.0f);
-                    }
-                    if (occlusionTex != null)
-                    {
-                        mat.SetTexture("_OcclusionMap", occlusionTex);
-                        mat.SetFloat("_OcclusionStrength", 1.0f);
-                    }
-                    if (metallicTex != null)
-                        mat.SetTexture("_MetallicGlossMap", metallicTex);
-
-                    // PBR properties for cartoon/toon look
-                    mat.SetFloat("_Glossiness", smoothness);
-                    mat.SetFloat("_Metallic", metallic);
-                    mat.enableInstancing = true;
-
-                    materials[m] = mat;
+                    if (mat != null && mat.mainTexture != null)
+                        texCount++;
                 }
-                renderer.materials = materials;
             }
-            AndroidLog($"[SceneBuilder] Converted {renderers.Length} renderers to Standard PBR shader");
+            AndroidLog($"[SceneBuilder] GLTFast native materials: {renderers.Length} renderers, {texCount} with textures, shadows enabled");
         }
 
         // === PBR Texture Loading for Rooms ===
