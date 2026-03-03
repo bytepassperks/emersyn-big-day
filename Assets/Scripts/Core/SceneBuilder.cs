@@ -1320,11 +1320,9 @@ namespace EmersynBigDay.Core
 
             AndroidLog($"[SceneBuilder] GLB instantiated for {charName}");
 
-            // Round 12 (Claude 4.5 Bedrock): DO NOT convert GLTFast materials!
-            // GLTFast 6.7.1 uses its own Built-in RP compatible PBR shaders natively.
-            // Converting to Standard shader DESTROYS texture references, causing white models.
-            // Instead, just enable shadows on GLTFast's native materials.
-            EnableGLTFShadows(glbObj);
+            // Round 13 (Claude 4.5 Bedrock): GLB files have NO textures, only baseColorFactor.
+            // Extract colors via shader reflection, then convert to Standard for proper lighting.
+            ConvertGLTFMaterialsWithReflection(glbObj);
 
             // Step 6: Add interaction components
             var col = glbObj.AddComponent<BoxCollider>();
@@ -1400,8 +1398,8 @@ namespace EmersynBigDay.Core
                 yield break;
             }
 
-            // Round 12: Use GLTFast native materials, just enable shadows
-            EnableGLTFShadows(glbObj);
+            // Round 13: Extract baseColorFactor via reflection, convert to Standard
+            ConvertGLTFMaterialsWithReflection(glbObj);
             var col = glbObj.AddComponent<BoxCollider>();
             col.center = new Vector3(0, 0.4f, 0);
             col.size = new Vector3(0.6f, 0.8f, 0.8f);
@@ -1412,30 +1410,118 @@ namespace EmersynBigDay.Core
         }
 
         /// <summary>
-        /// Round 12 (Claude 4.5 Bedrock): DO NOT convert GLTFast materials to Standard shader.
-        /// GLTFast 6.7.1 uses its own Built-in RP compatible PBR shaders that already support
-        /// lighting, shadows, and proper texture rendering. Converting to Standard shader
-        /// DESTROYS the internal texture references, causing white/untextured models.
-        /// Instead, just enable shadow casting/receiving on the native GLTFast materials.
+        /// Round 13 (Claude 4.5 Bedrock): GLB files have NO texture images — only baseColorFactor
+        /// solid colors. GLTFast's native shader doesn't render properly on Android Built-in RP.
+        /// Solution: Use shader property reflection to extract baseColorFactor from GLTFast materials,
+        /// then convert to Standard shader with proper _Color set from the extracted colors.
         /// </summary>
-        private void EnableGLTFShadows(GameObject obj)
+        private void ConvertGLTFMaterialsWithReflection(GameObject obj)
         {
             var renderers = obj.GetComponentsInChildren<Renderer>();
-            int texCount = 0;
+            if (standardShader == null)
+            {
+                AndroidLog("[SceneBuilder] Standard shader NULL - cannot convert glTF materials");
+                return;
+            }
+
+            int converted = 0;
+            int colorExtracted = 0;
             foreach (var renderer in renderers)
             {
-                // Enable shadows on GLTFast's native materials
                 renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
                 renderer.receiveShadows = true;
 
-                // Log material info for diagnostics
-                foreach (var mat in renderer.sharedMaterials)
+                var materials = renderer.materials;
+                for (int m = 0; m < materials.Length; m++)
                 {
-                    if (mat != null && mat.mainTexture != null)
-                        texCount++;
+                    var mat = materials[m];
+                    if (mat == null) continue;
+
+                    // Extract baseColorFactor from GLTFast material using multiple methods
+                    Color baseColor = Color.white;
+                    bool foundColor = false;
+
+                    // Method 1: Try common GLTFast property names
+                    string[] colorPropertyNames = new string[] {
+                        "_BaseColor", "_BaseColorFactor", "_Color",
+                        "baseColorFactor", "baseColor"
+                    };
+                    foreach (var propName in colorPropertyNames)
+                    {
+                        if (mat.HasProperty(propName))
+                        {
+                            Color c = mat.GetColor(propName);
+                            if (c != Color.clear)
+                            {
+                                baseColor = c;
+                                foundColor = true;
+                                AndroidLog($"[SceneBuilder] Mat '{mat.name}': extracted {propName}=({c.r:F2},{c.g:F2},{c.b:F2},{c.a:F2})");
+                                break;
+                            }
+                        }
+                    }
+
+                    // Method 2: Shader property reflection (nuclear option)
+                    if (!foundColor)
+                    {
+                        var shader = mat.shader;
+                        int propCount = shader.GetPropertyCount();
+                        for (int p = 0; p < propCount; p++)
+                        {
+                            var propType = shader.GetPropertyType(p);
+                            if (propType == UnityEngine.Rendering.ShaderPropertyType.Color)
+                            {
+                                string pName = shader.GetPropertyName(p);
+                                Color c = mat.GetColor(pName);
+                                string lower = pName.ToLowerInvariant();
+                                if (lower.Contains("base") || lower.Contains("color") || 
+                                    lower.Contains("albedo") || lower.Contains("diffuse"))
+                                {
+                                    if (c != Color.white && c != Color.black && c != Color.clear)
+                                    {
+                                        baseColor = c;
+                                        foundColor = true;
+                                        AndroidLog($"[SceneBuilder] Mat '{mat.name}': reflected {pName}=({c.r:F2},{c.g:F2},{c.b:F2},{c.a:F2})");
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    if (foundColor) colorExtracted++;
+
+                    // Extract metallic/roughness before shader switch
+                    float metallic = 0f;
+                    float smoothness = 0.5f;
+                    if (mat.HasProperty("_Metallic")) metallic = mat.GetFloat("_Metallic");
+                    if (mat.HasProperty("_Roughness")) smoothness = 1f - mat.GetFloat("_Roughness");
+                    else if (mat.HasProperty("_Glossiness")) smoothness = mat.GetFloat("_Glossiness");
+                    else if (mat.HasProperty("_Smoothness")) smoothness = mat.GetFloat("_Smoothness");
+
+                    // Convert to Standard shader
+                    mat.shader = standardShader;
+                    mat.color = baseColor;
+                    mat.SetFloat("_Metallic", metallic);
+                    mat.SetFloat("_Glossiness", smoothness);
+
+                    // Ensure opaque rendering mode
+                    mat.SetFloat("_Mode", 0);
+                    mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.One);
+                    mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.Zero);
+                    mat.SetInt("_ZWrite", 1);
+                    mat.DisableKeyword("_ALPHATEST_ON");
+                    mat.DisableKeyword("_ALPHABLEND_ON");
+                    mat.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+                    mat.renderQueue = -1;
+                    mat.enableInstancing = true;
+
+                    materials[m] = mat;
+                    converted++;
                 }
+                renderer.materials = materials;
             }
-            AndroidLog($"[SceneBuilder] GLTFast native materials: {renderers.Length} renderers, {texCount} with textures, shadows enabled");
+            AndroidLog($"[SceneBuilder] Round 13: Converted {converted} materials ({colorExtracted} colors extracted) to Standard shader");
         }
 
         // === PBR Texture Loading for Rooms ===
