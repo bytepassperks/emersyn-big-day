@@ -2,7 +2,6 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
-#include "Engine/Texture2D.h"
 #include "Materials/MaterialInstanceDynamic.h"
 #include "EmersynGameMode.generated.h"
 
@@ -48,7 +47,13 @@ private:
     void SpawnCharacter(FVector Location, FLinearColor SkinColor, FLinearColor HairColor, FLinearColor OutfitColor, const FString& Name, float Scale = 1.0f);
     void SpawnPet(FVector Location, FLinearColor BodyColor, FLinearColor AccentColor, const FString& Name, float Scale = 0.6f);
     
+    // v8: Custom M_SolidColor material (VectorParameter "Color" -> BaseColor)
+    // Created via UE5 editor Python script, compiled with proper mobile shader
     UMaterialInstanceDynamic* MakeMat(FLinearColor Color);
+    
+    // Cache: color key -> already-created material instance
+    UPROPERTY()
+    TMap<FString, UMaterialInstanceDynamic*> MaterialCache;
     
     void ClearRoom();
     void SetupCamera(FVector Location, FRotator Rotation);

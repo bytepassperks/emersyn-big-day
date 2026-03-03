@@ -57,13 +57,13 @@ AEmersynGameMode::AEmersynGameMode()
 void AEmersynGameMode::InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage)
 {
     Super::InitGame(MapName, Options, ErrorMessage);
-    UE_LOG(LogTemp, Log, TEXT("EmersynGameMode: InitGame"));
+    UE_LOG(LogTemp, Log, TEXT("EmersynGameMode v8: InitGame - Custom M_SolidColor material"));
 }
 
 void AEmersynGameMode::BeginPlay()
 {
     Super::BeginPlay();
-    UE_LOG(LogTemp, Log, TEXT("EmersynGameMode: BeginPlay - Starting splash"));
+    UE_LOG(LogTemp, Log, TEXT("EmersynGameMode v8: BeginPlay - Starting splash"));
 
     // Setup HUD
     UWorld* World = GetWorld();
@@ -153,7 +153,7 @@ void AEmersynGameMode::ClearRoom()
 
 void AEmersynGameMode::BuildCurrentRoom()
 {
-    UE_LOG(LogTemp, Log, TEXT("Building room: %s"), *CurrentRoom);
+    UE_LOG(LogTemp, Log, TEXT("v8 Building room: %s"), *CurrentRoom);
 
     if (CurrentRoom == TEXT("Splash")) BuildSplashScreen();
     else if (CurrentRoom == TEXT("MainMenu")) BuildMainMenu();
@@ -172,48 +172,74 @@ void AEmersynGameMode::BuildCurrentRoom()
     else BuildMainMenu();
 }
 
+// =============================================================================
+// v8 MakeMat: Custom M_SolidColor material (fixes Android checkerboard)
+// 
+// WHY PREVIOUS APPROACHES FAILED:
+// v6: SetVectorParameterValue on BasicShapeMaterial → checkerboard (BSM's vector
+//     parameter isn't properly connected in the compiled mobile shader)
+// v7: Runtime UTexture2D + SetTextureParameterValue → checkerboard (BSM uses
+//     TextureSample not TextureSampleParameter2D, so texture params are ignored)
+//
+// v8 FIX: Use a CUSTOM material (/Game/Materials/M_SolidColor) created via UE5
+// editor Python script. This material has a VectorParameter "Color" node directly
+// wired to BaseColor output in the material graph. The shader is compiled with
+// this connection, so SetVectorParameterValue WILL work on Android mobile.
+// =============================================================================
 UMaterialInstanceDynamic* AEmersynGameMode::MakeMat(FLinearColor Color)
 {
-    // Approach 1: Use BasicShapeMaterial_Inst (material instance, not parent)
-    UMaterialInterface* MatInst = LoadObject<UMaterialInterface>(nullptr, TEXT("/Engine/BasicShapes/BasicShapeMaterial_Inst.BasicShapeMaterial_Inst"));
-    if (MatInst)
+    // Build a cache key from the color
+    FString ColorKey = FString::Printf(TEXT("%.3f_%.3f_%.3f_%.3f"), Color.R, Color.G, Color.B, Color.A);
+    
+    // Check material cache first
+    if (UMaterialInstanceDynamic** CachedMat = MaterialCache.Find(ColorKey))
     {
-        UMaterialInstanceDynamic* Mat = UMaterialInstanceDynamic::Create(MatInst, this);
-        if (Mat)
+        if (*CachedMat && IsValid(*CachedMat))
         {
-            Mat->SetVectorParameterValue(TEXT("Color"), Color);
-            return Mat;
+            return *CachedMat;
         }
     }
-
-    // Approach 2: Use BasicShapeMaterial parent with both param names
-    UMaterial* BaseMat = LoadObject<UMaterial>(nullptr, TEXT("/Engine/BasicShapes/BasicShapeMaterial.BasicShapeMaterial"));
-    if (BaseMat)
+    
+    // Load our custom M_SolidColor material (created via UE5 editor Python script)
+    // This material has a VectorParameter "Color" directly connected to BaseColor
+    UMaterialInterface* BaseMat = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_SolidColor.M_SolidColor"));
+    
+    if (!BaseMat)
     {
-        UMaterialInstanceDynamic* Mat = UMaterialInstanceDynamic::Create(BaseMat, this);
-        if (Mat)
-        {
-            Mat->SetVectorParameterValue(TEXT("Color"), Color);
-            Mat->SetVectorParameterValue(TEXT("BaseColor"), Color);
-            return Mat;
-        }
+        // Fallback 1: Try BasicShapeMaterial
+        UE_LOG(LogTemp, Warning, TEXT("v8 MakeMat: M_SolidColor not found, trying BasicShapeMaterial"));
+        BaseMat = LoadObject<UMaterialInterface>(nullptr, TEXT("/Engine/BasicShapes/BasicShapeMaterial.BasicShapeMaterial"));
     }
-
-    // Approach 3: Use DefaultMaterial (guaranteed to exist on all platforms)
-    UMaterial* DefaultMat = LoadObject<UMaterial>(nullptr, TEXT("/Engine/EngineMaterials/DefaultMaterial.DefaultMaterial"));
-    if (DefaultMat)
+    if (!BaseMat)
     {
-        UMaterialInstanceDynamic* Mat = UMaterialInstanceDynamic::Create(DefaultMat, this);
-        if (Mat)
-        {
-            Mat->SetVectorParameterValue(TEXT("Color"), Color);
-            Mat->SetVectorParameterValue(TEXT("BaseColor"), Color);
-            return Mat;
-        }
+        // Fallback 2: Try DefaultMaterial
+        UE_LOG(LogTemp, Warning, TEXT("v8 MakeMat: BasicShapeMaterial not found, trying DefaultMaterial"));
+        BaseMat = LoadObject<UMaterialInterface>(nullptr, TEXT("/Engine/EngineMaterials/DefaultMaterial.DefaultMaterial"));
     }
-
-    UE_LOG(LogTemp, Error, TEXT("MakeMat: ALL material approaches failed!"));
-    return nullptr;
+    if (!BaseMat)
+    {
+        UE_LOG(LogTemp, Error, TEXT("v8 MakeMat: No base material available!"));
+        return nullptr;
+    }
+    
+    UMaterialInstanceDynamic* DynMat = UMaterialInstanceDynamic::Create(BaseMat, this);
+    if (!DynMat)
+    {
+        UE_LOG(LogTemp, Error, TEXT("v8 MakeMat: Failed to create MID for %s"), *ColorKey);
+        return nullptr;
+    }
+    
+    // Set the "Color" vector parameter (this is the parameter name in M_SolidColor)
+    DynMat->SetVectorParameterValue(TEXT("Color"), Color);
+    
+    // Also try BaseColor as fallback parameter name
+    DynMat->SetVectorParameterValue(TEXT("BaseColor"), Color);
+    
+    // Cache the material
+    MaterialCache.Add(ColorKey, DynMat);
+    
+    UE_LOG(LogTemp, Log, TEXT("v8 MakeMat: Created material for color %s using %s"), *ColorKey, *BaseMat->GetName());
+    return DynMat;
 }
 
 AActor* AEmersynGameMode::SpawnBox(FVector Location, FVector Scale, FLinearColor Color)
@@ -382,20 +408,13 @@ void AEmersynGameMode::BuildSplashScreen()
     SpawnBox(FVector(0, 0, 0), FVector(20, 20, 0.1f), FLinearColor(0.08f, 0.05f, 0.15f));
     SpawnBox(FVector(0, 200, 200), FVector(20, 0.1f, 4), FLinearColor(0.12f, 0.08f, 0.2f));
 
-    // Title letters - large colorful spheres spelling out the game
-    // E
+    // Title letters - large colorful blocks
     SpawnBox(FVector(-300, 0, 300), FVector(0.8f, 0.1f, 1.2f), FLinearColor(1.0f, 0.4f, 0.6f));
-    // M
     SpawnBox(FVector(-200, 0, 300), FVector(0.8f, 0.1f, 1.2f), FLinearColor(0.95f, 0.6f, 0.2f));
-    // E
     SpawnBox(FVector(-100, 0, 300), FVector(0.8f, 0.1f, 1.2f), FLinearColor(0.95f, 0.85f, 0.2f));
-    // R
     SpawnBox(FVector(0, 0, 300), FVector(0.8f, 0.1f, 1.2f), FLinearColor(0.3f, 0.85f, 0.4f));
-    // S
     SpawnBox(FVector(100, 0, 300), FVector(0.8f, 0.1f, 1.2f), FLinearColor(0.3f, 0.7f, 0.95f));
-    // Y
     SpawnBox(FVector(200, 0, 300), FVector(0.8f, 0.1f, 1.2f), FLinearColor(0.7f, 0.4f, 0.95f));
-    // N
     SpawnBox(FVector(300, 0, 300), FVector(0.8f, 0.1f, 1.2f), FLinearColor(0.95f, 0.4f, 0.8f));
 
     // Decorative stars
@@ -424,25 +443,22 @@ void AEmersynGameMode::BuildMainMenu()
 
     // Floor - warm pink gradient
     SpawnBox(FVector(0, 0, -5), FVector(15, 15, 0.1f), FLinearColor(0.95f, 0.85f, 0.88f));
-
     // Background wall
     SpawnBox(FVector(0, 500, 250), FVector(15, 0.1f, 5), FLinearColor(0.92f, 0.82f, 0.9f));
 
-    // Room door buttons (colored rectangles representing rooms)
-    // Row 1
-    SpawnBox(FVector(-400, 200, 100), FVector(1.2f, 0.1f, 0.8f), FLinearColor(1.0f, 0.7f, 0.8f)); // Bedroom
-    SpawnBox(FVector(-200, 200, 100), FVector(1.2f, 0.1f, 0.8f), FLinearColor(0.95f, 0.9f, 0.6f)); // Kitchen
-    SpawnBox(FVector(0, 200, 100), FVector(1.2f, 0.1f, 0.8f), FLinearColor(0.7f, 0.85f, 0.95f)); // Bathroom
-    SpawnBox(FVector(200, 200, 100), FVector(1.2f, 0.1f, 0.8f), FLinearColor(0.9f, 0.85f, 0.75f)); // Living Room
-    SpawnBox(FVector(400, 200, 100), FVector(1.2f, 0.1f, 0.8f), FLinearColor(0.6f, 0.9f, 0.65f)); // Garden
-    // Row 2
-    SpawnBox(FVector(-400, 200, 250), FVector(1.2f, 0.1f, 0.8f), FLinearColor(0.95f, 0.88f, 0.65f)); // School
-    SpawnBox(FVector(-200, 200, 250), FVector(1.2f, 0.1f, 0.8f), FLinearColor(0.85f, 0.7f, 0.95f)); // Shop
-    SpawnBox(FVector(0, 200, 250), FVector(1.2f, 0.1f, 0.8f), FLinearColor(0.6f, 0.85f, 0.5f)); // Playground
-    SpawnBox(FVector(200, 200, 250), FVector(1.2f, 0.1f, 0.8f), FLinearColor(0.5f, 0.8f, 0.6f)); // Park
-    SpawnBox(FVector(400, 200, 250), FVector(1.2f, 0.1f, 0.8f), FLinearColor(0.9f, 0.75f, 0.6f)); // Mall
+    // Room door buttons
+    SpawnBox(FVector(-400, 200, 100), FVector(1.2f, 0.1f, 0.8f), FLinearColor(1.0f, 0.7f, 0.8f));
+    SpawnBox(FVector(-200, 200, 100), FVector(1.2f, 0.1f, 0.8f), FLinearColor(0.95f, 0.9f, 0.6f));
+    SpawnBox(FVector(0, 200, 100), FVector(1.2f, 0.1f, 0.8f), FLinearColor(0.7f, 0.85f, 0.95f));
+    SpawnBox(FVector(200, 200, 100), FVector(1.2f, 0.1f, 0.8f), FLinearColor(0.9f, 0.85f, 0.75f));
+    SpawnBox(FVector(400, 200, 100), FVector(1.2f, 0.1f, 0.8f), FLinearColor(0.6f, 0.9f, 0.65f));
+    SpawnBox(FVector(-400, 200, 250), FVector(1.2f, 0.1f, 0.8f), FLinearColor(0.95f, 0.88f, 0.65f));
+    SpawnBox(FVector(-200, 200, 250), FVector(1.2f, 0.1f, 0.8f), FLinearColor(0.85f, 0.7f, 0.95f));
+    SpawnBox(FVector(0, 200, 250), FVector(1.2f, 0.1f, 0.8f), FLinearColor(0.6f, 0.85f, 0.5f));
+    SpawnBox(FVector(200, 200, 250), FVector(1.2f, 0.1f, 0.8f), FLinearColor(0.5f, 0.8f, 0.6f));
+    SpawnBox(FVector(400, 200, 250), FVector(1.2f, 0.1f, 0.8f), FLinearColor(0.9f, 0.75f, 0.6f));
 
-    // All characters on the floor
+    // Characters
     SpawnCharacter(FVector(-300, -100, 0), FLinearColor(0.95f, 0.82f, 0.72f), FLinearColor(0.85f, 0.55f, 0.2f), FLinearColor(1.0f, 0.5f, 0.7f), TEXT("Emersyn"));
     SpawnCharacter(FVector(-100, -50, 0), FLinearColor(0.92f, 0.78f, 0.65f), FLinearColor(0.15f, 0.1f, 0.08f), FLinearColor(0.6f, 0.3f, 0.9f), TEXT("Ava"));
     SpawnCharacter(FVector(100, -80, 0), FLinearColor(0.85f, 0.7f, 0.55f), FLinearColor(0.3f, 0.2f, 0.1f), FLinearColor(0.2f, 0.6f, 0.9f), TEXT("Leo"));
@@ -464,60 +480,40 @@ void AEmersynGameMode::BuildBedroom()
 {
     SetupCamera(FVector(0, -550, 350), FRotator(-25, 0, 0));
 
-    // Floor - soft pink carpet
     SpawnBox(FVector(0, 0, -5), FVector(8, 8, 0.1f), FLinearColor(0.95f, 0.82f, 0.85f));
-    // Walls - lavender
     SpawnBox(FVector(0, 400, 200), FVector(8, 0.1f, 4), FLinearColor(0.88f, 0.82f, 0.95f));
     SpawnBox(FVector(-400, 0, 200), FVector(0.1f, 8, 4), FLinearColor(0.9f, 0.84f, 0.96f));
     SpawnBox(FVector(400, 0, 200), FVector(0.1f, 8, 4), FLinearColor(0.9f, 0.84f, 0.96f));
 
-    // Bed frame (pink)
     SpawnBox(FVector(-200, 200, 30), FVector(1.8f, 1.2f, 0.3f), FLinearColor(1.0f, 0.7f, 0.8f));
-    // Mattress (white)
     SpawnBox(FVector(-200, 200, 50), FVector(1.6f, 1.0f, 0.15f), FLinearColor(0.98f, 0.95f, 0.97f));
-    // Pillow
     SpawnBox(FVector(-200, 280, 65), FVector(0.5f, 0.3f, 0.1f), FLinearColor(0.95f, 0.85f, 0.95f));
-    // Blanket
     SpawnBox(FVector(-200, 150, 58), FVector(1.4f, 0.7f, 0.08f), FLinearColor(0.85f, 0.6f, 0.8f));
-    // Headboard
     SpawnBox(FVector(-200, 310, 100), FVector(1.8f, 0.08f, 0.8f), FLinearColor(0.95f, 0.75f, 0.85f));
 
-    // Dresser
     SpawnBox(FVector(250, 300, 50), FVector(0.8f, 0.4f, 1.0f), FLinearColor(0.95f, 0.88f, 0.92f));
-    // Dresser knobs
     SpawnSphere(FVector(250, 278, 60), 0.04f, FLinearColor(0.9f, 0.7f, 0.3f));
     SpawnSphere(FVector(250, 278, 40), 0.04f, FLinearColor(0.9f, 0.7f, 0.3f));
-    // Mirror on dresser
     SpawnBox(FVector(250, 310, 130), FVector(0.5f, 0.05f, 0.5f), FLinearColor(0.8f, 0.85f, 0.9f));
 
-    // Nightstand
     SpawnBox(FVector(-50, 280, 25), FVector(0.35f, 0.35f, 0.5f), FLinearColor(0.92f, 0.85f, 0.88f));
-    // Lamp on nightstand
     SpawnCylinder(FVector(-50, 280, 55), FVector(0.05f, 0.05f, 0.15f), FLinearColor(0.9f, 0.7f, 0.3f));
     SpawnSphere(FVector(-50, 280, 72), 0.12f, FLinearColor(1.0f, 0.95f, 0.8f));
 
-    // Rug
     SpawnBox(FVector(0, 0, 1), FVector(2.5f, 2.0f, 0.02f), FLinearColor(0.85f, 0.65f, 0.75f));
 
-    // Bookshelf
     SpawnBox(FVector(350, -100, 75), FVector(0.4f, 0.8f, 1.5f), FLinearColor(0.92f, 0.85f, 0.8f));
-    // Books
     SpawnBox(FVector(350, -120, 120), FVector(0.05f, 0.15f, 0.2f), FLinearColor(0.9f, 0.3f, 0.4f));
     SpawnBox(FVector(350, -100, 120), FVector(0.05f, 0.12f, 0.18f), FLinearColor(0.3f, 0.6f, 0.9f));
     SpawnBox(FVector(350, -80, 120), FVector(0.05f, 0.13f, 0.2f), FLinearColor(0.4f, 0.85f, 0.5f));
 
-    // Toy box
     SpawnBox(FVector(200, -200, 20), FVector(0.6f, 0.4f, 0.4f), FLinearColor(0.95f, 0.6f, 0.3f));
 
-    // Window on back wall
     SpawnBox(FVector(150, 395, 250), FVector(1.0f, 0.02f, 0.8f), FLinearColor(0.7f, 0.85f, 0.95f));
-    // Window frame
     SpawnBox(FVector(150, 393, 250), FVector(1.05f, 0.01f, 0.03f), FLinearColor(0.95f, 0.92f, 0.88f));
     SpawnBox(FVector(150, 393, 290), FVector(1.05f, 0.01f, 0.03f), FLinearColor(0.95f, 0.92f, 0.88f));
 
-    // Emersyn in room
     SpawnCharacter(FVector(50, 0, 0), FLinearColor(0.95f, 0.82f, 0.72f), FLinearColor(0.85f, 0.55f, 0.2f), FLinearColor(1.0f, 0.5f, 0.7f), TEXT("Emersyn"));
-    // Cat pet
     SpawnPet(FVector(150, 50, 0), FLinearColor(0.9f, 0.6f, 0.3f), FLinearColor(0.95f, 0.8f, 0.6f), TEXT("Cat"));
 
     SpawnLight(FVector(0, 0, 350), 6000.0f, FLinearColor(1.0f, 0.92f, 0.88f));
@@ -530,50 +526,37 @@ void AEmersynGameMode::BuildKitchen()
 {
     SetupCamera(FVector(0, -550, 350), FRotator(-25, 0, 0));
 
-    // Floor - warm tile
     SpawnBox(FVector(0, 0, -5), FVector(8, 8, 0.1f), FLinearColor(0.95f, 0.9f, 0.82f));
-    // Walls - warm yellow
     SpawnBox(FVector(0, 400, 200), FVector(8, 0.1f, 4), FLinearColor(0.98f, 0.95f, 0.82f));
     SpawnBox(FVector(-400, 0, 200), FVector(0.1f, 8, 4), FLinearColor(0.97f, 0.94f, 0.83f));
     SpawnBox(FVector(400, 0, 200), FVector(0.1f, 8, 4), FLinearColor(0.97f, 0.94f, 0.83f));
 
-    // Kitchen counter (L-shape)
     SpawnBox(FVector(-300, 300, 45), FVector(0.6f, 2.5f, 0.9f), FLinearColor(0.92f, 0.88f, 0.82f));
-    // Counter top
     SpawnBox(FVector(-300, 300, 92), FVector(0.65f, 2.6f, 0.04f), FLinearColor(0.85f, 0.82f, 0.78f));
 
-    // Stove
     SpawnBox(FVector(-300, 150, 90), FVector(0.55f, 0.5f, 0.04f), FLinearColor(0.3f, 0.3f, 0.32f));
-    // Burners
     SpawnCylinder(FVector(-290, 130, 93), FVector(0.08f, 0.08f, 0.01f), FLinearColor(0.2f, 0.2f, 0.22f));
     SpawnCylinder(FVector(-310, 130, 93), FVector(0.08f, 0.08f, 0.01f), FLinearColor(0.2f, 0.2f, 0.22f));
     SpawnCylinder(FVector(-290, 170, 93), FVector(0.06f, 0.06f, 0.01f), FLinearColor(0.2f, 0.2f, 0.22f));
     SpawnCylinder(FVector(-310, 170, 93), FVector(0.06f, 0.06f, 0.01f), FLinearColor(0.2f, 0.2f, 0.22f));
 
-    // Fridge
     SpawnBox(FVector(300, 300, 100), FVector(0.6f, 0.5f, 2.0f), FLinearColor(0.92f, 0.92f, 0.93f));
-    // Fridge handle
     SpawnBox(FVector(300, 273, 120), FVector(0.03f, 0.02f, 0.3f), FLinearColor(0.7f, 0.7f, 0.72f));
 
-    // Dining table
     SpawnBox(FVector(50, -50, 38), FVector(1.2f, 0.8f, 0.04f), FLinearColor(0.75f, 0.55f, 0.35f));
-    // Table legs
     SpawnCylinder(FVector(-8, -80, 18), FVector(0.04f, 0.04f, 0.35f), FLinearColor(0.65f, 0.45f, 0.28f));
     SpawnCylinder(FVector(108, -80, 18), FVector(0.04f, 0.04f, 0.35f), FLinearColor(0.65f, 0.45f, 0.28f));
     SpawnCylinder(FVector(-8, -20, 18), FVector(0.04f, 0.04f, 0.35f), FLinearColor(0.65f, 0.45f, 0.28f));
     SpawnCylinder(FVector(108, -20, 18), FVector(0.04f, 0.04f, 0.35f), FLinearColor(0.65f, 0.45f, 0.28f));
 
-    // Chairs
     SpawnBox(FVector(-60, -50, 22), FVector(0.3f, 0.3f, 0.04f), FLinearColor(0.85f, 0.6f, 0.35f));
     SpawnBox(FVector(-60, -50, 50), FVector(0.3f, 0.04f, 0.4f), FLinearColor(0.85f, 0.6f, 0.35f));
     SpawnBox(FVector(160, -50, 22), FVector(0.3f, 0.3f, 0.04f), FLinearColor(0.85f, 0.6f, 0.35f));
     SpawnBox(FVector(160, -50, 50), FVector(0.3f, 0.04f, 0.4f), FLinearColor(0.85f, 0.6f, 0.35f));
 
-    // Plate and cup on table
     SpawnCylinder(FVector(30, -40, 42), FVector(0.12f, 0.12f, 0.01f), FLinearColor(0.98f, 0.97f, 0.95f));
     SpawnCylinder(FVector(70, -60, 45), FVector(0.04f, 0.04f, 0.06f), FLinearColor(0.85f, 0.6f, 0.7f));
 
-    // Ava character cooking
     SpawnCharacter(FVector(-150, 200, 0), FLinearColor(0.92f, 0.78f, 0.65f), FLinearColor(0.15f, 0.1f, 0.08f), FLinearColor(0.95f, 0.85f, 0.3f), TEXT("Ava"));
 
     SpawnLight(FVector(0, 0, 350), 5000.0f, FLinearColor(1.0f, 0.95f, 0.85f));
@@ -586,45 +569,31 @@ void AEmersynGameMode::BuildBathroom()
 {
     SetupCamera(FVector(0, -450, 300), FRotator(-25, 0, 0));
 
-    // Floor - light blue tile
     SpawnBox(FVector(0, 0, -5), FVector(6, 6, 0.1f), FLinearColor(0.85f, 0.92f, 0.97f));
-    // Walls - soft aqua
     SpawnBox(FVector(0, 300, 175), FVector(6, 0.1f, 3.5f), FLinearColor(0.82f, 0.93f, 0.97f));
     SpawnBox(FVector(-300, 0, 175), FVector(0.1f, 6, 3.5f), FLinearColor(0.84f, 0.94f, 0.98f));
     SpawnBox(FVector(300, 0, 175), FVector(0.1f, 6, 3.5f), FLinearColor(0.84f, 0.94f, 0.98f));
 
-    // Bathtub
     SpawnBox(FVector(-150, 200, 30), FVector(1.5f, 0.7f, 0.5f), FLinearColor(0.97f, 0.97f, 0.98f));
-    // Water in tub
     SpawnBox(FVector(-150, 200, 40), FVector(1.3f, 0.55f, 0.1f), FLinearColor(0.6f, 0.85f, 0.95f));
-    // Bubbles
     SpawnSphere(FVector(-180, 180, 50), 0.08f, FLinearColor(0.95f, 0.95f, 0.98f));
     SpawnSphere(FVector(-140, 210, 52), 0.06f, FLinearColor(0.93f, 0.93f, 0.97f));
     SpawnSphere(FVector(-160, 190, 53), 0.1f, FLinearColor(0.96f, 0.96f, 0.99f));
 
-    // Sink
     SpawnBox(FVector(200, 280, 50), FVector(0.5f, 0.3f, 0.06f), FLinearColor(0.97f, 0.97f, 0.98f));
-    // Sink base
     SpawnCylinder(FVector(200, 280, 25), FVector(0.08f, 0.08f, 0.5f), FLinearColor(0.92f, 0.92f, 0.93f));
-    // Faucet
     SpawnCylinder(FVector(200, 295, 60), FVector(0.02f, 0.02f, 0.12f), FLinearColor(0.8f, 0.8f, 0.82f));
-    // Mirror above sink
     SpawnBox(FVector(200, 298, 120), FVector(0.5f, 0.02f, 0.6f), FLinearColor(0.75f, 0.85f, 0.9f));
 
-    // Toilet
     SpawnBox(FVector(200, -100, 20), FVector(0.3f, 0.35f, 0.35f), FLinearColor(0.97f, 0.97f, 0.98f));
     SpawnBox(FVector(200, -120, 45), FVector(0.28f, 0.08f, 0.35f), FLinearColor(0.96f, 0.96f, 0.97f));
 
-    // Towel rack
     SpawnBox(FVector(-280, -100, 100), FVector(0.02f, 0.5f, 0.02f), FLinearColor(0.8f, 0.8f, 0.82f));
-    // Towel
     SpawnBox(FVector(-280, -100, 80), FVector(0.04f, 0.4f, 0.25f), FLinearColor(0.95f, 0.7f, 0.75f));
 
-    // Rubber duck
     SpawnSphere(FVector(-120, 220, 50), 0.06f, FLinearColor(0.98f, 0.92f, 0.2f));
     SpawnSphere(FVector(-115, 216, 52), 0.03f, FLinearColor(0.95f, 0.6f, 0.15f));
 
-    // Bath mat
     SpawnBox(FVector(-150, 50, 1), FVector(1.0f, 0.6f, 0.02f), FLinearColor(0.7f, 0.88f, 0.95f));
 
     SpawnCharacter(FVector(0, -50, 0), FLinearColor(0.95f, 0.82f, 0.72f), FLinearColor(0.85f, 0.55f, 0.2f), FLinearColor(0.7f, 0.85f, 0.95f), TEXT("Emersyn"));
@@ -639,52 +608,38 @@ void AEmersynGameMode::BuildLivingRoom()
 {
     SetupCamera(FVector(0, -600, 350), FRotator(-22, 0, 0));
 
-    // Floor - warm wood
     SpawnBox(FVector(0, 0, -5), FVector(10, 10, 0.1f), FLinearColor(0.82f, 0.65f, 0.45f));
-    // Walls - warm beige
     SpawnBox(FVector(0, 500, 200), FVector(10, 0.1f, 4), FLinearColor(0.95f, 0.92f, 0.85f));
     SpawnBox(FVector(-500, 0, 200), FVector(0.1f, 10, 4), FLinearColor(0.94f, 0.91f, 0.84f));
     SpawnBox(FVector(500, 0, 200), FVector(0.1f, 10, 4), FLinearColor(0.94f, 0.91f, 0.84f));
 
-    // Large sofa
     SpawnBox(FVector(-200, 300, 25), FVector(2.5f, 0.6f, 0.4f), FLinearColor(0.55f, 0.65f, 0.8f));
-    // Sofa back
     SpawnBox(FVector(-200, 340, 55), FVector(2.5f, 0.15f, 0.5f), FLinearColor(0.5f, 0.6f, 0.75f));
-    // Sofa arms
     SpawnBox(FVector(-430, 310, 35), FVector(0.15f, 0.4f, 0.3f), FLinearColor(0.52f, 0.62f, 0.77f));
     SpawnBox(FVector(30, 310, 35), FVector(0.15f, 0.4f, 0.3f), FLinearColor(0.52f, 0.62f, 0.77f));
-    // Cushions
     SpawnBox(FVector(-300, 300, 42), FVector(0.35f, 0.35f, 0.08f), FLinearColor(0.95f, 0.7f, 0.4f));
     SpawnBox(FVector(-100, 300, 42), FVector(0.35f, 0.35f, 0.08f), FLinearColor(0.6f, 0.85f, 0.65f));
 
-    // Coffee table
     SpawnBox(FVector(-200, 100, 22), FVector(1.0f, 0.5f, 0.03f), FLinearColor(0.65f, 0.45f, 0.3f));
     SpawnCylinder(FVector(-280, 80, 10), FVector(0.04f, 0.04f, 0.2f), FLinearColor(0.55f, 0.38f, 0.25f));
     SpawnCylinder(FVector(-120, 80, 10), FVector(0.04f, 0.04f, 0.2f), FLinearColor(0.55f, 0.38f, 0.25f));
     SpawnCylinder(FVector(-280, 120, 10), FVector(0.04f, 0.04f, 0.2f), FLinearColor(0.55f, 0.38f, 0.25f));
     SpawnCylinder(FVector(-120, 120, 10), FVector(0.04f, 0.04f, 0.2f), FLinearColor(0.55f, 0.38f, 0.25f));
 
-    // TV
     SpawnBox(FVector(350, 200, 120), FVector(0.05f, 1.8f, 1.0f), FLinearColor(0.12f, 0.12f, 0.15f));
-    // TV stand
     SpawnBox(FVector(350, 200, 30), FVector(0.3f, 1.5f, 0.5f), FLinearColor(0.4f, 0.35f, 0.3f));
-    // TV screen glow
     SpawnBox(FVector(348, 200, 120), FVector(0.02f, 1.6f, 0.85f), FLinearColor(0.3f, 0.5f, 0.8f));
 
-    // Bookshelf
     SpawnBox(FVector(-480, 100, 100), FVector(0.15f, 0.8f, 2.0f), FLinearColor(0.7f, 0.5f, 0.35f));
     SpawnBox(FVector(-480, 80, 130), FVector(0.04f, 0.12f, 0.2f), FLinearColor(0.9f, 0.3f, 0.3f));
     SpawnBox(FVector(-480, 100, 130), FVector(0.04f, 0.1f, 0.18f), FLinearColor(0.3f, 0.7f, 0.4f));
     SpawnBox(FVector(-480, 120, 130), FVector(0.04f, 0.14f, 0.22f), FLinearColor(0.4f, 0.5f, 0.9f));
 
-    // Floor lamp
     SpawnCylinder(FVector(300, -200, 50), FVector(0.03f, 0.03f, 1.0f), FLinearColor(0.75f, 0.6f, 0.4f));
     SpawnSphere(FVector(300, -200, 110), 0.2f, FLinearColor(1.0f, 0.95f, 0.8f));
 
-    // Area rug
     SpawnBox(FVector(-200, 150, 1), FVector(3.0f, 2.0f, 0.02f), FLinearColor(0.85f, 0.75f, 0.6f));
 
-    // Leo and Dog
     SpawnCharacter(FVector(100, -100, 0), FLinearColor(0.85f, 0.7f, 0.55f), FLinearColor(0.3f, 0.2f, 0.1f), FLinearColor(0.2f, 0.6f, 0.9f), TEXT("Leo"));
     SpawnPet(FVector(200, -50, 0), FLinearColor(0.7f, 0.5f, 0.3f), FLinearColor(0.4f, 0.25f, 0.15f), TEXT("Dog"));
 
@@ -699,36 +654,28 @@ void AEmersynGameMode::BuildGarden()
 {
     SetupCamera(FVector(0, -700, 400), FRotator(-20, 0, 0));
 
-    // Grass floor
     SpawnBox(FVector(0, 0, -5), FVector(15, 15, 0.1f), FLinearColor(0.35f, 0.72f, 0.3f));
-    // Sky backdrop
     SpawnBox(FVector(0, 800, 300), FVector(15, 0.1f, 6), FLinearColor(0.55f, 0.78f, 0.95f));
-    // Clouds
     SpawnSphere(FVector(-400, 700, 500), 1.5f, FLinearColor(0.98f, 0.98f, 1.0f));
     SpawnSphere(FVector(-300, 700, 520), 1.2f, FLinearColor(0.97f, 0.97f, 0.99f));
     SpawnSphere(FVector(300, 700, 480), 1.8f, FLinearColor(0.98f, 0.98f, 1.0f));
     SpawnSphere(FVector(400, 700, 500), 1.3f, FLinearColor(0.97f, 0.97f, 0.99f));
 
-    // Garden path
     SpawnBox(FVector(0, 0, 1), FVector(1.0f, 8.0f, 0.02f), FLinearColor(0.8f, 0.72f, 0.55f));
 
-    // Flower beds (left)
     SpawnBox(FVector(-300, -200, 10), FVector(1.5f, 1.0f, 0.15f), FLinearColor(0.45f, 0.3f, 0.2f));
-    // Flowers
     SpawnSphere(FVector(-350, -230, 25), 0.1f, FLinearColor(1.0f, 0.3f, 0.4f));
     SpawnSphere(FVector(-330, -200, 28), 0.08f, FLinearColor(0.95f, 0.85f, 0.2f));
     SpawnSphere(FVector(-300, -220, 26), 0.09f, FLinearColor(0.9f, 0.4f, 0.8f));
     SpawnSphere(FVector(-270, -190, 27), 0.1f, FLinearColor(0.4f, 0.6f, 0.95f));
     SpawnSphere(FVector(-250, -230, 25), 0.08f, FLinearColor(1.0f, 0.6f, 0.3f));
 
-    // Flower beds (right)
     SpawnBox(FVector(300, -200, 10), FVector(1.5f, 1.0f, 0.15f), FLinearColor(0.45f, 0.3f, 0.2f));
     SpawnSphere(FVector(250, -230, 25), 0.1f, FLinearColor(0.95f, 0.5f, 0.6f));
     SpawnSphere(FVector(280, -200, 28), 0.08f, FLinearColor(0.5f, 0.8f, 0.95f));
     SpawnSphere(FVector(310, -220, 26), 0.09f, FLinearColor(1.0f, 0.75f, 0.85f));
     SpawnSphere(FVector(340, -190, 27), 0.1f, FLinearColor(0.85f, 0.95f, 0.4f));
 
-    // Trees
     SpawnCylinder(FVector(-500, 300, 80), FVector(0.25f, 0.25f, 1.6f), FLinearColor(0.5f, 0.35f, 0.2f));
     SpawnSphere(FVector(-500, 300, 200), 1.5f, FLinearColor(0.2f, 0.6f, 0.2f));
     SpawnSphere(FVector(-480, 310, 230), 1.0f, FLinearColor(0.25f, 0.65f, 0.22f));
@@ -736,7 +683,6 @@ void AEmersynGameMode::BuildGarden()
     SpawnCylinder(FVector(500, 400, 80), FVector(0.2f, 0.2f, 1.4f), FLinearColor(0.55f, 0.38f, 0.22f));
     SpawnSphere(FVector(500, 400, 190), 1.3f, FLinearColor(0.22f, 0.62f, 0.2f));
 
-    // Fence
     for (int32 i = -5; i <= 5; i++)
     {
         SpawnBox(FVector(i * 120.0f, 500, 30), FVector(0.06f, 0.06f, 0.5f), FLinearColor(0.9f, 0.85f, 0.75f));
@@ -744,18 +690,14 @@ void AEmersynGameMode::BuildGarden()
     SpawnBox(FVector(0, 500, 50), FVector(6.5f, 0.04f, 0.06f), FLinearColor(0.88f, 0.83f, 0.73f));
     SpawnBox(FVector(0, 500, 20), FVector(6.5f, 0.04f, 0.06f), FLinearColor(0.88f, 0.83f, 0.73f));
 
-    // Garden bench
     SpawnBox(FVector(-200, 100, 22), FVector(0.8f, 0.25f, 0.04f), FLinearColor(0.6f, 0.42f, 0.28f));
     SpawnBox(FVector(-200, 115, 40), FVector(0.8f, 0.04f, 0.25f), FLinearColor(0.58f, 0.4f, 0.26f));
 
-    // Watering can
     SpawnCylinder(FVector(150, 100, 12), FVector(0.08f, 0.08f, 0.12f), FLinearColor(0.3f, 0.7f, 0.4f));
 
-    // Butterfly decorations
     SpawnSphere(FVector(-100, -100, 100), 0.05f, FLinearColor(0.95f, 0.6f, 0.8f));
     SpawnSphere(FVector(200, 50, 120), 0.04f, FLinearColor(0.6f, 0.8f, 0.95f));
 
-    // Mia and Bunny
     SpawnCharacter(FVector(0, -100, 0), FLinearColor(0.9f, 0.75f, 0.6f), FLinearColor(0.7f, 0.3f, 0.15f), FLinearColor(0.3f, 0.85f, 0.5f), TEXT("Mia"));
     SpawnPet(FVector(100, -50, 0), FLinearColor(0.95f, 0.95f, 0.92f), FLinearColor(0.95f, 0.7f, 0.75f), TEXT("Bunny"));
 
@@ -768,53 +710,38 @@ void AEmersynGameMode::BuildSchool()
 {
     SetupCamera(FVector(0, -500, 350), FRotator(-25, 0, 0));
 
-    // Floor - wood
     SpawnBox(FVector(0, 0, -5), FVector(8, 8, 0.1f), FLinearColor(0.78f, 0.62f, 0.42f));
-    // Walls - warm cream
     SpawnBox(FVector(0, 400, 200), FVector(8, 0.1f, 4), FLinearColor(0.97f, 0.94f, 0.85f));
     SpawnBox(FVector(-400, 0, 200), FVector(0.1f, 8, 4), FLinearColor(0.96f, 0.93f, 0.84f));
     SpawnBox(FVector(400, 0, 200), FVector(0.1f, 8, 4), FLinearColor(0.96f, 0.93f, 0.84f));
 
-    // Chalkboard
     SpawnBox(FVector(0, 395, 180), FVector(3.0f, 0.03f, 1.2f), FLinearColor(0.15f, 0.3f, 0.2f));
-    // Chalkboard frame
     SpawnBox(FVector(0, 393, 180), FVector(3.1f, 0.02f, 0.04f), FLinearColor(0.6f, 0.45f, 0.3f));
     SpawnBox(FVector(0, 393, 240), FVector(3.1f, 0.02f, 0.04f), FLinearColor(0.6f, 0.45f, 0.3f));
-    // Chalk tray
     SpawnBox(FVector(0, 390, 118), FVector(3.0f, 0.06f, 0.04f), FLinearColor(0.6f, 0.45f, 0.3f));
-    // Chalk
     SpawnBox(FVector(-20, 388, 121), FVector(0.08f, 0.02f, 0.02f), FLinearColor(0.95f, 0.95f, 0.92f));
 
-    // Student desks (3 rows of 2)
     for (int32 row = 0; row < 3; row++)
     {
         for (int32 col = 0; col < 2; col++)
         {
             float X = -150.0f + col * 300.0f;
             float Y = -200.0f + row * 150.0f;
-            // Desk
             SpawnBox(FVector(X, Y, 35), FVector(0.7f, 0.5f, 0.04f), FLinearColor(0.75f, 0.58f, 0.38f));
-            // Desk legs
             SpawnCylinder(FVector(X - 30, Y - 20, 16), FVector(0.03f, 0.03f, 0.3f), FLinearColor(0.4f, 0.4f, 0.42f));
             SpawnCylinder(FVector(X + 30, Y + 20, 16), FVector(0.03f, 0.03f, 0.3f), FLinearColor(0.4f, 0.4f, 0.42f));
-            // Chair
             SpawnBox(FVector(X, Y - 40, 20), FVector(0.25f, 0.25f, 0.04f), FLinearColor(0.3f, 0.5f, 0.8f));
         }
     }
 
-    // Teacher's desk
     SpawnBox(FVector(0, 250, 40), FVector(1.2f, 0.5f, 0.7f), FLinearColor(0.55f, 0.4f, 0.28f));
-    // Apple on desk
     SpawnSphere(FVector(30, 240, 76), 0.06f, FLinearColor(0.9f, 0.15f, 0.15f));
 
-    // Globe
     SpawnSphere(FVector(-300, 250, 80), 0.15f, FLinearColor(0.3f, 0.5f, 0.8f));
     SpawnCylinder(FVector(-300, 250, 55), FVector(0.03f, 0.03f, 0.2f), FLinearColor(0.5f, 0.4f, 0.3f));
 
-    // Clock on wall
     SpawnCylinder(FVector(300, 394, 300), FVector(0.2f, 0.2f, 0.02f), FLinearColor(0.95f, 0.93f, 0.88f));
 
-    // Teacher character
     SpawnCharacter(FVector(0, 150, 0), FLinearColor(0.88f, 0.72f, 0.55f), FLinearColor(0.25f, 0.15f, 0.1f), FLinearColor(0.35f, 0.55f, 0.35f), TEXT("Teacher"));
 
     SpawnLight(FVector(0, 0, 350), 5000.0f, FLinearColor(1.0f, 0.97f, 0.92f));
@@ -827,18 +754,14 @@ void AEmersynGameMode::BuildShop()
 {
     SetupCamera(FVector(0, -500, 350), FRotator(-25, 0, 0));
 
-    // Floor
     SpawnBox(FVector(0, 0, -5), FVector(8, 8, 0.1f), FLinearColor(0.92f, 0.88f, 0.82f));
-    // Walls - warm pink/cream
     SpawnBox(FVector(0, 400, 200), FVector(8, 0.1f, 4), FLinearColor(0.97f, 0.88f, 0.9f));
     SpawnBox(FVector(-400, 0, 200), FVector(0.1f, 8, 4), FLinearColor(0.96f, 0.87f, 0.89f));
     SpawnBox(FVector(400, 0, 200), FVector(0.1f, 8, 4), FLinearColor(0.96f, 0.87f, 0.89f));
 
-    // Display shelves (left wall)
     SpawnBox(FVector(-380, 0, 80), FVector(0.15f, 3.0f, 0.04f), FLinearColor(0.9f, 0.82f, 0.75f));
     SpawnBox(FVector(-380, 0, 140), FVector(0.15f, 3.0f, 0.04f), FLinearColor(0.9f, 0.82f, 0.75f));
     SpawnBox(FVector(-380, 0, 200), FVector(0.15f, 3.0f, 0.04f), FLinearColor(0.9f, 0.82f, 0.75f));
-    // Toys on shelves
     SpawnSphere(FVector(-375, -100, 90), 0.08f, FLinearColor(0.95f, 0.4f, 0.5f));
     SpawnBox(FVector(-375, -50, 88), FVector(0.06f, 0.06f, 0.1f), FLinearColor(0.4f, 0.6f, 0.95f));
     SpawnSphere(FVector(-375, 0, 90), 0.07f, FLinearColor(0.95f, 0.85f, 0.3f));
@@ -847,19 +770,14 @@ void AEmersynGameMode::BuildShop()
     SpawnBox(FVector(-375, -20, 148), FVector(0.07f, 0.07f, 0.1f), FLinearColor(0.95f, 0.7f, 0.3f));
     SpawnSphere(FVector(-375, 40, 150), 0.08f, FLinearColor(0.4f, 0.85f, 0.9f));
 
-    // Counter
     SpawnBox(FVector(200, 300, 50), FVector(1.5f, 0.4f, 1.0f), FLinearColor(0.88f, 0.78f, 0.7f));
-    // Register
     SpawnBox(FVector(200, 290, 105), FVector(0.2f, 0.15f, 0.15f), FLinearColor(0.85f, 0.6f, 0.7f));
 
-    // Display table center
     SpawnBox(FVector(0, 0, 30), FVector(1.0f, 0.8f, 0.5f), FLinearColor(0.92f, 0.85f, 0.8f));
-    // Items on display
     SpawnSphere(FVector(-30, -20, 60), 0.1f, FLinearColor(0.95f, 0.7f, 0.8f));
     SpawnBox(FVector(30, 10, 58), FVector(0.08f, 0.08f, 0.12f), FLinearColor(0.7f, 0.85f, 0.95f));
     SpawnSphere(FVector(0, -10, 62), 0.12f, FLinearColor(0.85f, 0.55f, 0.3f));
 
-    // Shopkeeper
     SpawnCharacter(FVector(200, 200, 0), FLinearColor(0.9f, 0.78f, 0.65f), FLinearColor(0.4f, 0.3f, 0.2f), FLinearColor(0.85f, 0.45f, 0.55f), TEXT("Shopkeeper"));
 
     SpawnLight(FVector(0, 0, 350), 5000.0f, FLinearColor(1.0f, 0.95f, 0.9f));
@@ -872,41 +790,29 @@ void AEmersynGameMode::BuildPlayground()
 {
     SetupCamera(FVector(0, -700, 400), FRotator(-20, 0, 0));
 
-    // Ground - grass and dirt
     SpawnBox(FVector(0, 0, -5), FVector(15, 15, 0.1f), FLinearColor(0.4f, 0.72f, 0.32f));
     SpawnBox(FVector(0, 0, -3), FVector(5, 5, 0.08f), FLinearColor(0.78f, 0.65f, 0.45f));
-    // Sky
     SpawnBox(FVector(0, 800, 300), FVector(15, 0.1f, 6), FLinearColor(0.55f, 0.78f, 0.95f));
 
-    // Slide structure
     SpawnCylinder(FVector(-300, 200, 100), FVector(0.12f, 0.12f, 2.0f), FLinearColor(0.9f, 0.25f, 0.3f));
     SpawnCylinder(FVector(-250, 200, 100), FVector(0.12f, 0.12f, 2.0f), FLinearColor(0.9f, 0.25f, 0.3f));
-    // Platform
     SpawnBox(FVector(-275, 200, 200), FVector(0.6f, 0.6f, 0.05f), FLinearColor(0.95f, 0.85f, 0.3f));
-    // Slide ramp
     SpawnBox(FVector(-275, 80, 100), FVector(0.35f, 1.2f, 0.04f), FLinearColor(0.95f, 0.7f, 0.15f));
 
-    // Swings
     SpawnCylinder(FVector(200, -100, 120), FVector(0.08f, 0.08f, 2.4f), FLinearColor(0.3f, 0.55f, 0.85f));
     SpawnCylinder(FVector(400, -100, 120), FVector(0.08f, 0.08f, 2.4f), FLinearColor(0.3f, 0.55f, 0.85f));
     SpawnBox(FVector(300, -100, 240), FVector(2.2f, 0.06f, 0.06f), FLinearColor(0.3f, 0.55f, 0.85f));
-    // Swing seats
     SpawnBox(FVector(260, -100, 40), FVector(0.2f, 0.15f, 0.03f), FLinearColor(0.9f, 0.3f, 0.4f));
     SpawnBox(FVector(340, -100, 50), FVector(0.2f, 0.15f, 0.03f), FLinearColor(0.3f, 0.85f, 0.45f));
 
-    // Sandbox
     SpawnBox(FVector(0, 300, 10), FVector(2.0f, 2.0f, 0.2f), FLinearColor(0.92f, 0.85f, 0.6f));
-    // Sand
     SpawnBox(FVector(0, 300, 15), FVector(1.8f, 1.8f, 0.1f), FLinearColor(0.95f, 0.9f, 0.7f));
-    // Sand castle
     SpawnCylinder(FVector(-20, 280, 25), FVector(0.1f, 0.1f, 0.12f), FLinearColor(0.92f, 0.85f, 0.6f));
     SpawnCylinder(FVector(20, 310, 23), FVector(0.08f, 0.08f, 0.1f), FLinearColor(0.9f, 0.83f, 0.58f));
 
-    // Seesaw
     SpawnCylinder(FVector(-100, -200, 15), FVector(0.1f, 0.1f, 0.25f), FLinearColor(0.5f, 0.5f, 0.52f));
     SpawnBox(FVector(-100, -200, 35), FVector(1.5f, 0.15f, 0.04f), FLinearColor(0.4f, 0.75f, 0.85f));
 
-    // Climbing dome
     SpawnSphere(FVector(400, 300, 50), 1.0f, FLinearColor(0.95f, 0.5f, 0.6f));
 
     SpawnCharacter(FVector(50, -50, 0), FLinearColor(0.95f, 0.82f, 0.72f), FLinearColor(0.85f, 0.55f, 0.2f), FLinearColor(0.95f, 0.65f, 0.2f), TEXT("Emersyn"));
@@ -921,23 +827,16 @@ void AEmersynGameMode::BuildPark()
 {
     SetupCamera(FVector(0, -700, 400), FRotator(-20, 0, 0));
 
-    // Grass
     SpawnBox(FVector(0, 0, -5), FVector(20, 20, 0.1f), FLinearColor(0.32f, 0.7f, 0.28f));
-    // Paths
     SpawnBox(FVector(0, 0, -2), FVector(1.0f, 12.0f, 0.05f), FLinearColor(0.78f, 0.68f, 0.52f));
     SpawnBox(FVector(0, 0, -2), FVector(12.0f, 1.0f, 0.05f), FLinearColor(0.78f, 0.68f, 0.52f));
-    // Sky
     SpawnBox(FVector(0, 1000, 300), FVector(20, 0.1f, 6), FLinearColor(0.5f, 0.75f, 0.95f));
 
-    // Fountain
     SpawnCylinder(FVector(0, 0, 20), FVector(0.8f, 0.8f, 0.3f), FLinearColor(0.8f, 0.78f, 0.75f));
     SpawnCylinder(FVector(0, 0, 35), FVector(0.5f, 0.5f, 0.2f), FLinearColor(0.82f, 0.8f, 0.77f));
-    // Water
     SpawnCylinder(FVector(0, 0, 28), FVector(0.7f, 0.7f, 0.05f), FLinearColor(0.5f, 0.75f, 0.92f));
-    // Fountain spray
     SpawnSphere(FVector(0, 0, 55), 0.08f, FLinearColor(0.7f, 0.88f, 0.97f));
 
-    // Large trees
     SpawnCylinder(FVector(-500, -400, 80), FVector(0.3f, 0.3f, 1.6f), FLinearColor(0.5f, 0.35f, 0.2f));
     SpawnSphere(FVector(-500, -400, 220), 2.0f, FLinearColor(0.18f, 0.55f, 0.18f));
     SpawnCylinder(FVector(600, 500, 80), FVector(0.35f, 0.35f, 1.8f), FLinearColor(0.48f, 0.33f, 0.18f));
@@ -945,19 +844,15 @@ void AEmersynGameMode::BuildPark()
     SpawnCylinder(FVector(-400, 400, 70), FVector(0.25f, 0.25f, 1.4f), FLinearColor(0.52f, 0.37f, 0.22f));
     SpawnSphere(FVector(-400, 400, 190), 1.5f, FLinearColor(0.22f, 0.6f, 0.22f));
 
-    // Benches
     SpawnBox(FVector(-200, 150, 22), FVector(0.8f, 0.25f, 0.04f), FLinearColor(0.55f, 0.4f, 0.25f));
     SpawnBox(FVector(-200, 165, 40), FVector(0.8f, 0.04f, 0.25f), FLinearColor(0.53f, 0.38f, 0.23f));
     SpawnBox(FVector(200, -150, 22), FVector(0.8f, 0.25f, 0.04f), FLinearColor(0.55f, 0.4f, 0.25f));
     SpawnBox(FVector(200, -135, 40), FVector(0.8f, 0.04f, 0.25f), FLinearColor(0.53f, 0.38f, 0.23f));
 
-    // Pond
     SpawnBox(FVector(400, -300, -2), FVector(2.0f, 1.5f, 0.05f), FLinearColor(0.35f, 0.6f, 0.85f));
-    // Lily pads
     SpawnCylinder(FVector(380, -280, 0), FVector(0.08f, 0.08f, 0.01f), FLinearColor(0.3f, 0.7f, 0.35f));
     SpawnCylinder(FVector(420, -310, 0), FVector(0.06f, 0.06f, 0.01f), FLinearColor(0.28f, 0.68f, 0.33f));
 
-    // Flower patches
     for (int32 i = 0; i < 6; i++)
     {
         float Angle = i * 60.0f * PI / 180.0f;
@@ -976,38 +871,30 @@ void AEmersynGameMode::BuildMall()
 {
     SetupCamera(FVector(0, -600, 400), FRotator(-25, 0, 0));
 
-    // Floor - white marble
     SpawnBox(FVector(0, 0, -5), FVector(12, 12, 0.1f), FLinearColor(0.95f, 0.93f, 0.9f));
-    // Walls
     SpawnBox(FVector(0, 600, 250), FVector(12, 0.1f, 5), FLinearColor(0.97f, 0.95f, 0.93f));
     SpawnBox(FVector(-600, 0, 250), FVector(0.1f, 12, 5), FLinearColor(0.96f, 0.94f, 0.92f));
     SpawnBox(FVector(600, 0, 250), FVector(0.1f, 12, 5), FLinearColor(0.96f, 0.94f, 0.92f));
 
-    // Store fronts (colored facades)
     SpawnBox(FVector(-580, -200, 120), FVector(0.12f, 2.0f, 2.0f), FLinearColor(0.95f, 0.6f, 0.7f));
     SpawnBox(FVector(-580, 200, 120), FVector(0.12f, 2.0f, 2.0f), FLinearColor(0.6f, 0.75f, 0.95f));
     SpawnBox(FVector(580, -200, 120), FVector(0.12f, 2.0f, 2.0f), FLinearColor(0.95f, 0.88f, 0.4f));
     SpawnBox(FVector(580, 200, 120), FVector(0.12f, 2.0f, 2.0f), FLinearColor(0.5f, 0.9f, 0.6f));
 
-    // Store signs (smaller colored boxes above)
     SpawnBox(FVector(-580, -200, 230), FVector(0.08f, 1.5f, 0.3f), FLinearColor(1.0f, 0.5f, 0.6f));
     SpawnBox(FVector(-580, 200, 230), FVector(0.08f, 1.5f, 0.3f), FLinearColor(0.5f, 0.65f, 0.95f));
     SpawnBox(FVector(580, -200, 230), FVector(0.08f, 1.5f, 0.3f), FLinearColor(0.95f, 0.82f, 0.3f));
     SpawnBox(FVector(580, 200, 230), FVector(0.08f, 1.5f, 0.3f), FLinearColor(0.4f, 0.85f, 0.5f));
 
-    // Center fountain
     SpawnCylinder(FVector(0, 0, 25), FVector(1.0f, 1.0f, 0.4f), FLinearColor(0.82f, 0.8f, 0.77f));
     SpawnCylinder(FVector(0, 0, 30), FVector(0.8f, 0.8f, 0.08f), FLinearColor(0.5f, 0.72f, 0.9f));
     SpawnCylinder(FVector(0, 0, 45), FVector(0.3f, 0.3f, 0.5f), FLinearColor(0.85f, 0.83f, 0.8f));
     SpawnSphere(FVector(0, 0, 70), 0.1f, FLinearColor(0.6f, 0.82f, 0.95f));
 
-    // Escalator
     SpawnBox(FVector(0, 400, 80), FVector(0.8f, 2.0f, 0.08f), FLinearColor(0.7f, 0.7f, 0.72f));
-    // Escalator railings
     SpawnBox(FVector(-40, 400, 90), FVector(0.04f, 2.0f, 0.15f), FLinearColor(0.6f, 0.6f, 0.62f));
     SpawnBox(FVector(40, 400, 90), FVector(0.04f, 2.0f, 0.15f), FLinearColor(0.6f, 0.6f, 0.62f));
 
-    // Planters
     SpawnBox(FVector(-300, 0, 20), FVector(0.4f, 0.4f, 0.3f), FLinearColor(0.65f, 0.55f, 0.4f));
     SpawnSphere(FVector(-300, 0, 50), 0.3f, FLinearColor(0.25f, 0.6f, 0.25f));
     SpawnBox(FVector(300, 0, 20), FVector(0.4f, 0.4f, 0.3f), FLinearColor(0.65f, 0.55f, 0.4f));
@@ -1027,20 +914,16 @@ void AEmersynGameMode::BuildArcade()
 {
     SetupCamera(FVector(0, -450, 300), FRotator(-25, 0, 0));
 
-    // Dark floor
     SpawnBox(FVector(0, 0, -5), FVector(8, 8, 0.1f), FLinearColor(0.1f, 0.08f, 0.15f));
-    // Dark walls with neon tint
     SpawnBox(FVector(0, 400, 175), FVector(8, 0.1f, 3.5f), FLinearColor(0.12f, 0.08f, 0.2f));
     SpawnBox(FVector(-400, 0, 175), FVector(0.1f, 8, 3.5f), FLinearColor(0.15f, 0.08f, 0.2f));
     SpawnBox(FVector(400, 0, 175), FVector(0.1f, 8, 3.5f), FLinearColor(0.15f, 0.08f, 0.2f));
 
-    // Neon strips on walls
     SpawnBox(FVector(0, 398, 300), FVector(7.5f, 0.02f, 0.06f), FLinearColor(0.95f, 0.1f, 0.5f));
     SpawnBox(FVector(0, 398, 50), FVector(7.5f, 0.02f, 0.06f), FLinearColor(0.1f, 0.5f, 0.95f));
     SpawnBox(FVector(-398, 0, 300), FVector(0.02f, 7.5f, 0.06f), FLinearColor(0.1f, 0.95f, 0.5f));
     SpawnBox(FVector(398, 0, 300), FVector(0.02f, 7.5f, 0.06f), FLinearColor(0.95f, 0.85f, 0.1f));
 
-    // Arcade cabinets (6 machines in 2 rows)
     FLinearColor CabinetColors[] = {
         FLinearColor(0.95f, 0.15f, 0.2f), FLinearColor(0.15f, 0.3f, 0.95f),
         FLinearColor(0.15f, 0.9f, 0.3f), FLinearColor(0.95f, 0.8f, 0.1f),
@@ -1050,34 +933,25 @@ void AEmersynGameMode::BuildArcade()
     {
         float X = (i < 3) ? -250.0f : 250.0f;
         float Y = -200.0f + (i % 3) * 200.0f;
-        // Cabinet body
         SpawnBox(FVector(X, Y, 70), FVector(0.4f, 0.3f, 1.3f), CabinetColors[i]);
-        // Screen
         SpawnBox(FVector(X + (i < 3 ? 22 : -22), Y, 100), FVector(0.02f, 0.2f, 0.3f), FLinearColor(0.1f, 0.15f, 0.2f));
-        // Screen glow
         SpawnBox(FVector(X + (i < 3 ? 21 : -21), Y, 100), FVector(0.01f, 0.18f, 0.28f), CabinetColors[i] * 0.3f + FLinearColor(0.1f, 0.1f, 0.1f));
     }
 
-    // Claw machine
     SpawnBox(FVector(0, 300, 80), FVector(0.5f, 0.5f, 1.5f), FLinearColor(0.95f, 0.6f, 0.7f));
-    // Glass case
     SpawnBox(FVector(0, 300, 110), FVector(0.45f, 0.45f, 0.7f), FLinearColor(0.7f, 0.85f, 0.9f));
-    // Prize plushies inside
     SpawnSphere(FVector(-10, 290, 60), 0.06f, FLinearColor(0.95f, 0.5f, 0.5f));
     SpawnSphere(FVector(10, 310, 58), 0.05f, FLinearColor(0.5f, 0.7f, 0.95f));
     SpawnSphere(FVector(5, 295, 62), 0.07f, FLinearColor(0.95f, 0.9f, 0.3f));
 
-    // Prize counter
     SpawnBox(FVector(350, 300, 50), FVector(0.4f, 0.8f, 1.0f), FLinearColor(0.9f, 0.3f, 0.5f));
 
-    // Floor pattern - neon diamonds
     SpawnBox(FVector(-150, -100, -2), FVector(0.8f, 0.8f, 0.02f), FLinearColor(0.15f, 0.1f, 0.25f));
     SpawnBox(FVector(150, 100, -2), FVector(0.8f, 0.8f, 0.02f), FLinearColor(0.2f, 0.1f, 0.2f));
 
     SpawnCharacter(FVector(0, -100, 0), FLinearColor(0.85f, 0.7f, 0.55f), FLinearColor(0.3f, 0.2f, 0.1f), FLinearColor(0.95f, 0.5f, 0.2f), TEXT("Leo"));
     SpawnCharacter(FVector(-100, 50, 0), FLinearColor(0.95f, 0.82f, 0.72f), FLinearColor(0.85f, 0.55f, 0.2f), FLinearColor(0.6f, 0.3f, 0.9f), TEXT("Emersyn"), 0.95f);
 
-    // Neon lights
     SpawnLight(FVector(-200, -200, 280), 2000.0f, FLinearColor(0.95f, 0.1f, 0.5f));
     SpawnLight(FVector(200, 200, 280), 2000.0f, FLinearColor(0.1f, 0.5f, 0.95f));
     SpawnLight(FVector(0, 0, 300), 3000.0f, FLinearColor(0.7f, 0.3f, 0.9f));
@@ -1090,71 +964,56 @@ void AEmersynGameMode::BuildAmusementPark()
 {
     SetupCamera(FVector(0, -800, 450), FRotator(-20, 0, 0));
 
-    // Ground
     SpawnBox(FVector(0, 0, -5), FVector(20, 20, 0.1f), FLinearColor(0.65f, 0.6f, 0.52f));
-    // Paths
     SpawnBox(FVector(0, 0, -2), FVector(1.2f, 15.0f, 0.05f), FLinearColor(0.75f, 0.68f, 0.58f));
-    // Sky
     SpawnBox(FVector(0, 1000, 350), FVector(20, 0.1f, 7), FLinearColor(0.45f, 0.7f, 0.95f));
-    // Sunset clouds
     SpawnSphere(FVector(-600, 900, 500), 2.0f, FLinearColor(0.98f, 0.85f, 0.75f));
     SpawnSphere(FVector(500, 900, 550), 2.5f, FLinearColor(0.97f, 0.82f, 0.72f));
 
     // Ferris wheel
     SpawnCylinder(FVector(-500, 300, 50), FVector(0.3f, 0.3f, 1.0f), FLinearColor(0.7f, 0.2f, 0.25f));
-    // Wheel rim (approximated with spheres)
     float WheelRadius = 200.0f;
     FVector WheelCenter(-500, 300, 280);
     for (int32 i = 0; i < 12; i++)
     {
         float Angle = i * 30.0f * PI / 180.0f;
         FVector Pos = WheelCenter + FVector(0, FMath::Cos(Angle) * WheelRadius, FMath::Sin(Angle) * WheelRadius);
-        // Spoke
         SpawnBox(Pos, FVector(0.02f, 0.02f, 0.15f), FLinearColor(0.8f, 0.3f, 0.35f));
-        // Gondola
         SpawnBox(Pos - FVector(0, 0, 15), FVector(0.1f, 0.08f, 0.08f), FLinearColor(0.95f, 0.85f, 0.3f + i * 0.03f));
     }
-    // Hub
     SpawnSphere(WheelCenter, 0.2f, FLinearColor(0.85f, 0.25f, 0.3f));
 
     // Carousel
     SpawnCylinder(FVector(300, 200, 20), FVector(1.5f, 1.5f, 0.2f), FLinearColor(0.95f, 0.85f, 0.35f));
     SpawnCylinder(FVector(300, 200, 100), FVector(0.15f, 0.15f, 1.0f), FLinearColor(0.85f, 0.6f, 0.25f));
     SpawnCylinder(FVector(300, 200, 120), FVector(1.6f, 1.6f, 0.08f), FLinearColor(0.95f, 0.4f, 0.55f));
-    // Carousel horses
     SpawnSphere(FVector(350, 250, 50), 0.12f, FLinearColor(0.95f, 0.95f, 0.92f));
     SpawnSphere(FVector(250, 150, 60), 0.12f, FLinearColor(0.85f, 0.6f, 0.4f));
     SpawnSphere(FVector(350, 150, 55), 0.12f, FLinearColor(0.7f, 0.7f, 0.72f));
     SpawnSphere(FVector(250, 250, 58), 0.12f, FLinearColor(0.4f, 0.3f, 0.25f));
 
-    // Roller coaster track
+    // Roller coaster
     SpawnBox(FVector(0, -400, 80), FVector(6.0f, 0.15f, 0.05f), FLinearColor(0.5f, 0.5f, 0.55f));
     SpawnBox(FVector(-200, -400, 120), FVector(2.0f, 0.15f, 0.05f), FLinearColor(0.5f, 0.5f, 0.55f));
-    // Supports
     SpawnCylinder(FVector(-300, -400, 40), FVector(0.08f, 0.08f, 0.8f), FLinearColor(0.55f, 0.55f, 0.58f));
     SpawnCylinder(FVector(0, -400, 40), FVector(0.06f, 0.06f, 0.8f), FLinearColor(0.55f, 0.55f, 0.58f));
     SpawnCylinder(FVector(300, -400, 40), FVector(0.08f, 0.08f, 0.8f), FLinearColor(0.55f, 0.55f, 0.58f));
 
     // Food stands
     SpawnBox(FVector(-200, 600, 50), FVector(0.8f, 0.5f, 1.0f), FLinearColor(0.95f, 0.55f, 0.2f));
-    // Awning
     SpawnBox(FVector(-200, 575, 110), FVector(0.9f, 0.6f, 0.04f), FLinearColor(0.95f, 0.3f, 0.3f));
-
-    // Ice cream cart
     SpawnBox(FVector(200, 600, 35), FVector(0.5f, 0.3f, 0.6f), FLinearColor(0.85f, 0.9f, 0.95f));
-    // Ice cream cone decoration
     SpawnSphere(FVector(200, 580, 75), 0.1f, FLinearColor(0.95f, 0.7f, 0.8f));
 
     // Ticket booth
     SpawnBox(FVector(0, 700, 60), FVector(0.6f, 0.4f, 1.2f), FLinearColor(0.3f, 0.55f, 0.9f));
     SpawnBox(FVector(0, 700, 130), FVector(0.7f, 0.5f, 0.04f), FLinearColor(0.95f, 0.85f, 0.3f));
 
-    // Balloon decorations
+    // Balloons
     SpawnSphere(FVector(100, 0, 200), 0.1f, FLinearColor(0.95f, 0.2f, 0.3f));
     SpawnSphere(FVector(120, 10, 210), 0.1f, FLinearColor(0.3f, 0.7f, 0.95f));
     SpawnSphere(FVector(80, -10, 195), 0.1f, FLinearColor(0.95f, 0.85f, 0.2f));
 
-    // Characters
     SpawnCharacter(FVector(-50, -100, 0), FLinearColor(0.95f, 0.82f, 0.72f), FLinearColor(0.85f, 0.55f, 0.2f), FLinearColor(0.95f, 0.4f, 0.6f), TEXT("Emersyn"));
     SpawnCharacter(FVector(100, -50, 0), FLinearColor(0.92f, 0.78f, 0.65f), FLinearColor(0.15f, 0.1f, 0.08f), FLinearColor(0.85f, 0.5f, 0.85f), TEXT("Ava"));
     SpawnPet(FVector(-150, -50, 0), FLinearColor(0.9f, 0.6f, 0.3f), FLinearColor(0.95f, 0.8f, 0.6f), TEXT("Cat"));
