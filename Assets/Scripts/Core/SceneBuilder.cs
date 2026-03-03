@@ -480,12 +480,12 @@ namespace EmersynBigDay.Core
             if (mainCamera.GetComponent<CameraSystem.CameraController>() == null)
             {
                 var ctrl = mainCamera.gameObject.AddComponent<CameraSystem.CameraController>();
-                // Round 46 (Claude 4.5 Bedrock): Lower pitch to see character FRONTS, closer zoom
+                // Round 47 (Claude 4.5 Bedrock): Near eye-level to see character FACES, pulled back to see room
                 float camAspect = (float)Screen.width / Screen.height;
                 float adaptiveZoom, adaptivePitch;
-                if (camAspect < 0.5f) { adaptiveZoom = 12f; adaptivePitch = 28f; } // Very narrow phones
-                else if (camAspect < 0.6f) { adaptiveZoom = 14f; adaptivePitch = 28f; } // Normal phones
-                else { adaptiveZoom = 13f; adaptivePitch = 28f; } // Tablets - closer
+                if (camAspect < 0.5f) { adaptiveZoom = 16f; adaptivePitch = 12f; } // Very narrow phones
+                else if (camAspect < 0.6f) { adaptiveZoom = 18f; adaptivePitch = 12f; } // Normal phones
+                else { adaptiveZoom = 17f; adaptivePitch = 12f; } // Tablets
                 ctrl.MinZoom = 8f;
                 ctrl.MaxZoom = 25f; // Round 28: Reduced from 50 to prevent fuzz test zooming too far out
                 ctrl.CurrentZoom = adaptiveZoom;
@@ -495,17 +495,17 @@ namespace EmersynBigDay.Core
                 ctrl.Offset = new Vector3(0f, 10f, -10f); // Round 28: Reduced offset to keep camera closer
                 Debug.Log($"[SceneBuilder] Camera adaptive R29: aspect={camAspect:F2} zoom={adaptiveZoom} pitch={adaptivePitch}");
             }
-            // Round 46: Lower camera angle to see character fronts
+            // Round 47: Near eye-level camera to see character faces
             float initAspect = (float)Screen.width / Screen.height;
             float initZoom, initPitch;
-            if (initAspect < 0.5f) { initZoom = 12f; initPitch = 28f; }
-            else if (initAspect < 0.6f) { initZoom = 14f; initPitch = 28f; }
-            else { initZoom = 13f; initPitch = 28f; }
+            if (initAspect < 0.5f) { initZoom = 16f; initPitch = 12f; }
+            else if (initAspect < 0.6f) { initZoom = 18f; initPitch = 12f; }
+            else { initZoom = 17f; initPitch = 12f; }
             float initPitchRad = initPitch * Mathf.Deg2Rad;
             Vector3 camDir = new Vector3(0f, Mathf.Sin(initPitchRad), -Mathf.Cos(initPitchRad));
             mainCamera.transform.position = camDir * initZoom;
-            mainCamera.transform.LookAt(new Vector3(0f, 0.7f, 0f)); // Round 46: Look at waist level to see faces
-            Debug.Log($"[SceneBuilder] Initial camera R46: aspect={initAspect:F2} zoom={initZoom} pitch={initPitch} pos={mainCamera.transform.position}");
+            mainCamera.transform.LookAt(new Vector3(0f, 0.8f, 0f)); // Round 47: Look at chest/face level
+            Debug.Log($"[SceneBuilder] Initial camera R47: aspect={initAspect:F2} zoom={initZoom} pitch={initPitch} pos={mainCamera.transform.position}");
         }
 
         private void CreateManagers()
@@ -856,33 +856,33 @@ namespace EmersynBigDay.Core
         private void CreateCharacters()
         {
             characterContainer = new GameObject("Characters").transform;
-            // Round 46 (Claude 4.5 Bedrock): Semicircle layout so characters don't overlap
-            // Emersyn center-front (hero position), others in arc behind
-            emersynObj = MakeCharacter("Emersyn", new Vector3(0f, 0f, -0.5f), CharBodyColors[0], 1f, true);
+            // Round 47 (Claude 4.5 Bedrock): Wider semicircle, smaller characters, all facing camera
+            // Emersyn center-front (hero position)
+            emersynObj = MakeCharacter("Emersyn", new Vector3(0f, 0f, 0f), CharBodyColors[0], 0.8f, true);
             emersynObj.transform.SetParent(characterContainer);
             if (CameraSystem.CameraController.Instance != null)
                 CameraSystem.CameraController.Instance.Target = emersynObj.transform;
             
-            // Arrange other characters in semicircle behind Emersyn
-            float charRadius = 2.5f;
-            float startAngle = 145f;
-            float angleStep = 35f;
+            // Round 47: Much wider semicircle (radius 5.0) so characters don't overlap
+            float charRadius = 5.0f;
+            float startAngle = 150f;
+            float angleStep = 30f;
             for (int i = 1; i < CharacterNames.Length; i++)
             {
                 float angle = (startAngle + (i - 1) * angleStep) * Mathf.Deg2Rad;
                 float x = Mathf.Sin(angle) * charRadius;
                 float z = Mathf.Cos(angle) * charRadius;
-                var f = MakeCharacter(CharacterNames[i], new Vector3(x, 0, z), CharBodyColors[i], 0.85f, false);
+                var f = MakeCharacter(CharacterNames[i], new Vector3(x, 0, z), CharBodyColors[i], 0.65f, false);
                 f.transform.SetParent(characterContainer);
             }
             
-            // Pets in front-row arc, closer to camera
-            float petRadius = 1.6f;
+            // Pets in front-row arc, wider spread
+            float petRadius = 3.0f;
             for (int i = 0; i < PetNames.Length; i++)
             {
                 float angle = (160f + i * 40f) * Mathf.Deg2Rad;
                 float x = Mathf.Sin(angle) * petRadius;
-                float z = Mathf.Cos(angle) * petRadius - 1.2f; // Closer to camera
+                float z = Mathf.Cos(angle) * petRadius - 2.0f;
                 var pet = MakePet(PetNames[i], new Vector3(x, 0, z), PetColors[i]);
                 pet.transform.SetParent(characterContainer);
             }
@@ -890,10 +890,12 @@ namespace EmersynBigDay.Core
 
         private GameObject MakeCharacter(string cName, Vector3 pos, Color bodyColor, float scale, bool isMain)
         {
-            var root = new GameObject(cName);
-            root.transform.position = pos;
-            // Fix #11: Characters scaled up 30% to be visible relative to rooms
-            root.transform.localScale = Vector3.one * scale * 1.3f;
+                    var root = new GameObject(cName);
+                    root.transform.position = pos;
+                    // Round 47 (Claude 4.5 Bedrock): Rotate 180° so characters FACE the camera (camera is at -Z)
+                    root.transform.rotation = Quaternion.Euler(0f, 180f, 0f);
+                    // Round 47: Reduced scale from 1.3x to 0.9x so characters don't fill entire viewport
+                    root.transform.localScale = Vector3.one * scale * 0.9f;
             // Emersyn's actual skin color: brown skin (age 6)
             Color skin = isMain ? new Color(0.55f, 0.38f, 0.28f) : new Color(1f, 0.88f, 0.78f);
 
@@ -1769,7 +1771,7 @@ namespace EmersynBigDay.Core
             if (norms == null || norms.Length != verts.Length) return;
             
             // Expand vertices along normals for outline thickness
-            float outlineWidth = 0.004f; // Thin but visible outline
+            float outlineWidth = 0.012f; // Round 47: Thicker outline for visibility
             Vector3[] expandedVerts = new Vector3[verts.Length];
             for (int i = 0; i < verts.Length; i++)
             {
@@ -1850,23 +1852,23 @@ namespace EmersynBigDay.Core
             var main = ps.main;
             main.startLifetime = 2.5f;
             main.startSpeed = 0.3f;
-            main.startSize = new ParticleSystem.MinMaxCurve(0.02f, 0.06f);
+            main.startSize = new ParticleSystem.MinMaxCurve(0.08f, 0.18f); // Round 47: 4x larger for visibility
             main.startColor = new ParticleSystem.MinMaxGradient(
                 new Color(1f, 1f, 0.7f, 0.9f),  // Warm yellow sparkle
                 new Color(1f, 0.85f, 1f, 0.9f)   // Soft pink sparkle
             );
-            main.maxParticles = isPet ? 10 : 15;
+            main.maxParticles = isPet ? 20 : 35; // Round 47: More particles
             main.simulationSpace = ParticleSystemSimulationSpace.World;
             main.gravityModifier = -0.05f; // Float upward slightly
             
             // Emission - subtle constant rate
             var emission = ps.emission;
-            emission.rateOverTime = isPet ? 2f : 3f;
+            emission.rateOverTime = isPet ? 6f : 10f; // Round 47: Higher emission rate
             
             // Shape - sphere around character
             var shape = ps.shape;
             shape.shapeType = ParticleSystemShapeType.Sphere;
-            shape.radius = isPet ? 0.4f : 0.6f;
+            shape.radius = isPet ? 0.6f : 1.0f; // Round 47: Wider sparkle area
             
             // Size over lifetime - fade in then out
             var sizeOverLifetime = ps.sizeOverLifetime;
