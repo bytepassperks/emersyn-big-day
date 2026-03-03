@@ -1726,6 +1726,10 @@ namespace EmersynBigDay.Core
         }
 
         // === Lightmap Loading from Modal GPU Baked Output ===
+        // Round 17 (Claude 4.5 Bedrock): CRITICAL FIX - only enable _DETAIL_MULX2 when lightmap
+        // texture ACTUALLY loads. When lightmap files don't exist, explicitly DISABLE the keyword
+        // and clear detail textures. Leaving _DETAIL_MULX2 enabled with null textures causes
+        // magenta/pink artifacts with white blobs on Android.
         private IEnumerator LoadAndApplyLightmaps(int roomIndex)
         {
             string roomName = RoomNames[roomIndex].ToLower();
@@ -1747,14 +1751,13 @@ namespace EmersynBigDay.Core
                         lightmapTex.filterMode = FilterMode.Bilinear;
                         lightmapTex.wrapMode = TextureWrapMode.Clamp;
 
-                        // Apply lightmap as emission/detail texture on the surface material
+                        // Apply lightmap as detail texture on the surface material
                         Transform surfaceObj = roomContainer.Find(surface);
                         if (surfaceObj != null)
                         {
                             var renderer = surfaceObj.GetComponent<Renderer>();
                             if (renderer != null && renderer.material != null)
                             {
-                                // Use detail albedo for lightmap blending on Standard shader
                                 renderer.material.SetTexture("_DetailAlbedoMap", lightmapTex);
                                 renderer.material.SetTextureScale("_DetailAlbedoMap", Vector2.one);
                                 renderer.material.EnableKeyword("_DETAIL_MULX2");
@@ -1765,11 +1768,26 @@ namespace EmersynBigDay.Core
                     }
                     else
                     {
-                        Debug.LogWarning($"[SceneBuilder] Lightmap not found: {lightmapFile}");
+                        // Round 17 (Claude 4.5 Bedrock): CRITICAL - disable detail keywords when
+                        // lightmap not found, otherwise magenta artifacts appear
+                        Transform surfaceObj = roomContainer.Find(surface);
+                        if (surfaceObj != null)
+                        {
+                            var renderer = surfaceObj.GetComponent<Renderer>();
+                            if (renderer != null && renderer.material != null)
+                            {
+                                renderer.material.DisableKeyword("_DETAIL_MULX2");
+                                renderer.material.DisableKeyword("_DETAILMULX2");
+                                renderer.material.SetTexture("_DetailAlbedoMap", null);
+                                renderer.material.SetTexture("_DetailMask", null);
+                                renderer.material.SetTexture("_DetailNormalMap", null);
+                            }
+                        }
+                        Debug.LogWarning($"[SceneBuilder] Lightmap not found (detail keywords disabled): {lightmapFile}");
                     }
                 }
             }
-            Debug.Log($"[SceneBuilder] Lightmaps applied to room {RoomNames[roomIndex]}");
+            Debug.Log($"[SceneBuilder] Lightmaps pass complete for room {RoomNames[roomIndex]}");
         }
 
         private IEnumerator LoadTextureFromStreamingAssets(string relativePath, System.Action<Texture2D> callback)
@@ -1803,8 +1821,8 @@ namespace EmersynBigDay.Core
 
         private Material CreatePBRMaterial(Texture2D albedo, Texture2D normal)
         {
-            // Round 11 (Claude 4.5): Use Standard shader for full PBR with textures.
-            // Standard shader gives us proper lighting, shadows, and normal mapping.
+            // Round 17 (Claude 4.5 Bedrock): Clean PBR material with NO detail keywords.
+            // CRITICAL: _DETAIL_MULX2 keyword without a valid detail texture causes magenta artifacts on Android.
             Material mat;
             if (standardShader != null)
             {
@@ -1819,6 +1837,12 @@ namespace EmersynBigDay.Core
                 }
                 mat.SetFloat("_Glossiness", 0.3f);
                 mat.SetFloat("_Metallic", 0.0f);
+                // Round 17 (Claude 4.5 Bedrock): Explicitly disable detail keywords to prevent magenta artifacts
+                mat.DisableKeyword("_DETAIL_MULX2");
+                mat.DisableKeyword("_DETAILMULX2");
+                mat.SetTexture("_DetailAlbedoMap", null);
+                mat.SetTexture("_DetailMask", null);
+                mat.SetTexture("_DetailNormalMap", null);
                 mat.enableInstancing = true;
                 mat.renderQueue = 2000;
                 return mat;
