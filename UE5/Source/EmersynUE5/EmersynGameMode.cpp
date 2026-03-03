@@ -62,38 +62,38 @@
 
 // ========= Sims-style color palette =========
 namespace SC {
-    // Woods
-    const FLinearColor WoodLight(0.76f, 0.60f, 0.42f);
-    const FLinearColor WoodMedium(0.55f, 0.35f, 0.17f);
-    const FLinearColor WoodDark(0.36f, 0.20f, 0.09f);
-    const FLinearColor WoodCherry(0.40f, 0.15f, 0.10f);
-    // Fabrics
-    const FLinearColor FabricPink(0.92f, 0.62f, 0.68f);
-    const FLinearColor FabricBlue(0.45f, 0.62f, 0.82f);
-    const FLinearColor FabricGreen(0.42f, 0.72f, 0.55f);
-    const FLinearColor FabricPurple(0.62f, 0.42f, 0.75f);
-    const FLinearColor FabricRed(0.82f, 0.28f, 0.28f);
-    const FLinearColor FabricYellow(0.95f, 0.85f, 0.45f);
-    const FLinearColor FabricOrange(0.95f, 0.60f, 0.30f);
-    const FLinearColor FabricCream(0.96f, 0.94f, 0.88f);
+    // Woods - richer, warmer tones
+    const FLinearColor WoodLight(0.82f, 0.62f, 0.38f);
+    const FLinearColor WoodMedium(0.62f, 0.38f, 0.15f);
+    const FLinearColor WoodDark(0.42f, 0.22f, 0.08f);
+    const FLinearColor WoodCherry(0.50f, 0.15f, 0.08f);
+    // Fabrics - VIBRANT Sims-level saturation
+    const FLinearColor FabricPink(1.0f, 0.45f, 0.60f);
+    const FLinearColor FabricBlue(0.30f, 0.55f, 0.95f);
+    const FLinearColor FabricGreen(0.25f, 0.85f, 0.45f);
+    const FLinearColor FabricPurple(0.70f, 0.30f, 0.90f);
+    const FLinearColor FabricRed(0.95f, 0.15f, 0.15f);
+    const FLinearColor FabricYellow(1.0f, 0.90f, 0.25f);
+    const FLinearColor FabricOrange(1.0f, 0.55f, 0.15f);
+    const FLinearColor FabricCream(0.98f, 0.95f, 0.88f);
     // Metals
     const FLinearColor MetalSilver(0.78f, 0.78f, 0.80f);
     const FLinearColor MetalGold(0.85f, 0.75f, 0.45f);
     const FLinearColor MetalBlack(0.15f, 0.15f, 0.18f);
-    // Walls / floors
-    const FLinearColor WallWhite(0.95f, 0.93f, 0.90f);
-    const FLinearColor WallPink(0.95f, 0.70f, 0.78f);
-    const FLinearColor WallBlue(0.65f, 0.78f, 0.95f);
-    const FLinearColor WallGreen(0.65f, 0.90f, 0.72f);
-    const FLinearColor WallYellow(0.98f, 0.90f, 0.65f);
-    const FLinearColor FloorWood(0.65f, 0.45f, 0.28f);
-    const FLinearColor FloorTile(0.88f, 0.88f, 0.85f);
-    const FLinearColor FloorGrass(0.35f, 0.65f, 0.30f);
-    const FLinearColor FloorSand(0.90f, 0.82f, 0.65f);
-    const FLinearColor FloorConcrete(0.70f, 0.68f, 0.65f);
-    // Sky
-    const FLinearColor SkyTop(0.45f, 0.65f, 0.95f);
-    const FLinearColor SkyBottom(0.75f, 0.88f, 1.00f);
+    // Walls / floors - MORE SATURATED for Sims look
+    const FLinearColor WallWhite(0.98f, 0.96f, 0.93f);
+    const FLinearColor WallPink(1.0f, 0.60f, 0.75f);
+    const FLinearColor WallBlue(0.55f, 0.75f, 1.0f);
+    const FLinearColor WallGreen(0.50f, 0.95f, 0.65f);
+    const FLinearColor WallYellow(1.0f, 0.92f, 0.50f);
+    const FLinearColor FloorWood(0.72f, 0.50f, 0.28f);
+    const FLinearColor FloorTile(0.92f, 0.92f, 0.88f);
+    const FLinearColor FloorGrass(0.25f, 0.75f, 0.25f);
+    const FLinearColor FloorSand(0.95f, 0.85f, 0.60f);
+    const FLinearColor FloorConcrete(0.75f, 0.72f, 0.68f);
+    // Sky - brighter, more vivid Sims sky
+    const FLinearColor SkyTop(0.35f, 0.60f, 1.0f);
+    const FLinearColor SkyBottom(0.70f, 0.88f, 1.0f);
     const FLinearColor SkyNightTop(0.08f, 0.08f, 0.22f);
     const FLinearColor SkyNightBot(0.15f, 0.12f, 0.30f);
     // Characters
@@ -104,16 +104,16 @@ namespace SC {
     const FLinearColor HairBrown(0.35f, 0.22f, 0.12f);
     const FLinearColor HairBlack(0.10f, 0.08f, 0.08f);
     const FLinearColor HairRed(0.65f, 0.25f, 0.15f);
-    const FLinearColor OutfitPink(0.95f, 0.55f, 0.65f);
-    const FLinearColor OutfitBlue(0.35f, 0.50f, 0.80f);
-    const FLinearColor OutfitGreen(0.30f, 0.65f, 0.40f);
-    const FLinearColor OutfitYellow(0.95f, 0.82f, 0.30f);
-    // Nature
-    const FLinearColor TreeTrunk(0.45f, 0.30f, 0.15f);
-    const FLinearColor TreeLeaves(0.25f, 0.55f, 0.22f);
-    const FLinearColor FlowerPink(0.95f, 0.55f, 0.65f);
-    const FLinearColor FlowerYellow(0.98f, 0.90f, 0.35f);
-    const FLinearColor WaterBlue(0.40f, 0.65f, 0.90f);
+    const FLinearColor OutfitPink(1.0f, 0.40f, 0.60f);
+    const FLinearColor OutfitBlue(0.25f, 0.45f, 0.95f);
+    const FLinearColor OutfitGreen(0.20f, 0.75f, 0.35f);
+    const FLinearColor OutfitYellow(1.0f, 0.85f, 0.15f);
+    // Nature - vivid greens and flowers
+    const FLinearColor TreeTrunk(0.50f, 0.32f, 0.12f);
+    const FLinearColor TreeLeaves(0.15f, 0.70f, 0.18f);
+    const FLinearColor FlowerPink(1.0f, 0.45f, 0.60f);
+    const FLinearColor FlowerYellow(1.0f, 0.92f, 0.20f);
+    const FLinearColor WaterBlue(0.25f, 0.60f, 0.95f);
     // Appliances
     const FLinearColor ApplianceWhite(0.92f, 0.92f, 0.90f);
     const FLinearColor ApplianceSteel(0.72f, 0.72f, 0.75f);
@@ -246,10 +246,11 @@ void AEmersynGameMode::SetupIsometricCamera(FVector RoomCenter, float Distance)
     float Yaw = 30.0f;
     FRotator CamRot(Pitch, Yaw, 0.0f);
 
-    // Position camera based on rotation and distance
+    // Position camera for clear Sims-style isometric view showing floor + furniture
     FVector Offset = CamRot.Vector() * (-Distance);
     FVector CamLoc = RoomCenter + Offset;
-    CamLoc.Z = FMath::Max(CamLoc.Z, RoomCenter.Z + Distance * 0.5f);
+    // Ensure camera is high enough to see floor but not too high
+    CamLoc.Z = FMath::Max(CamLoc.Z, RoomCenter.Z + Distance * 0.6f);
 
     ACameraActor* Cam = GetWorld()->SpawnActor<ACameraActor>(CamLoc, CamRot);
     if (Cam)
@@ -262,6 +263,9 @@ void AEmersynGameMode::SetupIsometricCamera(FVector RoomCenter, float Distance)
             PC->GetPawn()->Destroy();
             PC->UnPossess();
         }
+        // CRITICAL: Lock ALL look/move input to prevent camera rotation from touch
+        PC->SetIgnoreLookInput(true);
+        PC->SetIgnoreMoveInput(true);
         // Set UI-only input mode to block ALL game/touch input
         PC->DisableInput(PC);
         FInputModeUIOnly InputMode;
