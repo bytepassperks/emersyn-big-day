@@ -1225,8 +1225,8 @@ namespace EmersynBigDay.Core
 
         private void OnPinchHandler(float delta)
         {
-            if (CameraSystem.CameraController.Instance != null)
-                CameraSystem.CameraController.Instance.Zoom(delta);
+            // Round 52 (Bedrock): Disable zoom input - camera stays locked in optimal position
+            // Fuzz test random pinch gestures were zooming inside character bodies
         }
 
         private void OnObjectTappedHandler(GameObject obj)
@@ -1251,11 +1251,8 @@ namespace EmersynBigDay.Core
 
         private void OnDragHandler(Vector2 pos, Vector2 delta)
         {
-            if (CameraSystem.CameraController.Instance != null)
-            {
-                CameraSystem.CameraController.Instance.OrbitHorizontal(delta.x * 0.01f);
-                CameraSystem.CameraController.Instance.OrbitVertical(-delta.y * 0.01f);
-            }
+            // Round 52 (Bedrock): Disable camera orbit input - camera stays locked in optimal position
+            // Fuzz test random swipe gestures were orbiting camera into character geometry
         }
 
         private void OnActionButton(int idx)
