@@ -639,7 +639,7 @@ namespace EmersynBigDay.Core
             ml.shadowStrength = 0.5f;
             ml.shadowBias = 0.02f;
             ml.shadowNormalBias = 0.3f;
-            ml.shadowResolution = LightShadowResolution.High;
+            ml.shadowResolution = UnityEngine.Rendering.LightShadowResolution.High;
             lo.transform.rotation = Quaternion.Euler(40f, -30f, 0f);
             ml.cullingMask = ~0;
 
