@@ -25,18 +25,18 @@ namespace EmersynBigDay.CameraSystem
 
         [Header("Zoom")]
         public float MinZoom = 3f;
-        public float MaxZoom = 50f; // Round 22 (Claude 4.5 Bedrock): Allow very far zoom for dollhouse view
+        public float MaxZoom = 40f; // Round 23 (Claude 4.5 Bedrock): Balanced max zoom
         public float ZoomSpeed = 2f;
-        public float CurrentZoom = 35f; // Round 22: Default far enough for full room view
+        public float CurrentZoom = 26f; // Round 23: Sweet spot for full room view
 
         [Header("Orbital Control")]
         public float OrbitSpeed = 120f;
         public float MinPitch = 10f;
         public float MaxPitch = 80f;
-        // Round 22 (Claude 4.5 Bedrock): 55° pitch for steeper overhead dollhouse view
-        public float DefaultPitch = 55f;
+        // Round 23 (Claude 4.5 Bedrock): 50° pitch for balanced dollhouse view
+        public float DefaultPitch = 50f;
         private float currentYaw = 0f;
-        private float currentPitch = 55f; // Round 22: Default 55 degrees for proper overhead view
+        private float currentPitch = 50f; // Round 23: Default 50 degrees for proper overhead view
 
         [Header("Screen Shake")]
         public float ShakeDecay = 5f;
@@ -196,8 +196,8 @@ namespace EmersynBigDay.CameraSystem
         public void ResetToDefault()
         {
             currentYaw = 0f;
-            currentPitch = DefaultPitch; // Round 22: Use configurable pitch
-            CurrentZoom = 35f; // Round 22: Default to full dollhouse view
+            currentPitch = DefaultPitch; // Round 23: Use configurable pitch
+            CurrentZoom = 26f; // Round 23: Default to full room view
             isTransitioning = false;
         }
 

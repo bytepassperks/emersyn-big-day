@@ -60,18 +60,20 @@ namespace EmersynBigDay.Core
             "Bedroom", "Kitchen", "Bathroom", "Park",
             "School", "Arcade", "Studio", "Shop", "Garden"
         };
+        // Round 23 (Claude 4.5 Bedrock): Darker floor colors for strong contrast against pink bg
         private static readonly Color[] RoomFloorColors = {
-            new Color(0.95f, 0.85f, 0.90f), new Color(0.90f, 0.95f, 0.85f),
-            new Color(0.85f, 0.92f, 0.98f), new Color(0.70f, 0.90f, 0.60f),
-            new Color(0.95f, 0.92f, 0.80f), new Color(0.80f, 0.75f, 0.95f),
-            new Color(0.98f, 0.90f, 0.80f), new Color(0.95f, 0.88f, 0.75f),
-            new Color(0.75f, 0.92f, 0.75f)
+            new Color(0.55f, 0.40f, 0.30f), new Color(0.45f, 0.55f, 0.35f),
+            new Color(0.40f, 0.50f, 0.60f), new Color(0.35f, 0.55f, 0.25f),
+            new Color(0.60f, 0.50f, 0.35f), new Color(0.35f, 0.30f, 0.50f),
+            new Color(0.55f, 0.45f, 0.35f), new Color(0.50f, 0.45f, 0.30f),
+            new Color(0.30f, 0.50f, 0.30f)
         };
+        // Round 23 (Claude 4.5 Bedrock): Medium-tone wall colors visible against pink bg
         private static readonly Color[] RoomWallColors = {
-            new Color(1.0f, 0.92f, 0.95f), new Color(1.0f, 1.0f, 0.93f),
-            new Color(0.93f, 0.97f, 1.0f), new Color(0.55f, 0.80f, 0.95f),
-            new Color(1.0f, 0.97f, 0.90f), new Color(0.20f, 0.15f, 0.30f),
-            new Color(1.0f, 0.95f, 0.88f), new Color(1.0f, 0.95f, 0.85f),
+            new Color(0.70f, 0.55f, 0.65f), new Color(0.65f, 0.70f, 0.55f),
+            new Color(0.55f, 0.65f, 0.75f), new Color(0.55f, 0.80f, 0.95f),
+            new Color(0.75f, 0.70f, 0.55f), new Color(0.20f, 0.15f, 0.30f),
+            new Color(0.70f, 0.60f, 0.50f), new Color(0.65f, 0.60f, 0.50f),
             new Color(0.55f, 0.80f, 0.95f)
         };
 
@@ -452,8 +454,8 @@ namespace EmersynBigDay.Core
             mainCamera.clearFlags = CameraClearFlags.SolidColor;
             // Round 20 (Claude 4.5 Bedrock): Soft pink background to match room aesthetic
             mainCamera.backgroundColor = new Color(0.95f, 0.88f, 0.92f);
-            // Round 22 (Claude 4.5 Bedrock): FOV 50 for proper dollhouse framing
-            mainCamera.fieldOfView = 50f;
+            // Round 23 (Claude 4.5 Bedrock): FOV 55 — sweet spot between 50 (too narrow) and 60 (too wide)
+            mainCamera.fieldOfView = 55f;
             mainCamera.nearClipPlane = 0.1f;
             mainCamera.farClipPlane = 100f;
             // Claude Bedrock fix #1: FORCE Forward rendering - Deferred fails silently on Android GPUs
@@ -471,20 +473,19 @@ namespace EmersynBigDay.Core
             if (mainCamera.GetComponent<CameraSystem.CameraController>() == null)
             {
                 var ctrl = mainCamera.gameObject.AddComponent<CameraSystem.CameraController>();
-                // Round 22 (Claude 4.5 Bedrock): Zoom 35, Pitch 55° for true Sims 4 dollhouse overhead view
+                // Round 23 (Claude 4.5 Bedrock): Zoom=26, Pitch=50° — sweet spot between R21 (too close) and R22 (too far)
                 ctrl.MinZoom = 10f;
-                ctrl.MaxZoom = 50f;
-                ctrl.CurrentZoom = 35f; // Much further back to see entire room
-                ctrl.DefaultPitch = 55f; // Steeper overhead angle
+                ctrl.MaxZoom = 40f;
+                ctrl.CurrentZoom = 26f; // Full room visible with characters at good size
+                ctrl.DefaultPitch = 50f; // Balanced overhead angle
                 ctrl.SpringStiffness = 120f;
                 ctrl.SpringDamping = 25f;
-                ctrl.Offset = new Vector3(0f, 25f, -20f);
+                ctrl.Offset = new Vector3(0f, 20f, -17f);
             }
-            // Round 22 (Claude 4.5 Bedrock): Set initial camera position for full room view
-            // With Zoom=35, Pitch=55°: direction=(0, 0.819, -0.574), pos = (0, 28.67, -20.07)
-            float pitchRad = 55f * Mathf.Deg2Rad;
+            // Round 23 (Claude 4.5 Bedrock): Camera at (0, 19.9, -16.7) — shows full room
+            float pitchRad = 50f * Mathf.Deg2Rad;
             Vector3 camDir = new Vector3(0f, Mathf.Sin(pitchRad), -Mathf.Cos(pitchRad));
-            mainCamera.transform.position = camDir * 35f;
+            mainCamera.transform.position = camDir * 26f;
             mainCamera.transform.LookAt(new Vector3(0f, 1.5f, 0f));
         }
 
