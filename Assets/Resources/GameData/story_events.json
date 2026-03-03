@@ -1,0 +1,1194 @@
+[
+  {
+    "id": "evt_001",
+    "title": "Surprise Birthday Bash",
+    "description": "Emersyn's friends have secretly planned a surprise birthday party! Help decorate and keep the secret until the big reveal!",
+    "type": "surprise",
+    "duration_minutes": 25,
+    "rewards": {
+      "coins": 50,
+      "stars": 3,
+      "xp": 75
+    },
+    "required_room": "living_room",
+    "characters_involved": [
+      "Ava",
+      "Leo",
+      "Mia",
+      "Noah"
+    ],
+    "mood_effect": {
+      "fun": 25,
+      "social": 20
+    },
+    "rarity": "rare",
+    "season": "any",
+    "time_of_day": "afternoon"
+  },
+  {
+    "id": "evt_002",
+    "title": "Lost Kitten Rescue",
+    "description": "A tiny kitten is meowing behind the garden shed! Help Emersyn earn its trust with gentle pets and yummy treats.",
+    "type": "adventure",
+    "duration_minutes": 15,
+    "rewards": {
+      "coins": 30,
+      "stars": 2,
+      "xp": 50
+    },
+    "required_room": "garden",
+    "characters_involved": [
+      "Ava"
+    ],
+    "mood_effect": {
+      "fun": 15,
+      "social": 10
+    },
+    "rarity": "uncommon",
+    "season": "any",
+    "time_of_day": "morning"
+  },
+  {
+    "id": "evt_003",
+    "title": "Backyard Talent Show",
+    "description": "The neighborhood kids are putting on a talent show! Will Emersyn sing, dance, or show off a magic trick?",
+    "type": "celebration",
+    "duration_minutes": 20,
+    "rewards": {
+      "coins": 40,
+      "stars": 2,
+      "xp": 60
+    },
+    "required_room": "garden",
+    "characters_involved": [
+      "Leo",
+      "Mia",
+      "Sophie",
+      "Jake"
+    ],
+    "mood_effect": {
+      "fun": 20,
+      "social": 25
+    },
+    "rarity": "uncommon",
+    "season": "summer",
+    "time_of_day": "afternoon"
+  },
+  {
+    "id": "evt_004",
+    "title": "Cookie Baking Contest",
+    "description": "It's time for the annual cookie contest! Mix, bake, and decorate the most delicious cookies to win the golden spatula!",
+    "type": "challenge",
+    "duration_minutes": 25,
+    "rewards": {
+      "coins": 45,
+      "stars": 3,
+      "xp": 70
+    },
+    "required_room": "kitchen",
+    "characters_involved": [
+      "Grandma Rose",
+      "Ava"
+    ],
+    "mood_effect": {
+      "fun": 20,
+      "social": 15
+    },
+    "rarity": "uncommon",
+    "season": "fall",
+    "time_of_day": "morning"
+  },
+  {
+    "id": "evt_005",
+    "title": "Volcano Science Experiment",
+    "description": "Bubbling baking soda and vinegar create an erupting volcano! Don't forget your safety goggles for this messy fun!",
+    "type": "discovery",
+    "duration_minutes": 15,
+    "rewards": {
+      "coins": 25,
+      "stars": 2,
+      "xp": 45
+    },
+    "required_room": "kitchen",
+    "characters_involved": [
+      "Leo"
+    ],
+    "mood_effect": {
+      "fun": 25,
+      "social": 10
+    },
+    "rarity": "common",
+    "season": "any",
+    "time_of_day": "afternoon"
+  },
+  {
+    "id": "evt_006",
+    "title": "Pirate Treasure Hunt",
+    "description": "An old map appeared under Emersyn's pillow! Follow the clues around the house to find the hidden treasure chest!",
+    "type": "adventure",
+    "duration_minutes": 30,
+    "rewards": {
+      "coins": 60,
+      "stars": 4,
+      "xp": 100
+    },
+    "required_room": "any",
+    "characters_involved": [
+      "Noah",
+      "Jake"
+    ],
+    "mood_effect": {
+      "fun": 30,
+      "social": 20
+    },
+    "rarity": "rare",
+    "season": "any",
+    "time_of_day": "morning"
+  },
+  {
+    "id": "evt_007",
+    "title": "Rainy Day Blanket Fort",
+    "description": "Thunder rumbles outside, but inside it's cozy! Build the ultimate blanket fort and tell stories by flashlight.",
+    "type": "creative",
+    "duration_minutes": 20,
+    "rewards": {
+      "coins": 30,
+      "stars": 2,
+      "xp": 50
+    },
+    "required_room": "living_room",
+    "characters_involved": [
+      "Mia"
+    ],
+    "mood_effect": {
+      "fun": 25,
+      "social": 15
+    },
+    "rarity": "common",
+    "season": "spring",
+    "time_of_day": "afternoon"
+  },
+  {
+    "id": "evt_008",
+    "title": "Garden Fairy Sighting",
+    "description": "Sparkles flutter between the flowers! A tiny fairy needs help finding her lost wand before sunset.",
+    "type": "discovery",
+    "duration_minutes": 20,
+    "rewards": {
+      "coins": 55,
+      "stars": 3,
+      "xp": 80
+    },
+    "required_room": "garden",
+    "characters_involved": [
+      "Ava"
+    ],
+    "mood_effect": {
+      "fun": 30,
+      "social": 10
+    },
+    "rarity": "legendary",
+    "season": "spring",
+    "time_of_day": "evening"
+  },
+  {
+    "id": "evt_009",
+    "title": "Rainbow Art Exhibition",
+    "description": "Emersyn's artwork is being displayed at the community center! Help arrange the gallery and welcome visitors.",
+    "type": "creative",
+    "duration_minutes": 25,
+    "rewards": {
+      "coins": 45,
+      "stars": 3,
+      "xp": 65
+    },
+    "required_room": "school",
+    "characters_involved": [
+      "Ms. Penny",
+      "Sophie"
+    ],
+    "mood_effect": {
+      "fun": 20,
+      "social": 20
+    },
+    "rarity": "uncommon",
+    "season": "any",
+    "time_of_day": "afternoon"
+  },
+  {
+    "id": "evt_010",
+    "title": "Pajama Dance Party",
+    "description": "Crank up the music and dance in your PJs! The living room becomes a disco with colorful lights everywhere!",
+    "type": "celebration",
+    "duration_minutes": 15,
+    "rewards": {
+      "coins": 25,
+      "stars": 2,
+      "xp": 40
+    },
+    "required_room": "living_room",
+    "characters_involved": [
+      "Mia",
+      "Ava",
+      "Sophie"
+    ],
+    "mood_effect": {
+      "fun": 30,
+      "social": 25
+    },
+    "rarity": "common",
+    "season": "any",
+    "time_of_day": "evening"
+  },
+  {
+    "id": "evt_011",
+    "title": "Starlight Sleepover",
+    "description": "Best friends, sleeping bags, and midnight snacks! Play games and whisper secrets until everyone falls asleep.",
+    "type": "social",
+    "duration_minutes": 30,
+    "rewards": {
+      "coins": 50,
+      "stars": 3,
+      "xp": 75
+    },
+    "required_room": "bedroom",
+    "characters_involved": [
+      "Ava",
+      "Mia",
+      "Sophie"
+    ],
+    "mood_effect": {
+      "fun": 25,
+      "social": 30
+    },
+    "rarity": "uncommon",
+    "season": "any",
+    "time_of_day": "evening"
+  },
+  {
+    "id": "evt_012",
+    "title": "Adorable Pet Parade",
+    "description": "Dress up your pets and march through the park! Prizes for cutest costume, best trick, and waggiest tail!",
+    "type": "celebration",
+    "duration_minutes": 20,
+    "rewards": {
+      "coins": 40,
+      "stars": 2,
+      "xp": 55
+    },
+    "required_room": "park",
+    "characters_involved": [
+      "Leo",
+      "Noah",
+      "Emma"
+    ],
+    "mood_effect": {
+      "fun": 25,
+      "social": 20
+    },
+    "rarity": "uncommon",
+    "season": "summer",
+    "time_of_day": "morning"
+  },
+  {
+    "id": "evt_013",
+    "title": "Sparkle Fashion Show",
+    "description": "Design outfits and strut down the runway! Mix and match accessories to create the most fabulous looks!",
+    "type": "creative",
+    "duration_minutes": 20,
+    "rewards": {
+      "coins": 35,
+      "stars": 2,
+      "xp": 50
+    },
+    "required_room": "bedroom",
+    "characters_involved": [
+      "Sophie",
+      "Mia"
+    ],
+    "mood_effect": {
+      "fun": 25,
+      "social": 20
+    },
+    "rarity": "common",
+    "season": "any",
+    "time_of_day": "afternoon"
+  },
+  {
+    "id": "evt_014",
+    "title": "Campfire Story Night",
+    "description": "Gather around the crackling fire for spooky-silly stories, roasted marshmallows, and stargazing!",
+    "type": "social",
+    "duration_minutes": 25,
+    "rewards": {
+      "coins": 40,
+      "stars": 3,
+      "xp": 60
+    },
+    "required_room": "garden",
+    "characters_involved": [
+      "Dad",
+      "Leo",
+      "Noah",
+      "Ava"
+    ],
+    "mood_effect": {
+      "fun": 25,
+      "social": 25
+    },
+    "rarity": "uncommon",
+    "season": "summer",
+    "time_of_day": "evening"
+  },
+  {
+    "id": "evt_015",
+    "title": "Chase the Rainbow",
+    "description": "A beautiful rainbow appeared after the rain! Run through the neighborhood to find where it touches the ground!",
+    "type": "adventure",
+    "duration_minutes": 15,
+    "rewards": {
+      "coins": 35,
+      "stars": 2,
+      "xp": 55
+    },
+    "required_room": "park",
+    "characters_involved": [
+      "Ava"
+    ],
+    "mood_effect": {
+      "fun": 30,
+      "social": 10
+    },
+    "rarity": "rare",
+    "season": "spring",
+    "time_of_day": "afternoon"
+  },
+  {
+    "id": "evt_016",
+    "title": "Mysterious Letter Arrives",
+    "description": "A sparkly envelope with no return address! Solve the riddles inside to discover a secret admirer's identity.",
+    "type": "discovery",
+    "duration_minutes": 20,
+    "rewards": {
+      "coins": 35,
+      "stars": 2,
+      "xp": 50
+    },
+    "required_room": "bedroom",
+    "characters_involved": [],
+    "mood_effect": {
+      "fun": 20,
+      "social": 5
+    },
+    "rarity": "uncommon",
+    "season": "any",
+    "time_of_day": "morning"
+  },
+  {
+    "id": "evt_017",
+    "title": "Bubble Bath Bonanza",
+    "description": "The bathtub overflows with rainbow bubbles! Create bubble sculptures and find the hidden rubber ducky family.",
+    "type": "surprise",
+    "duration_minutes": 10,
+    "rewards": {
+      "coins": 20,
+      "stars": 1,
+      "xp": 30
+    },
+    "required_room": "bathroom",
+    "characters_involved": [],
+    "mood_effect": {
+      "fun": 25,
+      "social": 0
+    },
+    "rarity": "common",
+    "season": "any",
+    "time_of_day": "evening"
+  },
+  {
+    "id": "evt_018",
+    "title": "Lemonade Stand Success",
+    "description": "Set up a lemonade stand and serve thirsty neighbors! Mix special flavors and collect coins from happy customers.",
+    "type": "challenge",
+    "duration_minutes": 20,
+    "rewards": {
+      "coins": 55,
+      "stars": 3,
+      "xp": 65
+    },
+    "required_room": "garden",
+    "characters_involved": [
+      "Leo",
+      "Emma"
+    ],
+    "mood_effect": {
+      "fun": 20,
+      "social": 25
+    },
+    "rarity": "common",
+    "season": "summer",
+    "time_of_day": "afternoon"
+  },
+  {
+    "id": "evt_019",
+    "title": "Snowflake Catching Contest",
+    "description": "The first snow is falling! Catch snowflakes on your tongue and see who can find the most unique patterns.",
+    "type": "nature",
+    "duration_minutes": 15,
+    "rewards": {
+      "coins": 30,
+      "stars": 2,
+      "xp": 45
+    },
+    "required_room": "garden",
+    "characters_involved": [
+      "Noah",
+      "Mia"
+    ],
+    "mood_effect": {
+      "fun": 25,
+      "social": 15
+    },
+    "rarity": "uncommon",
+    "season": "winter",
+    "time_of_day": "morning"
+  },
+  {
+    "id": "evt_020",
+    "title": "Secret Ingredient Pancakes",
+    "description": "Dad's making his famous pancakes but forgot the secret ingredient! Search the kitchen to save breakfast!",
+    "type": "adventure",
+    "duration_minutes": 15,
+    "rewards": {
+      "coins": 30,
+      "stars": 2,
+      "xp": 45
+    },
+    "required_room": "kitchen",
+    "characters_involved": [
+      "Dad"
+    ],
+    "mood_effect": {
+      "fun": 20,
+      "social": 15
+    },
+    "rarity": "common",
+    "season": "any",
+    "time_of_day": "morning"
+  },
+  {
+    "id": "evt_021",
+    "title": "Playground Champion",
+    "description": "Master all the playground equipment to become the ultimate Playground Champion! Swing, slide, and climb!",
+    "type": "challenge",
+    "duration_minutes": 20,
+    "rewards": {
+      "coins": 40,
+      "stars": 2,
+      "xp": 60
+    },
+    "required_room": "playground",
+    "characters_involved": [
+      "Jake",
+      "Leo"
+    ],
+    "mood_effect": {
+      "fun": 30,
+      "social": 15
+    },
+    "rarity": "common",
+    "season": "any",
+    "time_of_day": "afternoon"
+  },
+  {
+    "id": "evt_022",
+    "title": "Butterfly Garden Magic",
+    "description": "Colorful butterflies have arrived in the garden! Plant special flowers and create a butterfly sanctuary.",
+    "type": "nature",
+    "duration_minutes": 20,
+    "rewards": {
+      "coins": 35,
+      "stars": 2,
+      "xp": 50
+    },
+    "required_room": "garden",
+    "characters_involved": [
+      "Mom"
+    ],
+    "mood_effect": {
+      "fun": 20,
+      "social": 10
+    },
+    "rarity": "uncommon",
+    "season": "spring",
+    "time_of_day": "morning"
+  },
+  {
+    "id": "evt_023",
+    "title": "Teddy Bear Picnic",
+    "description": "All stuffed animals are invited to a fancy garden picnic! Set up tiny tables and serve pretend tea and cakes.",
+    "type": "creative",
+    "duration_minutes": 15,
+    "rewards": {
+      "coins": 25,
+      "stars": 1,
+      "xp": 35
+    },
+    "required_room": "garden",
+    "characters_involved": [
+      "Ava"
+    ],
+    "mood_effect": {
+      "fun": 20,
+      "social": 15
+    },
+    "rarity": "common",
+    "season": "summer",
+    "time_of_day": "afternoon"
+  },
+  {
+    "id": "evt_024",
+    "title": "Glow Stick Adventure",
+    "description": "The power went out! Navigate through the house with glow sticks and discover the fun of darkness!",
+    "type": "adventure",
+    "duration_minutes": 15,
+    "rewards": {
+      "coins": 30,
+      "stars": 2,
+      "xp": 45
+    },
+    "required_room": "any",
+    "characters_involved": [
+      "Leo",
+      "Mia"
+    ],
+    "mood_effect": {
+      "fun": 25,
+      "social": 15
+    },
+    "rarity": "uncommon",
+    "season": "any",
+    "time_of_day": "evening"
+  },
+  {
+    "id": "evt_025",
+    "title": "Spelling Bee Star",
+    "description": "The school spelling bee is today! Practice tricky words and spell your way to the golden trophy!",
+    "type": "challenge",
+    "duration_minutes": 20,
+    "rewards": {
+      "coins": 45,
+      "stars": 3,
+      "xp": 70
+    },
+    "required_room": "school",
+    "characters_involved": [
+      "Ms. Penny",
+      "Sophie",
+      "Noah"
+    ],
+    "mood_effect": {
+      "fun": 15,
+      "social": 20
+    },
+    "rarity": "uncommon",
+    "season": "any",
+    "time_of_day": "morning"
+  },
+  {
+    "id": "evt_026",
+    "title": "Puddle Jumping Spree",
+    "description": "Rain boots on! Find the biggest, splashiest puddles and jump until you're soaked with giggles!",
+    "type": "nature",
+    "duration_minutes": 10,
+    "rewards": {
+      "coins": 20,
+      "stars": 1,
+      "xp": 30
+    },
+    "required_room": "park",
+    "characters_involved": [
+      "Leo"
+    ],
+    "mood_effect": {
+      "fun": 30,
+      "social": 10
+    },
+    "rarity": "common",
+    "season": "spring",
+    "time_of_day": "afternoon"
+  },
+  {
+    "id": "evt_027",
+    "title": "Cupcake Decoration Station",
+    "description": "Plain cupcakes need your artistic touch! Swirl frosting, add sprinkles, and create edible masterpieces!",
+    "type": "creative",
+    "duration_minutes": 15,
+    "rewards": {
+      "coins": 30,
+      "stars": 2,
+      "xp": 45
+    },
+    "required_room": "kitchen",
+    "characters_involved": [
+      "Mom",
+      "Ava"
+    ],
+    "mood_effect": {
+      "fun": 25,
+      "social": 15
+    },
+    "rarity": "common",
+    "season": "any",
+    "time_of_day": "afternoon"
+  },
+  {
+    "id": "evt_028",
+    "title": "Firefly Catching Evening",
+    "description": "The garden twinkles with fireflies! Gently catch them in a jar and make a magical glowing lantern.",
+    "type": "nature",
+    "duration_minutes": 15,
+    "rewards": {
+      "coins": 35,
+      "stars": 2,
+      "xp": 50
+    },
+    "required_room": "garden",
+    "characters_involved": [
+      "Dad"
+    ],
+    "mood_effect": {
+      "fun": 25,
+      "social": 10
+    },
+    "rarity": "uncommon",
+    "season": "summer",
+    "time_of_day": "evening"
+  },
+  {
+    "id": "evt_029",
+    "title": "Friendship Bracelet Workshop",
+    "description": "Colorful threads and beads everywhere! Create matching friendship bracelets for your besties.",
+    "type": "creative",
+    "duration_minutes": 20,
+    "rewards": {
+      "coins": 30,
+      "stars": 2,
+      "xp": 45
+    },
+    "required_room": "bedroom",
+    "characters_involved": [
+      "Ava",
+      "Sophie"
+    ],
+    "mood_effect": {
+      "fun": 20,
+      "social": 25
+    },
+    "rarity": "common",
+    "season": "any",
+    "time_of_day": "afternoon"
+  },
+  {
+    "id": "evt_030",
+    "title": "Magical Music Box Mystery",
+    "description": "An antique music box appeared on the shelf! Wind it up to discover its enchanted melody and hidden secret.",
+    "type": "discovery",
+    "duration_minutes": 15,
+    "rewards": {
+      "coins": 40,
+      "stars": 2,
+      "xp": 55
+    },
+    "required_room": "living_room",
+    "characters_involved": [
+      "Grandma Rose"
+    ],
+    "mood_effect": {
+      "fun": 20,
+      "social": 10
+    },
+    "rarity": "rare",
+    "season": "any",
+    "time_of_day": "evening"
+  },
+  {
+    "id": "evt_031",
+    "title": "Veggie Garden Harvest",
+    "description": "The vegetables are ready to pick! Harvest carrots, tomatoes, and surprise veggies hiding underground.",
+    "type": "nature",
+    "duration_minutes": 15,
+    "rewards": {
+      "coins": 35,
+      "stars": 2,
+      "xp": 50
+    },
+    "required_room": "garden",
+    "characters_involved": [
+      "Grandpa Joe"
+    ],
+    "mood_effect": {
+      "fun": 15,
+      "social": 15
+    },
+    "rarity": "common",
+    "season": "fall",
+    "time_of_day": "morning"
+  },
+  {
+    "id": "evt_032",
+    "title": "Paper Airplane Tournament",
+    "description": "Fold the perfect paper airplane and compete for distance, accuracy, and coolest loop-de-loops!",
+    "type": "challenge",
+    "duration_minutes": 15,
+    "rewards": {
+      "coins": 25,
+      "stars": 2,
+      "xp": 40
+    },
+    "required_room": "playground",
+    "characters_involved": [
+      "Noah",
+      "Jake",
+      "Leo"
+    ],
+    "mood_effect": {
+      "fun": 25,
+      "social": 20
+    },
+    "rarity": "common",
+    "season": "any",
+    "time_of_day": "afternoon"
+  },
+  {
+    "id": "evt_033",
+    "title": "Cozy Reading Corner",
+    "description": "Build a pillow nest and dive into an exciting storybook! Choose your own adventure as you read along.",
+    "type": "creative",
+    "duration_minutes": 20,
+    "rewards": {
+      "coins": 25,
+      "stars": 2,
+      "xp": 45
+    },
+    "required_room": "bedroom",
+    "characters_involved": [],
+    "mood_effect": {
+      "fun": 20,
+      "social": 0
+    },
+    "rarity": "common",
+    "season": "any",
+    "time_of_day": "evening"
+  },
+  {
+    "id": "evt_034",
+    "title": "Ice Cream Sundae Party",
+    "description": "Build the ultimate ice cream sundae! Stack scoops, drizzle sauces, and pile on the toppings!",
+    "type": "celebration",
+    "duration_minutes": 15,
+    "rewards": {
+      "coins": 30,
+      "stars": 2,
+      "xp": 45
+    },
+    "required_room": "kitchen",
+    "characters_involved": [
+      "Mia",
+      "Leo",
+      "Ava"
+    ],
+    "mood_effect": {
+      "fun": 30,
+      "social": 20
+    },
+    "rarity": "common",
+    "season": "summer",
+    "time_of_day": "afternoon"
+  },
+  {
+    "id": "evt_035",
+    "title": "Leaf Pile Jump-a-thon",
+    "description": "Rake up the biggest leaf pile ever and take turns jumping in! Who can make the leaves fly highest?",
+    "type": "nature",
+    "duration_minutes": 15,
+    "rewards": {
+      "coins": 25,
+      "stars": 1,
+      "xp": 35
+    },
+    "required_room": "garden",
+    "characters_involved": [
+      "Noah",
+      "Emma"
+    ],
+    "mood_effect": {
+      "fun": 30,
+      "social": 15
+    },
+    "rarity": "common",
+    "season": "fall",
+    "time_of_day": "afternoon"
+  },
+  {
+    "id": "evt_036",
+    "title": "Wish Upon a Star",
+    "description": "A shooting star streaks across the night sky! Make a wish and create a constellation map together.",
+    "type": "discovery",
+    "duration_minutes": 15,
+    "rewards": {
+      "coins": 40,
+      "stars": 3,
+      "xp": 60
+    },
+    "required_room": "garden",
+    "characters_involved": [
+      "Mom"
+    ],
+    "mood_effect": {
+      "fun": 20,
+      "social": 15
+    },
+    "rarity": "rare",
+    "season": "any",
+    "time_of_day": "evening"
+  },
+  {
+    "id": "evt_037",
+    "title": "Obstacle Course Champion",
+    "description": "Set up an epic obstacle course in the backyard! Crawl, jump, balance, and race to beat the clock!",
+    "type": "challenge",
+    "duration_minutes": 20,
+    "rewards": {
+      "coins": 40,
+      "stars": 2,
+      "xp": 55
+    },
+    "required_room": "garden",
+    "characters_involved": [
+      "Jake",
+      "Leo"
+    ],
+    "mood_effect": {
+      "fun": 30,
+      "social": 15
+    },
+    "rarity": "common",
+    "season": "any",
+    "time_of_day": "morning"
+  },
+  {
+    "id": "evt_038",
+    "title": "Snowman Building Contest",
+    "description": "Roll the perfect snowballs and build a snowman family! Add creative accessories to win the contest!",
+    "type": "creative",
+    "duration_minutes": 25,
+    "rewards": {
+      "coins": 40,
+      "stars": 3,
+      "xp": 60
+    },
+    "required_room": "garden",
+    "characters_involved": [
+      "Ava",
+      "Noah",
+      "Mia"
+    ],
+    "mood_effect": {
+      "fun": 30,
+      "social": 20
+    },
+    "rarity": "uncommon",
+    "season": "winter",
+    "time_of_day": "morning"
+  },
+  {
+    "id": "evt_039",
+    "title": "Hot Cocoa Café",
+    "description": "Open a pretend café serving delicious hot cocoa! Add marshmallows, whipped cream, and sprinkles!",
+    "type": "social",
+    "duration_minutes": 15,
+    "rewards": {
+      "coins": 25,
+      "stars": 2,
+      "xp": 40
+    },
+    "required_room": "kitchen",
+    "characters_involved": [
+      "Sophie",
+      "Emma"
+    ],
+    "mood_effect": {
+      "fun": 20,
+      "social": 20
+    },
+    "rarity": "common",
+    "season": "winter",
+    "time_of_day": "afternoon"
+  },
+  {
+    "id": "evt_040",
+    "title": "Time Capsule Creation",
+    "description": "Gather special treasures and bury a time capsule in the garden! Write a letter to your future self.",
+    "type": "discovery",
+    "duration_minutes": 25,
+    "rewards": {
+      "coins": 45,
+      "stars": 3,
+      "xp": 70
+    },
+    "required_room": "garden",
+    "characters_involved": [
+      "Ava",
+      "Leo"
+    ],
+    "mood_effect": {
+      "fun": 20,
+      "social": 20
+    },
+    "rarity": "rare",
+    "season": "any",
+    "time_of_day": "afternoon"
+  },
+  {
+    "id": "evt_041",
+    "title": "Karaoke Superstar",
+    "description": "Grab the microphone and belt out your favorite songs! Perform for an audience of stuffed animals and friends!",
+    "type": "celebration",
+    "duration_minutes": 15,
+    "rewards": {
+      "coins": 30,
+      "stars": 2,
+      "xp": 45
+    },
+    "required_room": "living_room",
+    "characters_involved": [
+      "Mia",
+      "Sophie"
+    ],
+    "mood_effect": {
+      "fun": 30,
+      "social": 20
+    },
+    "rarity": "common",
+    "season": "any",
+    "time_of_day": "evening"
+  },
+  {
+    "id": "evt_042",
+    "title": "Cloud Shape Gazing",
+    "description": "Lie in the grass and find shapes in the clouds! Is that a bunny? A dragon? A giant cupcake?",
+    "type": "nature",
+    "duration_minutes": 10,
+    "rewards": {
+      "coins": 15,
+      "stars": 1,
+      "xp": 25
+    },
+    "required_room": "park",
+    "characters_involved": [
+      "Ava"
+    ],
+    "mood_effect": {
+      "fun": 20,
+      "social": 15
+    },
+    "rarity": "common",
+    "season": "summer",
+    "time_of_day": "afternoon"
+  },
+  {
+    "id": "evt_043",
+    "title": "Scavenger Hunt Scramble",
+    "description": "A list of mysterious items to find around the house! Race against time to collect them all!",
+    "type": "adventure",
+    "duration_minutes": 20,
+    "rewards": {
+      "coins": 40,
+      "stars": 2,
+      "xp": 55
+    },
+    "required_room": "any",
+    "characters_involved": [
+      "Leo",
+      "Emma"
+    ],
+    "mood_effect": {
+      "fun": 25,
+      "social": 15
+    },
+    "rarity": "common",
+    "season": "any",
+    "time_of_day": "morning"
+  },
+  {
+    "id": "evt_044",
+    "title": "Glitter Slime Laboratory",
+    "description": "Mix up colorful, sparkly slime! Experiment with different ingredients to create the perfect stretch!",
+    "type": "creative",
+    "duration_minutes": 20,
+    "rewards": {
+      "coins": 30,
+      "stars": 2,
+      "xp": 50
+    },
+    "required_room": "kitchen",
+    "characters_involved": [
+      "Mia"
+    ],
+    "mood_effect": {
+      "fun": 30,
+      "social": 10
+    },
+    "rarity": "common",
+    "season": "any",
+    "time_of_day": "afternoon"
+  },
+  {
+    "id": "evt_045",
+    "title": "Royal Tea Party",
+    "description": "Dress up fancy and host a royal tea party! Practice your best manners while sipping pretend tea.",
+    "type": "social",
+    "duration_minutes": 20,
+    "rewards": {
+      "coins": 35,
+      "stars": 2,
+      "xp": 50
+    },
+    "required_room": "living_room",
+    "characters_involved": [
+      "Ava",
+      "Sophie",
+      "Emma"
+    ],
+    "mood_effect": {
+      "fun": 20,
+      "social": 30
+    },
+    "rarity": "uncommon",
+    "season": "any",
+    "time_of_day": "afternoon"
+  },
+  {
+    "id": "evt_046",
+    "title": "Golden Egg Hunt",
+    "description": "Sparkly eggs are hidden everywhere! Search high and low to find them all before time runs out!",
+    "type": "adventure",
+    "duration_minutes": 20,
+    "rewards": {
+      "coins": 50,
+      "stars": 3,
+      "xp": 70
+    },
+    "required_room": "garden",
+    "characters_involved": [
+      "Noah",
+      "Mia",
+      "Leo"
+    ],
+    "mood_effect": {
+      "fun": 30,
+      "social": 20
+    },
+    "rarity": "rare",
+    "season": "spring",
+    "time_of_day": "morning"
+  },
+  {
+    "id": "evt_047",
+    "title": "Pillow Fight Frenzy",
+    "description": "Grab your fluffiest pillow and let the feathers fly! Last one standing wins the pillow crown!",
+    "type": "surprise",
+    "duration_minutes": 10,
+    "rewards": {
+      "coins": 20,
+      "stars": 1,
+      "xp": 30
+    },
+    "required_room": "bedroom",
+    "characters_involved": [
+      "Leo",
+      "Noah"
+    ],
+    "mood_effect": {
+      "fun": 35,
+      "social": 20
+    },
+    "rarity": "common",
+    "season": "any",
+    "time_of_day": "evening"
+  },
+  {
+    "id": "evt_048",
+    "title": "Unicorn Sighting",
+    "description": "A magical unicorn was spotted near the garden! Leave out rainbow treats and wait quietly to see it!",
+    "type": "discovery",
+    "duration_minutes": 20,
+    "rewards": {
+      "coins": 65,
+      "stars": 4,
+      "xp": 90
+    },
+    "required_room": "garden",
+    "characters_involved": [
+      "Ava"
+    ],
+    "mood_effect": {
+      "fun": 35,
+      "social": 10
+    },
+    "rarity": "legendary",
+    "season": "any",
+    "time_of_day": "evening"
+  },
+  {
+    "id": "evt_049",
+    "title": "Breakfast in Bed Surprise",
+    "description": "Sneak into the kitchen and prepare a special breakfast tray for someone you love! Don't spill the juice!",
+    "type": "surprise",
+    "duration_minutes": 15,
+    "rewards": {
+      "coins": 35,
+      "stars": 2,
+      "xp": 50
+    },
+    "required_room": "kitchen",
+    "characters_involved": [
+      "Mom"
+    ],
+    "mood_effect": {
+      "fun": 20,
+      "social": 25
+    },
+    "rarity": "uncommon",
+    "season": "any",
+    "time_of_day": "morning"
+  },
+  {
+    "id": "evt_050",
+    "title": "New Year Countdown Party",
+    "description": "Decorate with streamers and prepare for the big countdown! Make noise with pots and pans at midnight!",
+    "type": "celebration",
+    "duration_minutes": 25,
+    "rewards": {
+      "coins": 55,
+      "stars": 4,
+      "xp": 85
+    },
+    "required_room": "living_room",
+    "characters_involved": [
+      "Mom",
+      "Dad",
+      "Leo",
+      "Ava",
+      "Mia"
+    ],
+    "mood_effect": {
+      "fun": 35,
+      "social": 30
+    },
+    "rarity": "legendary",
+    "season": "winter",
+    "time_of_day": "evening"
+  }
+]

@@ -1,0 +1,16 @@
+{
+  "name": "EmersynsBigDay.MiniGames",
+  "rootNamespace": "EmersynsBigDay.MiniGames",
+  "references": [
+    "EmersynsBigDay"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

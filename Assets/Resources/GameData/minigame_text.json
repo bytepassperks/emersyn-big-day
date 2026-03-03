@@ -1,0 +1,512 @@
+[
+  {
+    "id": "game_cooking_challenge",
+    "name": "Gol Gappe Kitchen",
+    "description": "Help Emersyn make delicious gol gappe in her kitchen! Mix the dough, fry the puris, and prepare the tangy pani. Serve them to friends and family before time runs out!",
+    "instructions": "Tap ingredients to add them to your bowl. Swipe to mix the dough and tap the puris to fry them at the right moment. Fill each puri with the perfect amount of pani and serve to waiting customers!",
+    "flavor_text": "\"The crunchier the puri, the happier the tummy!\" 🥟",
+    "difficulty_levels": [
+      {
+        "level": 1,
+        "name": "Beginner Chef",
+        "description": "Make 5 gol gappe with simple recipes and generous time limits"
+      },
+      {
+        "level": 2,
+        "name": "Home Cook",
+        "description": "Make 10 gol gappe with special toppings and faster service"
+      },
+      {
+        "level": 3,
+        "name": "Master Chef",
+        "description": "Make 15 gol gappe with secret ingredients and impatient customers"
+      }
+    ],
+    "rewards": {
+      "coins": 25,
+      "xp": 60
+    },
+    "tips": [
+      "Watch the frying pan - golden puris score more points!",
+      "Each friend has a favorite pani flavor - Ava loves extra spicy!",
+      "Combo bonus: Serve 3 perfect gol gappe in a row for bonus coins"
+    ],
+    "unlock_level": 1
+  },
+  {
+    "id": "game_fashion_runway",
+    "name": "Fashion Runway Star",
+    "description": "It's fashion show time at the mall! Help Emersyn pick the perfect outfits, accessories, and matching juttis for the runway. Mix traditional Indian wear with trendy styles to wow the judges!",
+    "instructions": "Drag and drop clothing items onto Emersyn. Match colors and styles to fit the theme shown at the top. Walk the runway by tapping to the beat and strike a pose at the end!",
+    "flavor_text": "\"Lehenga today, jeans tomorrow - fashion is MY superpower!\" ✨",
+    "difficulty_levels": [
+      {
+        "level": 1,
+        "name": "Fashion Newbie",
+        "description": "Simple themes with helpful hints and unlimited outfit changes"
+      },
+      {
+        "level": 2,
+        "name": "Style Star",
+        "description": "Trickier themes with limited time and accessory matching"
+      },
+      {
+        "level": 3,
+        "name": "Runway Queen",
+        "description": "Surprise themes, strict judging, and bonus choreography"
+      }
+    ],
+    "rewards": {
+      "coins": 30,
+      "xp": 55
+    },
+    "tips": [
+      "Sparkly bindis go with everything!",
+      "Watch the theme carefully - Diwali themes love gold and red",
+      "Mia gives fashion advice if you tap on her in the audience"
+    ],
+    "unlock_level": 1
+  },
+  {
+    "id": "game_garden_grow",
+    "name": "Emersyn's Magic Garden",
+    "description": "Grow a beautiful garden with Emersyn! Plant seeds, water them daily, and watch flowers bloom. Create stunning rangoli patterns with the flowers you grow and attract colorful butterflies!",
+    "instructions": "Tap empty soil to plant seeds. Drag the watering can over plants to help them grow. Collect bloomed flowers and arrange them into rangoli designs by placing them in the glowing spots.",
+    "flavor_text": "\"My garden grows happiness... and marigolds for Diwali!\" 🌸",
+    "difficulty_levels": [
+      {
+        "level": 1,
+        "name": "Little Gardener",
+        "description": "Fast-growing flowers with simple rangoli patterns"
+      },
+      {
+        "level": 2,
+        "name": "Green Thumb",
+        "description": "Different flower types with weather challenges"
+      },
+      {
+        "level": 3,
+        "name": "Garden Expert",
+        "description": "Rare flowers, complex rangoli, and seasonal events"
+      }
+    ],
+    "rewards": {
+      "coins": 20,
+      "xp": 50
+    },
+    "tips": [
+      "Marigolds grow fastest but roses score more points",
+      "Buddy the dog sometimes digs up surprises in the garden!",
+      "Symmetrical rangoli patterns earn bonus butterflies"
+    ],
+    "unlock_level": 1
+  },
+  {
+    "id": "game_dance_battle",
+    "name": "Bollywood Dance Battle",
+    "description": "Show off your Bollywood moves in an epic dance battle! Follow the rhythm, match the dance steps, and challenge Ava and friends to see who's the ultimate dancing star!",
+    "instructions": "Watch the arrows and symbols that appear on screen. Tap or swipe in the matching direction when they reach the beat line. Chain perfect moves together to fill your star meter and unlock special dance finishes!",
+    "flavor_text": "\"When the dhol beats drop, my feet can't stop!\" 💃",
+    "difficulty_levels": [
+      {
+        "level": 1,
+        "name": "Dance Beginner",
+        "description": "Slow songs with simple tap patterns and forgiving timing"
+      },
+      {
+        "level": 2,
+        "name": "Rhythm Rockstar",
+        "description": "Faster beats with swipe combos and spin moves"
+      },
+      {
+        "level": 3,
+        "name": "Bollywood Diva",
+        "description": "Complex choreography with freestyle sections and crowd reactions"
+      }
+    ],
+    "rewards": {
+      "coins": 35,
+      "xp": 70
+    },
+    "tips": [
+      "Listen to the music - the beat helps you time your taps!",
+      "Ava's signature move is the twirl - watch out for it in battles!",
+      "Perfect combos make the crowd throw virtual flowers"
+    ],
+    "unlock_level": 2
+  },
+  {
+    "id": "game_karate_kata",
+    "name": "Karate Kata Champion",
+    "description": "Train with Emersyn to master karate! Learn kata sequences, practice powerful moves, and earn colorful belts. Break boards, perfect your stance, and become a martial arts master!",
+    "instructions": "Follow the sensei's movements by swiping in the correct direction. Hold your finger down for power stances and release at the right moment for strikes. Complete the full kata sequence without mistakes to earn your next belt!",
+    "flavor_text": "\"Kiai! Watch out world, this yellow belt is going for gold!\" 🥋",
+    "difficulty_levels": [
+      {
+        "level": 1,
+        "name": "White Belt",
+        "description": "Basic stances and simple 4-move sequences"
+      },
+      {
+        "level": 2,
+        "name": "Yellow Belt",
+        "description": "Longer sequences with kicks and timing challenges"
+      },
+      {
+        "level": 3,
+        "name": "Orange Belt",
+        "description": "Complex kata with board breaking and tournament mode"
+      }
+    ],
+    "rewards": {
+      "coins": 30,
+      "xp": 65
+    },
+    "tips": [
+      "Breathe with Emersyn - tap when she exhales for perfect power",
+      "Practice mode lets you learn moves without losing points",
+      "Each belt unlocks a new karate outfit color!"
+    ],
+    "unlock_level": 2
+  },
+  {
+    "id": "game_reel_maker",
+    "name": "Reel Star Studio",
+    "description": "Create awesome reels with Emersyn! Pick backgrounds, add fun filters, record dance moves, and edit with stickers and music. Share your masterpiece and watch the likes pour in!",
+    "instructions": "Choose a background scene and tap record to capture Emersyn's performance. Swipe through filters and effects to add sparkle. Drag stickers and text onto your reel, pick the perfect music, and hit post!",
+    "flavor_text": "\"Lights, camera, REEL IT! Going viral in 3... 2... 1...\" 📱",
+    "difficulty_levels": [
+      {
+        "level": 1,
+        "name": "Reel Rookie",
+        "description": "Pre-set templates with easy editing and auto-music"
+      },
+      {
+        "level": 2,
+        "name": "Content Creator",
+        "description": "Custom transitions, timing challenges, and trend matching"
+      },
+      {
+        "level": 3,
+        "name": "Viral Superstar",
+        "description": "Multi-clip editing, special effects, and audience requests"
+      }
+    ],
+    "rewards": {
+      "coins": 25,
+      "xp": 55
+    },
+    "tips": [
+      "Trending sounds give bonus likes!",
+      "Add Whiskers the cat for guaranteed heart reactions",
+      "The golden hour filter makes everything look magical"
+    ],
+    "unlock_level": 1
+  },
+  {
+    "id": "game_color_mix",
+    "name": "Holi Color Splash",
+    "description": "Celebrate Holi with Emersyn and friends! Mix colors to create new shades, fill water balloons, and splash everyone with joy. Paint the whole screen in rainbow colors before time runs out!",
+    "instructions": "Drag colors together to mix new shades. Fill balloons by holding on the tap and release to throw them at friends. Match the target color shown to earn bonus points. Cover the entire playground in colorful gulaal!",
+    "flavor_text": "\"Bura na mano, Holi hai! Let's paint the world happy!\" 🎨",
+    "difficulty_levels": [
+      {
+        "level": 1,
+        "name": "Color Beginner",
+        "description": "Primary colors only with big target zones"
+      },
+      {
+        "level": 2,
+        "name": "Rainbow Mixer",
+        "description": "Secondary colors with moving friends and pichkari power-ups"
+      },
+      {
+        "level": 3,
+        "name": "Holi Hero",
+        "description": "Complex color mixing, dodging challenges, and festival parade mode"
+      }
+    ],
+    "rewards": {
+      "coins": 30,
+      "xp": 60
+    },
+    "tips": [
+      "Red + Yellow = Orange, Blue + Yellow = Green!",
+      "Leo hides behind the tree - find him for bonus points!",
+      "The pichkari power-up covers more area with one splash"
+    ],
+    "unlock_level": 3
+  },
+  {
+    "id": "game_music_maker",
+    "name": "Emersyn's Music Studio",
+    "description": "Become a music producer with Emersyn! Mix beats from tabla and dhol, add melodic tunes, and create your own songs. Record vocals and share your musical masterpiece with friends!",
+    "instructions": "Tap the instrument icons to add sounds to your track. Drag loops onto the timeline to build your song. Use the mixer sliders to adjust volume and tap the mic button to add fun voice effects!",
+    "flavor_text": "\"DJ Emersyn in the house! Drop the beat, not the samosa!\" 🎵",
+    "difficulty_levels": [
+      {
+        "level": 1,
+        "name": "Beat Beginner",
+        "description": "Pre-made loops with simple drag-and-drop mixing"
+      },
+      {
+        "level": 2,
+        "name": "Melody Maker",
+        "description": "Custom beats with rhythm matching and instrument unlocks"
+      },
+      {
+        "level": 3,
+        "name": "Music Producer",
+        "description": "Full studio access with layering, effects, and concert mode"
+      }
+    ],
+    "rewards": {
+      "coins": 25,
+      "xp": 55
+    },
+    "tips": [
+      "The tabla sounds amazing with the electronic beats!",
+      "Ava can add backup vocals if you invite her to the studio",
+      "Songs you create can be used in Dance Battle mode!"
+    ],
+    "unlock_level": 3
+  },
+  {
+    "id": "game_art_studio",
+    "name": "Mia's Art Studio",
+    "description": "Join Mia and Emersyn for creative art time! Draw, paint, and decorate with glitter and gems. Create beautiful mehndi designs, Diwali cards, and frame-worthy masterpieces!",
+    "instructions": "Select brushes and colors from the palette. Draw on the canvas by dragging your finger. Use stamps for quick designs and shake your device to add glitter! Save your artwork to Emersyn's gallery.",
+    "flavor_text": "\"Every masterpiece starts with a single sparkly dot!\" 🖼️",
+    "difficulty_levels": [
+      {
+        "level": 1,
+        "name": "Little Artist",
+        "description": "Coloring pages with guided outlines and basic tools"
+      },
+      {
+        "level": 2,
+        "name": "Creative Star",
+        "description": "Blank canvas with stencils, stamps, and special brushes"
+      },
+      {
+        "level": 3,
+        "name": "Art Master",
+        "description": "Challenge themes, mehndi designer, and art gallery exhibitions"
+      }
+    ],
+    "rewards": {
+      "coins": 20,
+      "xp": 50
+    },
+    "tips": [
+      "Mia's favorite color is purple - use it for bonus friendship points!",
+      "Mehndi designs look best with the fine tip brush",
+      "Your art can decorate Emersyn's bedroom walls!"
+    ],
+    "unlock_level": 1
+  },
+  {
+    "id": "game_shopping_spree",
+    "name": "Mall Shopping Spree",
+    "description": "Hit the mall with Emersyn for a shopping adventure! Find items on your list, hunt for deals, and ride the escalators between floors. Don't forget to stop at the food court for Frooti and french fries!",
+    "instructions": "Swipe to move through the mall and tap on stores to enter. Find items that match your shopping list and drag them to your cart. Manage your budget wisely and collect discount coupons for bonus savings!",
+    "flavor_text": "\"Escalator rides AND shopping? Best. Day. EVER!\" 🛍️",
+    "difficulty_levels": [
+      {
+        "level": 1,
+        "name": "Window Shopper",
+        "description": "Small shopping list with unlimited budget and store hints"
+      },
+      {
+        "level": 2,
+        "name": "Smart Shopper",
+        "description": "Budget management with sales hunting and time limits"
+      },
+      {
+        "level": 3,
+        "name": "Shopping Expert",
+        "description": "Complex lists, coupon combos, and VIP store access"
+      }
+    ],
+    "rewards": {
+      "coins": 35,
+      "xp": 65
+    },
+    "tips": [
+      "The Shopkeeper gives hints if you're stuck finding items",
+      "Riding escalators between shops saves time!",
+      "Food court breaks restore your shopping energy meter"
+    ],
+    "unlock_level": 2
+  },
+  {
+    "id": "game_puzzle_solve",
+    "name": "Puzzle Party with Leo",
+    "description": "Solve puzzles with Leo the bookworm! Match patterns, complete jigsaws, and crack codes. Each puzzle reveals a piece of a magical storybook that Leo is writing!",
+    "instructions": "Drag puzzle pieces to their correct spots or tap matching tiles to clear them. Look for patterns and use hint books if you get stuck. Complete puzzles before the timer runs out to unlock story pages!",
+    "flavor_text": "\"Leo says thinking is fun... and you know what? He's RIGHT!\" 🧩",
+    "difficulty_levels": [
+      {
+        "level": 1,
+        "name": "Puzzle Starter",
+        "description": "Simple matching with large pieces and helpful guides"
+      },
+      {
+        "level": 2,
+        "name": "Brain Builder",
+        "description": "Pattern recognition with rotating pieces and fewer hints"
+      },
+      {
+        "level": 3,
+        "name": "Puzzle Master",
+        "description": "Complex logic puzzles with mystery codes and speed challenges"
+      }
+    ],
+    "rewards": {
+      "coins": 25,
+      "xp": 70
+    },
+    "tips": [
+      "Leo's hint books are hidden in the corners - tap to reveal!",
+      "Edge pieces first, just like Leo taught Emersyn!",
+      "Completed storybook pages unlock special bedtime stories"
+    ],
+    "unlock_level": 2
+  },
+  {
+    "id": "game_pet_care",
+    "name": "Pet Paradise",
+    "description": "Take care of Whiskers, Buddy, and Cotton! Feed them yummy treats, give them baths, play fetch, and dress them in adorable outfits. Happy pets mean lots of cuddles and surprises!",
+    "instructions": "Tap on a pet to select them. Drag food to their bowls, scrub them clean in the bath, and tap toys to play together. Watch their happiness hearts fill up and collect the love they give back!",
+    "flavor_text": "\"Whiskers wants brushies, Buddy wants belly rubs, Cotton wants EVERYTHING!\" 🐾",
+    "difficulty_levels": [
+      {
+        "level": 1,
+        "name": "Pet Friend",
+        "description": "One pet at a time with simple needs and slow timers"
+      },
+      {
+        "level": 2,
+        "name": "Pet Parent",
+        "description": "Multiple pets with different needs and mini-games"
+      },
+      {
+        "level": 3,
+        "name": "Pet Expert",
+        "description": "All three pets, special requests, and pet show competitions"
+      }
+    ],
+    "rewards": {
+      "coins": 20,
+      "xp": 50
+    },
+    "tips": [
+      "Whiskers loves the feather toy, Buddy loves the squeaky ball!",
+      "Cotton the bunny hops faster when she's extra happy",
+      "Pet costumes unlock after reaching maximum happiness!"
+    ],
+    "unlock_level": 1
+  },
+  {
+    "id": "game_hide_and_seek",
+    "name": "Hide and Seek Adventure",
+    "description": "Play hide and seek with Ava, Mia, and Leo! Search through Emersyn's house, garden, and playground to find your hiding friends. But watch out - they might change spots when you're not looking!",
+    "instructions": "Tap on objects to search behind them. Look for giggles and movement hints to find hiding friends. Find everyone before the timer ends! In hiding mode, tap the perfect spot and stay very still!",
+    "flavor_text": "\"Ready or not, here I come! ...Is that Leo's book sticking out?\" 👀",
+    "difficulty_levels": [
+      {
+        "level": 1,
+        "name": "Seeker Starter",
+        "description": "Obvious hiding spots with lots of hints and giggles"
+      },
+      {
+        "level": 2,
+        "name": "Super Seeker",
+        "description": "Trickier spots across multiple rooms with fewer hints"
+      },
+      {
+        "level": 3,
+        "name": "Hide & Seek Champion",
+        "description": "Friends move between spots, pets give false clues, bonus rounds"
+      }
+    ],
+    "rewards": {
+      "coins": 25,
+      "xp": 55
+    },
+    "tips": [
+      "Ava always giggles - listen for her!",
+      "Leo brings his book everywhere, even when hiding",
+      "The pets sometimes point to where friends are hiding!"
+    ],
+    "unlock_level": 1
+  },
+  {
+    "id": "game_racing_run",
+    "name": "Amusement Park Dash",
+    "description": "Race through the amusement park with Emersyn! Dodge bumper cars, leap over cotton candy carts, and collect tickets while running past the ferris wheel and roller coaster!",
+    "instructions": "Swipe up to jump over obstacles and swipe down to slide under barriers. Tilt your device to move between lanes. Collect golden tickets and grab power-ups like speed boosts and magnets!",
+    "flavor_text": "\"Faster than the roller coaster! Well... almost!\" 🎢",
+    "difficulty_levels": [
+      {
+        "level": 1,
+        "name": "Park Jogger",
+        "description": "Slow speed with wide lanes and few obstacles"
+      },
+      {
+        "level": 2,
+        "name": "Speed Runner",
+        "description": "Faster pace with more obstacles and power-up combos"
+      },
+      {
+        "level": 3,
+        "name": "Dash Champion",
+        "description": "Maximum speed with moving obstacles and boss chase sequences"
+      }
+    ],
+    "rewards": {
+      "coins": 30,
+      "xp": 60
+    },
+    "tips": [
+      "The magnet power-up pulls all nearby tickets to you!",
+      "Jump on bumper cars for a super bounce boost",
+      "Cotton candy stands give you a temporary speed burst"
+    ],
+    "unlock_level": 3
+  },
+  {
+    "id": "game_star_catcher",
+    "name": "Diwali Star Catcher",
+    "description": "It's Diwali night and the sky is full of magical stars! Help Emersyn catch falling stars and diyas to light up her home. Create beautiful patterns of light and celebrate the festival of lights!",
+    "instructions": "Move Emersyn left and right to catch falling stars and glowing diyas. Avoid the rain clouds that try to dim your lights. Fill the light meter to create a spectacular Diwali firework finale!",
+    "flavor_text": "\"Catching stars and spreading light - Happy Diwali, everyone!\" ⭐",
+    "difficulty_levels": [
+      {
+        "level": 1,
+        "name": "Star Beginner",
+        "description": "Slow-falling stars with a wide catching area"
+      },
+      {
+        "level": 2,
+        "name": "Light Collector",
+        "description": "Faster stars with special golden diyas and small obstacles"
+      },
+      {
+        "level": 3,
+        "name": "Diwali Star",
+        "description": "Shooting stars, combo chains, and spectacular firework patterns"
+      }
+    ],
+    "rewards": {
+      "coins": 35,
+      "xp": 70
+    },
+    "tips": [
+      "Golden diyas are worth 5 regular stars!",
+      "Catch stars in a row without missing for combo bonuses",
+      "The rangoli platform power-up makes you catch stars automatically for 5 seconds"
+    ],
+    "unlock_level": 4
+  }
+]

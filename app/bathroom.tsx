@@ -1,103 +1,86 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, Alert } from 'react-native';
+/**
+ * Bathroom - 3D interactive bathroom with cleaning activities
+ */
+import React, { useState, useCallback } from 'react';
+import { View, Text, StyleSheet, Dimensions, Alert } from 'react-native';
+import { router } from 'expo-router';
 import { useGameStore } from '@/store/gameStore';
-import { ScreenWrapper } from '@/components/ScreenWrapper';
-import { ActivityButton } from '@/components/ActivityButton';
-import { Colors } from '@/lib/colors';
 import { getRandomEncouragement } from '@/lib/helpers';
+import GameScene from '@/components/GameScene';
+import GameHUD from '@/components/GameHUD';
+import { InteractableInfo } from '@/engine/RoomBuilder';
+import { NPCCharacter } from '@/engine/NPCCharacter';
 
-const bathroomActivities = [
-  { id: 'brush_teeth_b', name: 'Brush Teeth', emoji: '🪥', statDeltas: { cleanliness: 15 }, coinReward: 3, xpReward: 5, starReward: 0 },
-  { id: 'wash_face_b', name: 'Wash Face', emoji: '🧼', statDeltas: { cleanliness: 10 }, coinReward: 2, xpReward: 3, starReward: 0 },
-  { id: 'wash_hands_b', name: 'Wash Hands', emoji: '🖐️', statDeltas: { cleanliness: 8 }, coinReward: 2, xpReward: 3, starReward: 0 },
-  { id: 'bath_bubbles', name: 'Bubble Bath', emoji: '🛁', statDeltas: { cleanliness: 30, fun: 10 }, coinReward: 5, xpReward: 8, starReward: 1 },
-  { id: 'hair_wash', name: 'Wash Hair', emoji: '💇', statDeltas: { cleanliness: 12 }, coinReward: 3, xpReward: 5, starReward: 0 },
-  { id: 'dry_off', name: 'Dry Off', emoji: '🧖', statDeltas: { cleanliness: 5 }, coinReward: 2, xpReward: 3, starReward: 0 },
-];
+const { width: SW } = Dimensions.get('window');
+
+const INTERACTION_REWARDS: Record<string, { stats: Record<string, number>; coins: number; xp: number; sticker?: string }> = {
+  bathtub: { stats: { cleanliness: 30, fun: 10 }, coins: 5, xp: 8, sticker: 'sticker_bath_time' },
+  sink: { stats: { cleanliness: 15 }, coins: 3, xp: 5, sticker: 'sticker_brush_teeth' },
+  toilet: { stats: { cleanliness: 5 }, coins: 1, xp: 2 },
+  towel_rack: { stats: { cleanliness: 10 }, coins: 2, xp: 3 },
+  rubber_duck: { stats: { fun: 15 }, coins: 3, xp: 5 },
+  bath_mat: { stats: { cleanliness: 3 }, coins: 1, xp: 2 },
+};
 
 export default function Bathroom() {
-  const { updateStats, addCoins, addXP, addStars, earnSticker, saveGame } = useGameStore();
-  const [completedActivities, setCompletedActivities] = useState<string[]>([]);
+  const { coins, stats, xp, level, updateStats, addCoins, addXP, earnSticker, saveGame } = useGameStore();
+  const [showCoinAnim, setShowCoinAnim] = useState(false);
+  const [coinDelta, setCoinDelta] = useState(0);
+  const [npcDialogue, setNpcDialogue] = useState<{ npcName: string; text: string } | null>(null);
 
-  const handleActivity = async (act: typeof bathroomActivities[0]) => {
-    if (completedActivities.includes(act.id)) return;
+  const xpToNext = 100;
 
-    updateStats(act.statDeltas);
-    addCoins(act.coinReward);
-    addXP(act.xpReward);
-    if (act.starReward > 0) addStars(act.starReward);
+  const handleInteract = useCallback((interactable: InteractableInfo) => {
+    const reward = INTERACTION_REWARDS[interactable.id] || { stats: { cleanliness: 5 }, coins: 1, xp: 2 };
+    updateStats(reward.stats);
+    if (reward.coins > 0) {
+      addCoins(reward.coins);
+      setCoinDelta(reward.coins);
+      setShowCoinAnim(true);
+      setTimeout(() => setShowCoinAnim(false), 1000);
+    }
+    addXP(reward.xp);
+    if (reward.sticker) earnSticker(reward.sticker);
+    saveGame();
+    Alert.alert(getRandomEncouragement(), `+₹${reward.coins} coins!`);
+  }, [updateStats, addCoins, addXP, earnSticker, saveGame]);
 
-    setCompletedActivities((prev) => [...prev, act.id]);
-
-    if (act.id === 'brush_teeth_b') earnSticker('sticker_brush_teeth');
-    if (act.id === 'bath_bubbles') earnSticker('sticker_bath_time');
-
-    await saveGame();
-    Alert.alert(getRandomEncouragement(), `+₹${act.coinReward} coins!`);
-  };
+  const handleNPCTap = useCallback((npc: NPCCharacter) => {
+    setNpcDialogue({ npcName: npc.name, text: npc.currentDialogue });
+  }, []);
 
   return (
-    <ScreenWrapper title="Bathroom" emoji="🛁" bgColor={Colors.skyLight}>
-      <View style={styles.characterArea}>
-        <Text style={styles.characterEmoji}>🚿</Text>
-        <Text style={styles.roomDesc}>Time to get squeaky clean!</Text>
-      </View>
-
-      <Text style={styles.sectionTitle}>🧼 Activities</Text>
-      {bathroomActivities.map((act) => (
-        <ActivityButton
-          key={act.id}
-          activity={act as any}
-          completed={completedActivities.includes(act.id)}
-          onPress={() => handleActivity(act)}
+    <View style={styles.container}>
+      <View style={styles.sceneContainer}>
+        <GameScene
+          roomType="bathroom"
+          onInteract={handleInteract}
+          onNPCTap={handleNPCTap}
+          height={SW * 0.85}
         />
-      ))}
-
-      <View style={styles.tip}>
-        <Text style={styles.tipEmoji}>💡</Text>
-        <Text style={styles.tipText}>Keeping clean boosts your Cleanliness meter!</Text>
+        <GameHUD
+          coins={coins}
+          stats={stats}
+          level={level}
+          xp={xp % xpToNext}
+          xpToNext={xpToNext}
+          roomName="Bathroom"
+          onBack={() => router.back()}
+          showCoinAnimation={showCoinAnim}
+          coinDelta={coinDelta}
+          activeNPCDialogue={npcDialogue}
+        />
       </View>
-    </ScreenWrapper>
+      <View style={styles.tip}>
+        <Text style={styles.tipText}>Tap the bathtub for a bubble bath, sink to wash up, duck to play!</Text>
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  characterArea: {
-    alignItems: 'center',
-    paddingVertical: 20,
-  },
-  characterEmoji: {
-    fontSize: 72,
-  },
-  roomDesc: {
-    fontSize: 14,
-    color: Colors.gray500,
-    marginTop: 8,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: Colors.dark,
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 8,
-  },
-  tip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.yellowLight,
-    marginHorizontal: 16,
-    marginTop: 16,
-    padding: 12,
-    borderRadius: 14,
-    gap: 8,
-  },
-  tipEmoji: {
-    fontSize: 20,
-  },
-  tipText: {
-    fontSize: 13,
-    color: Colors.gray500,
-    flex: 1,
-  },
+  container: { flex: 1, backgroundColor: '#E0F2F8' },
+  sceneContainer: { flex: 1, position: 'relative' },
+  tip: { padding: 12, backgroundColor: '#fff', alignItems: 'center' },
+  tipText: { fontSize: 12, color: '#999', fontWeight: '500' },
 });

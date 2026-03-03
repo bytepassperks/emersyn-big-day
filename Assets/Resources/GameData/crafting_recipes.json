@@ -1,0 +1,1534 @@
+[
+  {
+    "id": "recipe_001",
+    "name": "Gol Gappe",
+    "description": "Crispy puris filled with spicy tangy water - Emersyn's favorite street food!",
+    "category": "food",
+    "ingredients": [
+      {
+        "item": "semolina",
+        "count": 2
+      },
+      {
+        "item": "tamarind",
+        "count": 1
+      },
+      {
+        "item": "mint_leaves",
+        "count": 1
+      },
+      {
+        "item": "spice_mix",
+        "count": 1
+      }
+    ],
+    "result": {
+      "item": "gol_gappe",
+      "count": 1
+    },
+    "time_minutes": 8,
+    "difficulty": "medium",
+    "unlock_level": 1,
+    "special": true
+  },
+  {
+    "id": "recipe_002",
+    "name": "Chai Masala",
+    "description": "Warm and aromatic Indian spiced tea to share with friends",
+    "category": "food",
+    "ingredients": [
+      {
+        "item": "tea_leaves",
+        "count": 1
+      },
+      {
+        "item": "milk",
+        "count": 1
+      },
+      {
+        "item": "cardamom",
+        "count": 1
+      },
+      {
+        "item": "ginger",
+        "count": 1
+      }
+    ],
+    "result": {
+      "item": "chai_masala",
+      "count": 1
+    },
+    "time_minutes": 5,
+    "difficulty": "easy",
+    "unlock_level": 2,
+    "special": false
+  },
+  {
+    "id": "recipe_003",
+    "name": "Mango Lassi",
+    "description": "Creamy mango yogurt drink - tastes just like Frooti but homemade!",
+    "category": "food",
+    "ingredients": [
+      {
+        "item": "mango",
+        "count": 2
+      },
+      {
+        "item": "yogurt",
+        "count": 1
+      },
+      {
+        "item": "sugar",
+        "count": 1
+      }
+    ],
+    "result": {
+      "item": "mango_lassi",
+      "count": 1
+    },
+    "time_minutes": 3,
+    "difficulty": "easy",
+    "unlock_level": 1,
+    "special": false
+  },
+  {
+    "id": "recipe_004",
+    "name": "Samosa",
+    "description": "Crispy triangular pastries filled with spiced potatoes",
+    "category": "food",
+    "ingredients": [
+      {
+        "item": "flour",
+        "count": 2
+      },
+      {
+        "item": "potato",
+        "count": 2
+      },
+      {
+        "item": "peas",
+        "count": 1
+      },
+      {
+        "item": "spice_mix",
+        "count": 1
+      }
+    ],
+    "result": {
+      "item": "samosa",
+      "count": 2
+    },
+    "time_minutes": 12,
+    "difficulty": "medium",
+    "unlock_level": 4,
+    "special": false
+  },
+  {
+    "id": "recipe_005",
+    "name": "Jalebi",
+    "description": "Bright orange spiral sweets soaked in sugar syrup - so yummy!",
+    "category": "food",
+    "ingredients": [
+      {
+        "item": "flour",
+        "count": 1
+      },
+      {
+        "item": "sugar",
+        "count": 2
+      },
+      {
+        "item": "saffron",
+        "count": 1
+      },
+      {
+        "item": "oil",
+        "count": 1
+      }
+    ],
+    "result": {
+      "item": "jalebi",
+      "count": 3
+    },
+    "time_minutes": 10,
+    "difficulty": "hard",
+    "unlock_level": 6,
+    "special": false
+  },
+  {
+    "id": "recipe_006",
+    "name": "Cotton Candy",
+    "description": "Fluffy pink cloud of sweetness from the amusement park!",
+    "category": "food",
+    "ingredients": [
+      {
+        "item": "sugar",
+        "count": 2
+      },
+      {
+        "item": "pink_food_color",
+        "count": 1
+      },
+      {
+        "item": "cotton_candy_stick",
+        "count": 1
+      }
+    ],
+    "result": {
+      "item": "cotton_candy",
+      "count": 1
+    },
+    "time_minutes": 2,
+    "difficulty": "easy",
+    "unlock_level": 1,
+    "special": false
+  },
+  {
+    "id": "recipe_007",
+    "name": "Popcorn Chicken",
+    "description": "Crispy bite-sized chicken pieces - Emersyn's mall food court favorite!",
+    "category": "food",
+    "ingredients": [
+      {
+        "item": "chicken",
+        "count": 2
+      },
+      {
+        "item": "breadcrumbs",
+        "count": 1
+      },
+      {
+        "item": "egg",
+        "count": 1
+      },
+      {
+        "item": "spice_mix",
+        "count": 1
+      }
+    ],
+    "result": {
+      "item": "popcorn_chicken",
+      "count": 1
+    },
+    "time_minutes": 8,
+    "difficulty": "medium",
+    "unlock_level": 3,
+    "special": false
+  },
+  {
+    "id": "recipe_008",
+    "name": "French Fries",
+    "description": "Golden crispy potato sticks with ketchup on the side!",
+    "category": "food",
+    "ingredients": [
+      {
+        "item": "potato",
+        "count": 2
+      },
+      {
+        "item": "oil",
+        "count": 1
+      },
+      {
+        "item": "salt",
+        "count": 1
+      }
+    ],
+    "result": {
+      "item": "french_fries",
+      "count": 1
+    },
+    "time_minutes": 6,
+    "difficulty": "easy",
+    "unlock_level": 1,
+    "special": false
+  },
+  {
+    "id": "recipe_009",
+    "name": "Rainbow Cupcakes",
+    "description": "Colorful cupcakes perfect for sharing with Ava and Mia!",
+    "category": "food",
+    "ingredients": [
+      {
+        "item": "flour",
+        "count": 1
+      },
+      {
+        "item": "sugar",
+        "count": 1
+      },
+      {
+        "item": "egg",
+        "count": 1
+      },
+      {
+        "item": "rainbow_sprinkles",
+        "count": 1
+      },
+      {
+        "item": "frosting",
+        "count": 1
+      }
+    ],
+    "result": {
+      "item": "rainbow_cupcakes",
+      "count": 2
+    },
+    "time_minutes": 10,
+    "difficulty": "medium",
+    "unlock_level": 3,
+    "special": false
+  },
+  {
+    "id": "recipe_010",
+    "name": "Gulab Jamun",
+    "description": "Soft milk dumplings soaked in rose-flavored syrup",
+    "category": "food",
+    "ingredients": [
+      {
+        "item": "milk_powder",
+        "count": 2
+      },
+      {
+        "item": "flour",
+        "count": 1
+      },
+      {
+        "item": "sugar",
+        "count": 2
+      },
+      {
+        "item": "rose_water",
+        "count": 1
+      }
+    ],
+    "result": {
+      "item": "gulab_jamun",
+      "count": 4
+    },
+    "time_minutes": 15,
+    "difficulty": "hard",
+    "unlock_level": 7,
+    "special": false
+  },
+  {
+    "id": "recipe_011",
+    "name": "Pakora",
+    "description": "Crispy vegetable fritters perfect for rainy days with chai",
+    "category": "food",
+    "ingredients": [
+      {
+        "item": "chickpea_flour",
+        "count": 1
+      },
+      {
+        "item": "onion",
+        "count": 1
+      },
+      {
+        "item": "potato",
+        "count": 1
+      },
+      {
+        "item": "spice_mix",
+        "count": 1
+      }
+    ],
+    "result": {
+      "item": "pakora",
+      "count": 2
+    },
+    "time_minutes": 7,
+    "difficulty": "easy",
+    "unlock_level": 2,
+    "special": false
+  },
+  {
+    "id": "recipe_012",
+    "name": "Pav Bhaji",
+    "description": "Spiced mashed vegetables served with buttery bread rolls",
+    "category": "food",
+    "ingredients": [
+      {
+        "item": "mixed_vegetables",
+        "count": 2
+      },
+      {
+        "item": "pav_bread",
+        "count": 2
+      },
+      {
+        "item": "butter",
+        "count": 1
+      },
+      {
+        "item": "pav_bhaji_masala",
+        "count": 1
+      }
+    ],
+    "result": {
+      "item": "pav_bhaji",
+      "count": 1
+    },
+    "time_minutes": 12,
+    "difficulty": "medium",
+    "unlock_level": 5,
+    "special": false
+  },
+  {
+    "id": "recipe_013",
+    "name": "Dosa",
+    "description": "Crispy golden crepe served with coconut chutney",
+    "category": "food",
+    "ingredients": [
+      {
+        "item": "rice_batter",
+        "count": 2
+      },
+      {
+        "item": "oil",
+        "count": 1
+      },
+      {
+        "item": "coconut_chutney",
+        "count": 1
+      }
+    ],
+    "result": {
+      "item": "dosa",
+      "count": 1
+    },
+    "time_minutes": 8,
+    "difficulty": "medium",
+    "unlock_level": 4,
+    "special": false
+  },
+  {
+    "id": "recipe_014",
+    "name": "Paneer Tikka",
+    "description": "Grilled spiced cottage cheese cubes on skewers",
+    "category": "food",
+    "ingredients": [
+      {
+        "item": "paneer",
+        "count": 2
+      },
+      {
+        "item": "yogurt",
+        "count": 1
+      },
+      {
+        "item": "tikka_masala",
+        "count": 1
+      },
+      {
+        "item": "bell_pepper",
+        "count": 1
+      }
+    ],
+    "result": {
+      "item": "paneer_tikka",
+      "count": 1
+    },
+    "time_minutes": 10,
+    "difficulty": "medium",
+    "unlock_level": 5,
+    "special": false
+  },
+  {
+    "id": "recipe_015",
+    "name": "Rangoli Design",
+    "description": "Beautiful colorful floor art for Diwali celebrations!",
+    "category": "decor",
+    "ingredients": [
+      {
+        "item": "colored_powder",
+        "count": 4
+      },
+      {
+        "item": "flower_petals",
+        "count": 2
+      },
+      {
+        "item": "rangoli_stencil",
+        "count": 1
+      }
+    ],
+    "result": {
+      "item": "rangoli_design",
+      "count": 1
+    },
+    "time_minutes": 15,
+    "difficulty": "hard",
+    "unlock_level": 6,
+    "special": true
+  },
+  {
+    "id": "recipe_016",
+    "name": "Mehndi Pattern Stickers",
+    "description": "Pretty henna-style temporary tattoos for hands!",
+    "category": "fashion",
+    "ingredients": [
+      {
+        "item": "sticker_paper",
+        "count": 1
+      },
+      {
+        "item": "brown_ink",
+        "count": 1
+      },
+      {
+        "item": "glitter",
+        "count": 1
+      }
+    ],
+    "result": {
+      "item": "mehndi_stickers",
+      "count": 3
+    },
+    "time_minutes": 5,
+    "difficulty": "easy",
+    "unlock_level": 2,
+    "special": false
+  },
+  {
+    "id": "recipe_017",
+    "name": "Rakhi Bracelet",
+    "description": "Handmade friendship bracelet to celebrate the bond with siblings",
+    "category": "gift",
+    "ingredients": [
+      {
+        "item": "silk_thread",
+        "count": 2
+      },
+      {
+        "item": "beads",
+        "count": 3
+      },
+      {
+        "item": "small_bells",
+        "count": 1
+      }
+    ],
+    "result": {
+      "item": "rakhi_bracelet",
+      "count": 1
+    },
+    "time_minutes": 8,
+    "difficulty": "medium",
+    "unlock_level": 4,
+    "special": true
+  },
+  {
+    "id": "recipe_018",
+    "name": "Diya Lamp",
+    "description": "Traditional clay oil lamp to light up Diwali night!",
+    "category": "decor",
+    "ingredients": [
+      {
+        "item": "clay",
+        "count": 1
+      },
+      {
+        "item": "paint",
+        "count": 2
+      },
+      {
+        "item": "cotton_wick",
+        "count": 1
+      },
+      {
+        "item": "glitter",
+        "count": 1
+      }
+    ],
+    "result": {
+      "item": "diya_lamp",
+      "count": 1
+    },
+    "time_minutes": 10,
+    "difficulty": "medium",
+    "unlock_level": 5,
+    "special": true
+  },
+  {
+    "id": "recipe_019",
+    "name": "Holi Color Bombs",
+    "description": "Soft color powder balls to throw during Holi festival!",
+    "category": "gift",
+    "ingredients": [
+      {
+        "item": "corn_starch",
+        "count": 2
+      },
+      {
+        "item": "food_coloring",
+        "count": 3
+      },
+      {
+        "item": "tissue_paper",
+        "count": 2
+      }
+    ],
+    "result": {
+      "item": "holi_color_bombs",
+      "count": 5
+    },
+    "time_minutes": 6,
+    "difficulty": "easy",
+    "unlock_level": 3,
+    "special": true
+  },
+  {
+    "id": "recipe_020",
+    "name": "Friendship Bracelet",
+    "description": "Colorful woven bracelet to give to Ava as a BFF gift!",
+    "category": "gift",
+    "ingredients": [
+      {
+        "item": "embroidery_thread",
+        "count": 3
+      },
+      {
+        "item": "beads",
+        "count": 2
+      }
+    ],
+    "result": {
+      "item": "friendship_bracelet",
+      "count": 1
+    },
+    "time_minutes": 7,
+    "difficulty": "easy",
+    "unlock_level": 1,
+    "special": false
+  },
+  {
+    "id": "recipe_021",
+    "name": "Flower Crown",
+    "description": "Beautiful floral headband perfect for making reels!",
+    "category": "fashion",
+    "ingredients": [
+      {
+        "item": "artificial_flowers",
+        "count": 5
+      },
+      {
+        "item": "wire",
+        "count": 1
+      },
+      {
+        "item": "ribbon",
+        "count": 1
+      }
+    ],
+    "result": {
+      "item": "flower_crown",
+      "count": 1
+    },
+    "time_minutes": 8,
+    "difficulty": "medium",
+    "unlock_level": 3,
+    "special": false
+  },
+  {
+    "id": "recipe_022",
+    "name": "Dream Catcher",
+    "description": "Magical hanging decoration with feathers for sweet dreams",
+    "category": "decor",
+    "ingredients": [
+      {
+        "item": "wooden_hoop",
+        "count": 1
+      },
+      {
+        "item": "yarn",
+        "count": 2
+      },
+      {
+        "item": "feathers",
+        "count": 3
+      },
+      {
+        "item": "beads",
+        "count": 2
+      }
+    ],
+    "result": {
+      "item": "dream_catcher",
+      "count": 1
+    },
+    "time_minutes": 12,
+    "difficulty": "medium",
+    "unlock_level": 4,
+    "special": false
+  },
+  {
+    "id": "recipe_023",
+    "name": "Sparkle Slime",
+    "description": "Glittery squishy slime in Emersyn's favorite colors!",
+    "category": "gift",
+    "ingredients": [
+      {
+        "item": "glue",
+        "count": 2
+      },
+      {
+        "item": "contact_solution",
+        "count": 1
+      },
+      {
+        "item": "glitter",
+        "count": 2
+      },
+      {
+        "item": "food_coloring",
+        "count": 1
+      }
+    ],
+    "result": {
+      "item": "sparkle_slime",
+      "count": 1
+    },
+    "time_minutes": 5,
+    "difficulty": "easy",
+    "unlock_level": 2,
+    "special": false
+  },
+  {
+    "id": "recipe_024",
+    "name": "Bath Bombs",
+    "description": "Fizzy colorful balls that make bath time magical!",
+    "category": "gift",
+    "ingredients": [
+      {
+        "item": "baking_soda",
+        "count": 2
+      },
+      {
+        "item": "citric_acid",
+        "count": 1
+      },
+      {
+        "item": "essential_oil",
+        "count": 1
+      },
+      {
+        "item": "food_coloring",
+        "count": 1
+      }
+    ],
+    "result": {
+      "item": "bath_bombs",
+      "count": 2
+    },
+    "time_minutes": 10,
+    "difficulty": "medium",
+    "unlock_level": 4,
+    "special": false
+  },
+  {
+    "id": "recipe_025",
+    "name": "Scented Candle",
+    "description": "Pretty candle that smells like mango and roses",
+    "category": "decor",
+    "ingredients": [
+      {
+        "item": "wax",
+        "count": 2
+      },
+      {
+        "item": "wick",
+        "count": 1
+      },
+      {
+        "item": "fragrance_oil",
+        "count": 1
+      },
+      {
+        "item": "candle_dye",
+        "count": 1
+      }
+    ],
+    "result": {
+      "item": "scented_candle",
+      "count": 1
+    },
+    "time_minutes": 15,
+    "difficulty": "hard",
+    "unlock_level": 6,
+    "special": false
+  },
+  {
+    "id": "recipe_026",
+    "name": "Glitter Photo Frame",
+    "description": "Sparkly frame to display photos from the mall and park!",
+    "category": "decor",
+    "ingredients": [
+      {
+        "item": "cardboard_frame",
+        "count": 1
+      },
+      {
+        "item": "glitter",
+        "count": 2
+      },
+      {
+        "item": "glue",
+        "count": 1
+      },
+      {
+        "item": "gems",
+        "count": 3
+      }
+    ],
+    "result": {
+      "item": "glitter_photo_frame",
+      "count": 1
+    },
+    "time_minutes": 8,
+    "difficulty": "easy",
+    "unlock_level": 2,
+    "special": false
+  },
+  {
+    "id": "recipe_027",
+    "name": "Play Makeup Kit",
+    "description": "Kid-friendly makeup set with lip gloss and eyeshadow!",
+    "category": "fashion",
+    "ingredients": [
+      {
+        "item": "coconut_oil",
+        "count": 1
+      },
+      {
+        "item": "beeswax",
+        "count": 1
+      },
+      {
+        "item": "mica_powder",
+        "count": 2
+      },
+      {
+        "item": "small_containers",
+        "count": 3
+      }
+    ],
+    "result": {
+      "item": "play_makeup_kit",
+      "count": 1
+    },
+    "time_minutes": 12,
+    "difficulty": "medium",
+    "unlock_level": 5,
+    "special": false
+  },
+  {
+    "id": "recipe_028",
+    "name": "Nail Art Set",
+    "description": "Colorful nail polishes with stickers and gems for pretty nails!",
+    "category": "fashion",
+    "ingredients": [
+      {
+        "item": "clear_polish",
+        "count": 1
+      },
+      {
+        "item": "pigment_powder",
+        "count": 3
+      },
+      {
+        "item": "nail_stickers",
+        "count": 2
+      },
+      {
+        "item": "tiny_gems",
+        "count": 2
+      }
+    ],
+    "result": {
+      "item": "nail_art_set",
+      "count": 1
+    },
+    "time_minutes": 8,
+    "difficulty": "medium",
+    "unlock_level": 4,
+    "special": false
+  },
+  {
+    "id": "recipe_029",
+    "name": "Arcade Ticket Pouch",
+    "description": "Cute pouch to store all your game parlour tickets!",
+    "category": "fashion",
+    "ingredients": [
+      {
+        "item": "felt_fabric",
+        "count": 2
+      },
+      {
+        "item": "zipper",
+        "count": 1
+      },
+      {
+        "item": "thread",
+        "count": 1
+      },
+      {
+        "item": "decorative_buttons",
+        "count": 2
+      }
+    ],
+    "result": {
+      "item": "arcade_ticket_pouch",
+      "count": 1
+    },
+    "time_minutes": 10,
+    "difficulty": "medium",
+    "unlock_level": 3,
+    "special": false
+  },
+  {
+    "id": "recipe_030",
+    "name": "Candy Necklace",
+    "description": "Edible jewelry made with colorful candies on a string!",
+    "category": "food",
+    "ingredients": [
+      {
+        "item": "ring_candies",
+        "count": 10
+      },
+      {
+        "item": "elastic_string",
+        "count": 1
+      }
+    ],
+    "result": {
+      "item": "candy_necklace",
+      "count": 1
+    },
+    "time_minutes": 3,
+    "difficulty": "easy",
+    "unlock_level": 1,
+    "special": false
+  },
+  {
+    "id": "recipe_031",
+    "name": "Frooti Popsicle",
+    "description": "Frozen mango treat that tastes like Emersyn's favorite drink!",
+    "category": "food",
+    "ingredients": [
+      {
+        "item": "mango_pulp",
+        "count": 2
+      },
+      {
+        "item": "sugar",
+        "count": 1
+      },
+      {
+        "item": "popsicle_stick",
+        "count": 1
+      }
+    ],
+    "result": {
+      "item": "frooti_popsicle",
+      "count": 2
+    },
+    "time_minutes": 5,
+    "difficulty": "easy",
+    "unlock_level": 2,
+    "special": true
+  },
+  {
+    "id": "recipe_032",
+    "name": "Karate Belt Display",
+    "description": "A special board to showcase all your karate belt achievements!",
+    "category": "decor",
+    "ingredients": [
+      {
+        "item": "wooden_board",
+        "count": 1
+      },
+      {
+        "item": "hooks",
+        "count": 4
+      },
+      {
+        "item": "paint",
+        "count": 2
+      },
+      {
+        "item": "stickers",
+        "count": 2
+      }
+    ],
+    "result": {
+      "item": "karate_belt_display",
+      "count": 1
+    },
+    "time_minutes": 15,
+    "difficulty": "hard",
+    "unlock_level": 7,
+    "special": false
+  },
+  {
+    "id": "recipe_033",
+    "name": "Dance Ribbon Wand",
+    "description": "Sparkly ribbon wand for dancing and making reels!",
+    "category": "fashion",
+    "ingredients": [
+      {
+        "item": "wooden_stick",
+        "count": 1
+      },
+      {
+        "item": "satin_ribbon",
+        "count": 3
+      },
+      {
+        "item": "glitter",
+        "count": 1
+      },
+      {
+        "item": "bells",
+        "count": 2
+      }
+    ],
+    "result": {
+      "item": "dance_ribbon_wand",
+      "count": 1
+    },
+    "time_minutes": 6,
+    "difficulty": "easy",
+    "unlock_level": 2,
+    "special": false
+  },
+  {
+    "id": "recipe_034",
+    "name": "Pet Treat for Whiskers",
+    "description": "Homemade kitty treats for your furry friend!",
+    "category": "food",
+    "ingredients": [
+      {
+        "item": "tuna",
+        "count": 1
+      },
+      {
+        "item": "flour",
+        "count": 1
+      },
+      {
+        "item": "egg",
+        "count": 1
+      }
+    ],
+    "result": {
+      "item": "cat_treats",
+      "count": 5
+    },
+    "time_minutes": 10,
+    "difficulty": "easy",
+    "unlock_level": 3,
+    "special": false
+  },
+  {
+    "id": "recipe_035",
+    "name": "Pet Treat for Buddy",
+    "description": "Yummy dog biscuits shaped like bones for your pup!",
+    "category": "food",
+    "ingredients": [
+      {
+        "item": "peanut_butter",
+        "count": 1
+      },
+      {
+        "item": "oats",
+        "count": 1
+      },
+      {
+        "item": "banana",
+        "count": 1
+      }
+    ],
+    "result": {
+      "item": "dog_treats",
+      "count": 5
+    },
+    "time_minutes": 12,
+    "difficulty": "easy",
+    "unlock_level": 3,
+    "special": false
+  },
+  {
+    "id": "recipe_036",
+    "name": "Bunny Hay Cakes",
+    "description": "Special snacks for Cotton the bunny!",
+    "category": "food",
+    "ingredients": [
+      {
+        "item": "timothy_hay",
+        "count": 2
+      },
+      {
+        "item": "carrot",
+        "count": 1
+      },
+      {
+        "item": "apple",
+        "count": 1
+      }
+    ],
+    "result": {
+      "item": "bunny_treats",
+      "count": 3
+    },
+    "time_minutes": 8,
+    "difficulty": "easy",
+    "unlock_level": 3,
+    "special": false
+  },
+  {
+    "id": "recipe_037",
+    "name": "Tablet Stand",
+    "description": "Cute decorated stand for watching YouTube and reels!",
+    "category": "decor",
+    "ingredients": [
+      {
+        "item": "cardboard",
+        "count": 2
+      },
+      {
+        "item": "washi_tape",
+        "count": 2
+      },
+      {
+        "item": "stickers",
+        "count": 3
+      }
+    ],
+    "result": {
+      "item": "tablet_stand",
+      "count": 1
+    },
+    "time_minutes": 7,
+    "difficulty": "easy",
+    "unlock_level": 2,
+    "special": false
+  },
+  {
+    "id": "recipe_038",
+    "name": "Diwali Gift Box",
+    "description": "Decorated box filled with sweets for Diwali gifting!",
+    "category": "gift",
+    "ingredients": [
+      {
+        "item": "gift_box",
+        "count": 1
+      },
+      {
+        "item": "gold_paper",
+        "count": 1
+      },
+      {
+        "item": "ribbon",
+        "count": 1
+      },
+      {
+        "item": "sweets_assortment",
+        "count": 2
+      }
+    ],
+    "result": {
+      "item": "diwali_gift_box",
+      "count": 1
+    },
+    "time_minutes": 10,
+    "difficulty": "medium",
+    "unlock_level": 5,
+    "special": true
+  },
+  {
+    "id": "recipe_039",
+    "name": "Carnival Mask",
+    "description": "Sparkly mask for amusement park fun and photos!",
+    "category": "fashion",
+    "ingredients": [
+      {
+        "item": "mask_base",
+        "count": 1
+      },
+      {
+        "item": "feathers",
+        "count": 2
+      },
+      {
+        "item": "sequins",
+        "count": 2
+      },
+      {
+        "item": "glitter_glue",
+        "count": 1
+      }
+    ],
+    "result": {
+      "item": "carnival_mask",
+      "count": 1
+    },
+    "time_minutes": 8,
+    "difficulty": "medium",
+    "unlock_level": 4,
+    "special": false
+  },
+  {
+    "id": "recipe_040",
+    "name": "Claw Machine Prize",
+    "description": "Cute stuffed toy just like the ones at the arcade!",
+    "category": "gift",
+    "ingredients": [
+      {
+        "item": "soft_fabric",
+        "count": 2
+      },
+      {
+        "item": "stuffing",
+        "count": 2
+      },
+      {
+        "item": "button_eyes",
+        "count": 2
+      },
+      {
+        "item": "thread",
+        "count": 1
+      }
+    ],
+    "result": {
+      "item": "stuffed_toy",
+      "count": 1
+    },
+    "time_minutes": 15,
+    "difficulty": "hard",
+    "unlock_level": 6,
+    "special": false
+  },
+  {
+    "id": "recipe_041",
+    "name": "Mango Candy",
+    "description": "Sweet chewy mango candies to share with friends!",
+    "category": "food",
+    "ingredients": [
+      {
+        "item": "mango_pulp",
+        "count": 1
+      },
+      {
+        "item": "sugar",
+        "count": 2
+      },
+      {
+        "item": "gelatin",
+        "count": 1
+      }
+    ],
+    "result": {
+      "item": "mango_candy",
+      "count": 6
+    },
+    "time_minutes": 8,
+    "difficulty": "medium",
+    "unlock_level": 3,
+    "special": false
+  },
+  {
+    "id": "recipe_042",
+    "name": "Hair Scrunchie",
+    "description": "Cute fabric hair tie for dance practice and reels!",
+    "category": "fashion",
+    "ingredients": [
+      {
+        "item": "fabric_strip",
+        "count": 1
+      },
+      {
+        "item": "elastic",
+        "count": 1
+      },
+      {
+        "item": "thread",
+        "count": 1
+      }
+    ],
+    "result": {
+      "item": "hair_scrunchie",
+      "count": 2
+    },
+    "time_minutes": 5,
+    "difficulty": "easy",
+    "unlock_level": 1,
+    "special": false
+  },
+  {
+    "id": "recipe_043",
+    "name": "Ferris Wheel Model",
+    "description": "Mini ferris wheel decoration from the amusement park!",
+    "category": "decor",
+    "ingredients": [
+      {
+        "item": "popsicle_sticks",
+        "count": 10
+      },
+      {
+        "item": "glue",
+        "count": 2
+      },
+      {
+        "item": "paint",
+        "count": 3
+      },
+      {
+        "item": "small_baskets",
+        "count": 4
+      }
+    ],
+    "result": {
+      "item": "ferris_wheel_model",
+      "count": 1
+    },
+    "time_minutes": 20,
+    "difficulty": "hard",
+    "unlock_level": 8,
+    "special": false
+  },
+  {
+    "id": "recipe_044",
+    "name": "Lipstick Crayon",
+    "description": "Kid-safe tinted lip crayon in pretty pink!",
+    "category": "fashion",
+    "ingredients": [
+      {
+        "item": "beeswax",
+        "count": 1
+      },
+      {
+        "item": "coconut_oil",
+        "count": 1
+      },
+      {
+        "item": "pink_mica",
+        "count": 1
+      }
+    ],
+    "result": {
+      "item": "lipstick_crayon",
+      "count": 1
+    },
+    "time_minutes": 6,
+    "difficulty": "easy",
+    "unlock_level": 2,
+    "special": false
+  },
+  {
+    "id": "recipe_045",
+    "name": "Toran Door Hanging",
+    "description": "Colorful door decoration for festivals and celebrations!",
+    "category": "decor",
+    "ingredients": [
+      {
+        "item": "marigold_flowers",
+        "count": 10
+      },
+      {
+        "item": "mango_leaves",
+        "count": 5
+      },
+      {
+        "item": "string",
+        "count": 1
+      },
+      {
+        "item": "bells",
+        "count": 3
+      }
+    ],
+    "result": {
+      "item": "toran_hanging",
+      "count": 1
+    },
+    "time_minutes": 12,
+    "difficulty": "medium",
+    "unlock_level": 5,
+    "special": true
+  },
+  {
+    "id": "recipe_046",
+    "name": "Gift for Ava",
+    "description": "Special friendship gift box for your bestie!",
+    "category": "gift",
+    "ingredients": [
+      {
+        "item": "friendship_bracelet",
+        "count": 1
+      },
+      {
+        "item": "candy",
+        "count": 3
+      },
+      {
+        "item": "cute_note",
+        "count": 1
+      },
+      {
+        "item": "gift_wrap",
+        "count": 1
+      }
+    ],
+    "result": {
+      "item": "ava_gift_box",
+      "count": 1
+    },
+    "time_minutes": 8,
+    "difficulty": "easy",
+    "unlock_level": 3,
+    "special": false
+  },
+  {
+    "id": "recipe_047",
+    "name": "Art Supplies for Mia",
+    "description": "Handmade art kit for your artistic friend!",
+    "category": "gift",
+    "ingredients": [
+      {
+        "item": "colored_pencils",
+        "count": 1
+      },
+      {
+        "item": "sketchbook",
+        "count": 1
+      },
+      {
+        "item": "stickers",
+        "count": 2
+      },
+      {
+        "item": "decorated_pouch",
+        "count": 1
+      }
+    ],
+    "result": {
+      "item": "mia_art_kit",
+      "count": 1
+    },
+    "time_minutes": 10,
+    "difficulty": "medium",
+    "unlock_level": 4,
+    "special": false
+  },
+  {
+    "id": "recipe_048",
+    "name": "Book Bookmark for Leo",
+    "description": "Cute handmade bookmark for your bookworm friend!",
+    "category": "gift",
+    "ingredients": [
+      {
+        "item": "cardstock",
+        "count": 1
+      },
+      {
+        "item": "ribbon",
+        "count": 1
+      },
+      {
+        "item": "stickers",
+        "count": 1
+      },
+      {
+        "item": "laminating_sheet",
+        "count": 1
+      }
+    ],
+    "result": {
+      "item": "leo_bookmark",
+      "count": 2
+    },
+    "time_minutes": 5,
+    "difficulty": "easy",
+    "unlock_level": 2,
+    "special": false
+  },
+  {
+    "id": "recipe_049",
+    "name": "Popcorn Box",
+    "description": "Movie-style popcorn in a decorated box for TV time!",
+    "category": "food",
+    "ingredients": [
+      {
+        "item": "popcorn_kernels",
+        "count": 1
+      },
+      {
+        "item": "butter",
+        "count": 1
+      },
+      {
+        "item": "salt",
+        "count": 1
+      },
+      {
+        "item": "decorated_box",
+        "count": 1
+      }
+    ],
+    "result": {
+      "item": "popcorn_box",
+      "count": 1
+    },
+    "time_minutes": 5,
+    "difficulty": "easy",
+    "unlock_level": 1,
+    "special": false
+  },
+  {
+    "id": "recipe_050",
+    "name": "Emersyn's Special Cake",
+    "description": "A beautiful birthday cake for Emersyn's Big Day celebration!",
+    "category": "food",
+    "ingredients": [
+      {
+        "item": "flour",
+        "count": 2
+      },
+      {
+        "item": "sugar",
+        "count": 2
+      },
+      {
+        "item": "eggs",
+        "count": 2
+      },
+      {
+        "item": "butter",
+        "count": 1
+      },
+      {
+        "item": "rainbow_frosting",
+        "count": 2
+      },
+      {
+        "item": "sprinkles",
+        "count": 2
+      },
+      {
+        "item": "candles",
+        "count": 1
+      }
+    ],
+    "result": {
+      "item": "emersyns_special_cake",
+      "count": 1
+    },
+    "time_minutes": 25,
+    "difficulty": "hard",
+    "unlock_level": 10,
+    "special": true
+  }
+]

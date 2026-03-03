@@ -1,0 +1,502 @@
+[
+  {
+    "id": 1,
+    "text": "Feed your pet before school! A happy pet means bonus coins!",
+    "category": "gameplay"
+  },
+  {
+    "id": 2,
+    "text": "Did you know gol gappe is also called pani puri? Yummy!",
+    "category": "fun_fact"
+  },
+  {
+    "id": 3,
+    "text": "Every karate master started as a white belt! Keep practicing!",
+    "category": "karate"
+  },
+  {
+    "id": 4,
+    "text": "Ava loves when you share cotton candy with her at the mall!",
+    "category": "friendship"
+  },
+  {
+    "id": 5,
+    "text": "Try mixing pink and purple eyeshadow for a magical look!",
+    "category": "fashion"
+  },
+  {
+    "id": 6,
+    "text": "Water your garden plants every day to help them grow big and strong!",
+    "category": "nature"
+  },
+  {
+    "id": 7,
+    "text": "Frooti is a yummy mango drink loved by kids all over India!",
+    "category": "fun_fact"
+  },
+  {
+    "id": 8,
+    "text": "Practice your kata moves to earn your next karate belt!",
+    "category": "karate"
+  },
+  {
+    "id": 9,
+    "text": "Dancing makes Emersyn super happy! Try making a reel today!",
+    "category": "dance"
+  },
+  {
+    "id": 10,
+    "text": "The claw machine has secret tricks - try grabbing from the side!",
+    "category": "gameplay"
+  },
+  {
+    "id": 11,
+    "text": "Diwali is the festival of lights! Look for sparklers and diyas!",
+    "category": "fun_fact"
+  },
+  {
+    "id": 12,
+    "text": "Mia loves drawing rangoli patterns. Ask her to teach you!",
+    "category": "friendship"
+  },
+  {
+    "id": 13,
+    "text": "French fries taste best when shared with friends!",
+    "category": "food"
+  },
+  {
+    "id": 14,
+    "text": "Don't forget to brush your teeth in the bathroom every morning!",
+    "category": "gameplay"
+  },
+  {
+    "id": 15,
+    "text": "Leo might be shy, but he knows the best book recommendations!",
+    "category": "friendship"
+  },
+  {
+    "id": 16,
+    "text": "Collect tickets at the arcade to win amazing prizes!",
+    "category": "gameplay"
+  },
+  {
+    "id": 17,
+    "text": "Holi is the festival of colors! Get ready to play with gulal!",
+    "category": "fun_fact"
+  },
+  {
+    "id": 18,
+    "text": "A good friend listens when others are talking!",
+    "category": "friendship"
+  },
+  {
+    "id": 19,
+    "text": "The ferris wheel gives you the best view of the amusement park!",
+    "category": "fun_fact"
+  },
+  {
+    "id": 20,
+    "text": "Whiskers the cat loves chin scratches! Pet her for bonus hearts!",
+    "category": "gameplay"
+  },
+  {
+    "id": 21,
+    "text": "Popcorn chicken is Emersyn's favorite snack at the food court!",
+    "category": "food"
+  },
+  {
+    "id": 22,
+    "text": "Practice makes perfect! Dance every day to learn new moves!",
+    "category": "dance"
+  },
+  {
+    "id": 23,
+    "text": "Buddy the dog needs walks in the park to stay healthy!",
+    "category": "gameplay"
+  },
+  {
+    "id": 24,
+    "text": "Rangoli designs look beautiful at the entrance of your home!",
+    "category": "fun_fact"
+  },
+  {
+    "id": 25,
+    "text": "The escalator at the mall is fun, but hold the railing!",
+    "category": "fun_fact"
+  },
+  {
+    "id": 26,
+    "text": "Cotton the bunny loves carrots from the garden!",
+    "category": "gameplay"
+  },
+  {
+    "id": 27,
+    "text": "Being kind to others makes you a true champion!",
+    "category": "motivation"
+  },
+  {
+    "id": 28,
+    "text": "Check the shop for new makeup colors every day!",
+    "category": "gameplay"
+  },
+  {
+    "id": 29,
+    "text": "Chai is a special spiced tea that grown-ups in India love!",
+    "category": "fun_fact"
+  },
+  {
+    "id": 30,
+    "text": "The merry-go-round has beautiful horses to ride!",
+    "category": "fun_fact"
+  },
+  {
+    "id": 31,
+    "text": "Help Teacher collect the books for extra school points!",
+    "category": "school"
+  },
+  {
+    "id": 32,
+    "text": "Nail polish looks prettiest when you let it dry completely!",
+    "category": "fashion"
+  },
+  {
+    "id": 33,
+    "text": "Bumper cars are more fun when you bump gently!",
+    "category": "fun_fact"
+  },
+  {
+    "id": 34,
+    "text": "Emersyn's garden grows faster when you sing to the plants!",
+    "category": "nature"
+  },
+  {
+    "id": 35,
+    "text": "True friends celebrate each other's success!",
+    "category": "friendship"
+  },
+  {
+    "id": 36,
+    "text": "The Shopkeeper has new items every week - keep checking!",
+    "category": "gameplay"
+  },
+  {
+    "id": 37,
+    "text": "Lipstick comes in so many fun colors! Try them all!",
+    "category": "fashion"
+  },
+  {
+    "id": 38,
+    "text": "Street food vendors sell the tastiest gol gappe!",
+    "category": "food"
+  },
+  {
+    "id": 39,
+    "text": "Your bedroom is the perfect place to practice dance moves!",
+    "category": "dance"
+  },
+  {
+    "id": 40,
+    "text": "Karate teaches us to be strong AND kind!",
+    "category": "karate"
+  },
+  {
+    "id": 41,
+    "text": "Ava's favorite color is pink - just like Emersyn's!",
+    "category": "friendship"
+  },
+  {
+    "id": 42,
+    "text": "Cotton candy melts on your tongue like sweet clouds!",
+    "category": "food"
+  },
+  {
+    "id": 43,
+    "text": "Visit the playground to meet new friends!",
+    "category": "gameplay"
+  },
+  {
+    "id": 44,
+    "text": "Butterflies love visiting gardens with colorful flowers!",
+    "category": "nature"
+  },
+  {
+    "id": 45,
+    "text": "Making reels is more fun with your best friends!",
+    "category": "dance"
+  },
+  {
+    "id": 46,
+    "text": "The kitchen is where yummy snacks are made!",
+    "category": "gameplay"
+  },
+  {
+    "id": 47,
+    "text": "Diyas are small clay lamps lit during Diwali!",
+    "category": "fun_fact"
+  },
+  {
+    "id": 48,
+    "text": "Always warm up before practicing karate kicks!",
+    "category": "karate"
+  },
+  {
+    "id": 49,
+    "text": "Mia draws the prettiest pictures in art class!",
+    "category": "friendship"
+  },
+  {
+    "id": 50,
+    "text": "Carnival games give you tickets for cool prizes!",
+    "category": "gameplay"
+  },
+  {
+    "id": 51,
+    "text": "Sunflowers always turn to face the sun!",
+    "category": "nature"
+  },
+  {
+    "id": 52,
+    "text": "A smile is the best accessory you can wear!",
+    "category": "motivation"
+  },
+  {
+    "id": 53,
+    "text": "The living room TV is perfect for watching YouTube!",
+    "category": "fun_fact"
+  },
+  {
+    "id": 54,
+    "text": "Gulal is the colorful powder used during Holi!",
+    "category": "fun_fact"
+  },
+  {
+    "id": 55,
+    "text": "Leo loves reading books under the big tree in the park!",
+    "category": "friendship"
+  },
+  {
+    "id": 56,
+    "text": "Try the roller coaster if you're feeling brave!",
+    "category": "fun_fact"
+  },
+  {
+    "id": 57,
+    "text": "Washing your hands keeps germs away!",
+    "category": "school"
+  },
+  {
+    "id": 58,
+    "text": "Glitter nail polish makes your nails sparkle like stars!",
+    "category": "fashion"
+  },
+  {
+    "id": 59,
+    "text": "Pets need love and attention every single day!",
+    "category": "gameplay"
+  },
+  {
+    "id": 60,
+    "text": "The best dancers practice even when no one is watching!",
+    "category": "dance"
+  },
+  {
+    "id": 61,
+    "text": "Pani puri has tangy, spicy water inside - so tasty!",
+    "category": "food"
+  },
+  {
+    "id": 62,
+    "text": "Respecting your teacher helps you learn better!",
+    "category": "school"
+  },
+  {
+    "id": 63,
+    "text": "Window shopping at the mall is fun even without buying!",
+    "category": "fun_fact"
+  },
+  {
+    "id": 64,
+    "text": "Karate is about self-control, not fighting!",
+    "category": "karate"
+  },
+  {
+    "id": 65,
+    "text": "Ladybugs in the garden are good luck!",
+    "category": "nature"
+  },
+  {
+    "id": 66,
+    "text": "Share your snacks with Ava for friendship bonus points!",
+    "category": "gameplay"
+  },
+  {
+    "id": 67,
+    "text": "Mangoes are called the King of Fruits in India!",
+    "category": "fun_fact"
+  },
+  {
+    "id": 68,
+    "text": "Clean your bedroom to find hidden surprises!",
+    "category": "gameplay"
+  },
+  {
+    "id": 69,
+    "text": "Every new day is a chance to learn something amazing!",
+    "category": "motivation"
+  },
+  {
+    "id": 70,
+    "text": "The arcade has new games every season!",
+    "category": "gameplay"
+  },
+  {
+    "id": 71,
+    "text": "Eyeshadow looks best when you blend the colors!",
+    "category": "fashion"
+  },
+  {
+    "id": 72,
+    "text": "Whiskers purrs when she's happy and loved!",
+    "category": "fun_fact"
+  },
+  {
+    "id": 73,
+    "text": "Help Mia finish her art project for a special reward!",
+    "category": "gameplay"
+  },
+  {
+    "id": 74,
+    "text": "Dancing burns energy and makes you feel happy!",
+    "category": "dance"
+  },
+  {
+    "id": 75,
+    "text": "The food court has all of Emersyn's favorite treats!",
+    "category": "food"
+  },
+  {
+    "id": 76,
+    "text": "Saying 'please' and 'thank you' shows good manners!",
+    "category": "school"
+  },
+  {
+    "id": 77,
+    "text": "Buddy wags his tail when he sees you!",
+    "category": "fun_fact"
+  },
+  {
+    "id": 78,
+    "text": "Flowers need sunshine and water to bloom!",
+    "category": "nature"
+  },
+  {
+    "id": 79,
+    "text": "The yellow belt comes after the white belt in karate!",
+    "category": "karate"
+  },
+  {
+    "id": 80,
+    "text": "Making mistakes helps us learn and grow!",
+    "category": "motivation"
+  },
+  {
+    "id": 81,
+    "text": "Samosas are yummy triangle-shaped Indian snacks!",
+    "category": "food"
+  },
+  {
+    "id": 82,
+    "text": "Check on Cotton the bunny - she loves cuddles!",
+    "category": "gameplay"
+  },
+  {
+    "id": 83,
+    "text": "Best friends like Ava stick together no matter what!",
+    "category": "friendship"
+  },
+  {
+    "id": 84,
+    "text": "The park swing goes higher if you pump your legs!",
+    "category": "fun_fact"
+  },
+  {
+    "id": 85,
+    "text": "Matching your lipstick to your outfit is super stylish!",
+    "category": "fashion"
+  },
+  {
+    "id": 86,
+    "text": "Kata is a pattern of karate moves done in order!",
+    "category": "karate"
+  },
+  {
+    "id": 87,
+    "text": "Bees help flowers grow by spreading pollen!",
+    "category": "nature"
+  },
+  {
+    "id": 88,
+    "text": "Save your arcade tickets for the biggest prizes!",
+    "category": "gameplay"
+  },
+  {
+    "id": 89,
+    "text": "India has 22 official languages! So many ways to say hello!",
+    "category": "fun_fact"
+  },
+  {
+    "id": 90,
+    "text": "Leo knows fun facts about almost everything!",
+    "category": "friendship"
+  },
+  {
+    "id": 91,
+    "text": "Recording dance reels helps you see how you improve!",
+    "category": "dance"
+  },
+  {
+    "id": 92,
+    "text": "The Shopkeeper always has a friendly smile!",
+    "category": "fun_fact"
+  },
+  {
+    "id": 93,
+    "text": "Eating breakfast gives you energy for the whole day!",
+    "category": "food"
+  },
+  {
+    "id": 94,
+    "text": "Believe in yourself - you can do amazing things!",
+    "category": "motivation"
+  },
+  {
+    "id": 95,
+    "text": "Rangoli is made with colored powder, flowers, or rice!",
+    "category": "fun_fact"
+  },
+  {
+    "id": 96,
+    "text": "The bathroom mirror is perfect for makeup practice!",
+    "category": "gameplay"
+  },
+  {
+    "id": 97,
+    "text": "Good friends help each other when things are hard!",
+    "category": "friendship"
+  },
+  {
+    "id": 98,
+    "text": "Plant seeds in the garden and watch them grow!",
+    "category": "nature"
+  },
+  {
+    "id": 99,
+    "text": "Emersyn's smile makes everyone's day brighter!",
+    "category": "motivation"
+  },
+  {
+    "id": 100,
+    "text": "Every adventure starts with a single step! Let's play!",
+    "category": "motivation"
+  }
+]

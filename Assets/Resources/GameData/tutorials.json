@@ -1,0 +1,372 @@
+[
+  {
+    "id": "tutorial_first_open",
+    "title": "Welcome to Emersyn's Big Day!",
+    "trigger": "first_open",
+    "steps": [
+      {
+        "speaker": "emersyn",
+        "text": "Namaste! I'm Emersyn, and this is MY world! I'm so excited you're here!",
+        "action": "animate_character",
+        "target": "emersyn_wave"
+      },
+      {
+        "speaker": "emersyn",
+        "text": "I'm 6 years old and I love doing SO many things — dancing, karate, makeup, and eating yummy gol gappe!",
+        "action": "none",
+        "target": ""
+      },
+      {
+        "speaker": "narrator",
+        "text": "Tap on different rooms to explore Emersyn's house and beyond!",
+        "action": "highlight_button",
+        "target": "room_selector"
+      },
+      {
+        "speaker": "emersyn",
+        "text": "Let's start in my bedroom! That's where all my cool stuff is!",
+        "action": "show_arrow",
+        "target": "bedroom_door"
+      },
+      {
+        "speaker": "narrator",
+        "text": "Tap the bedroom to begin your adventure!",
+        "action": "wait_tap",
+        "target": "bedroom_door"
+      }
+    ]
+  },
+  {
+    "id": "tutorial_first_cook",
+    "title": "Kitchen Fun with Emersyn",
+    "trigger": "first_cook",
+    "steps": [
+      {
+        "speaker": "emersyn",
+        "text": "Yay, the kitchen! I love making snacks here. Mummy taught me how to make chai — but I like Frooti better, hehe!",
+        "action": "animate_character",
+        "target": "emersyn_jump"
+      },
+      {
+        "speaker": "narrator",
+        "text": "In the kitchen, you can cook delicious treats! Tap the recipe book to see what you can make.",
+        "action": "show_arrow",
+        "target": "recipe_book"
+      },
+      {
+        "speaker": "emersyn",
+        "text": "Ooh, can we make french fries? They're crispy and SO good with ketchup!",
+        "action": "highlight_button",
+        "target": "recipe_fries"
+      },
+      {
+        "speaker": "narrator",
+        "text": "Drag the ingredients to the cooking area. Follow the steps to complete your dish!",
+        "action": "show_arrow",
+        "target": "cooking_area"
+      },
+      {
+        "speaker": "emersyn",
+        "text": "When it's done, I get to eat it! Maybe I'll share with Ava... maybe!",
+        "action": "wait_tap",
+        "target": "start_cooking_button"
+      }
+    ]
+  },
+  {
+    "id": "tutorial_first_dress",
+    "title": "Dress Up Time!",
+    "trigger": "first_dress",
+    "steps": [
+      {
+        "speaker": "emersyn",
+        "text": "This is my favorite part — picking outfits! I have lehengas for Diwali and sparkly dresses for parties!",
+        "action": "animate_character",
+        "target": "emersyn_twirl"
+      },
+      {
+        "speaker": "narrator",
+        "text": "Open the wardrobe to see all of Emersyn's clothes and accessories!",
+        "action": "show_arrow",
+        "target": "wardrobe"
+      },
+      {
+        "speaker": "emersyn",
+        "text": "Don't forget the makeup! I want pink lipstick and sparkly eyeshadow!",
+        "action": "highlight_button",
+        "target": "makeup_kit"
+      },
+      {
+        "speaker": "narrator",
+        "text": "Drag clothes onto Emersyn to dress her up. Mix and match to create fun looks!",
+        "action": "show_arrow",
+        "target": "outfit_area"
+      },
+      {
+        "speaker": "emersyn",
+        "text": "And nail polish too! Purple is my favorite. Let's get fancy!",
+        "action": "wait_tap",
+        "target": "nail_polish_purple"
+      }
+    ]
+  },
+  {
+    "id": "tutorial_first_garden",
+    "title": "Emersyn's Garden Adventure",
+    "trigger": "first_garden",
+    "steps": [
+      {
+        "speaker": "emersyn",
+        "text": "Welcome to my garden! Mummy grows marigolds here for making rangoli during Diwali!",
+        "action": "animate_character",
+        "target": "emersyn_point"
+      },
+      {
+        "speaker": "narrator",
+        "text": "In the garden, you can plant flowers and vegetables. Tap the seed bag to start!",
+        "action": "show_arrow",
+        "target": "seed_bag"
+      },
+      {
+        "speaker": "emersyn",
+        "text": "I want to grow sunflowers! They're big and yellow like the sun!",
+        "action": "highlight_button",
+        "target": "sunflower_seeds"
+      },
+      {
+        "speaker": "narrator",
+        "text": "Plant seeds in the soil, then water them. Come back later to see them grow!",
+        "action": "show_arrow",
+        "target": "watering_can"
+      },
+      {
+        "speaker": "emersyn",
+        "text": "Buddy loves running around here! Don't dig up my flowers, Buddy!",
+        "action": "wait_tap",
+        "target": "plant_button"
+      }
+    ]
+  },
+  {
+    "id": "tutorial_first_school",
+    "title": "School Time with Friends",
+    "trigger": "first_school",
+    "steps": [
+      {
+        "speaker": "emersyn",
+        "text": "School is so fun because Ava and Mia are there! And Leo always has cool books!",
+        "action": "animate_character",
+        "target": "emersyn_wave"
+      },
+      {
+        "speaker": "teacher",
+        "text": "Good morning, Emersyn! Are you ready to learn something new today?",
+        "action": "animate_character",
+        "target": "teacher_smile"
+      },
+      {
+        "speaker": "narrator",
+        "text": "At school, you can do fun activities! Tap on a subject to start learning.",
+        "action": "show_arrow",
+        "target": "subject_buttons"
+      },
+      {
+        "speaker": "ava",
+        "text": "Emersyn, let's sit together! I saved you a seat!",
+        "action": "animate_character",
+        "target": "ava_wave"
+      },
+      {
+        "speaker": "emersyn",
+        "text": "After class, we can play on the playground! Race you to the swings, Ava!",
+        "action": "wait_tap",
+        "target": "start_lesson_button"
+      }
+    ]
+  },
+  {
+    "id": "tutorial_first_shop",
+    "title": "Shopping Spree!",
+    "trigger": "first_shop",
+    "steps": [
+      {
+        "speaker": "emersyn",
+        "text": "OMG, the mall! I love the escalators — up and down, up and down! Wheee!",
+        "action": "animate_character",
+        "target": "emersyn_excited"
+      },
+      {
+        "speaker": "narrator",
+        "text": "At the shop, you can buy clothes, toys, and treats! Look at all the items!",
+        "action": "show_arrow",
+        "target": "shop_items"
+      },
+      {
+        "speaker": "shopkeeper",
+        "text": "Welcome, little one! We have new bangles and hair clips today!",
+        "action": "animate_character",
+        "target": "shopkeeper_greet"
+      },
+      {
+        "speaker": "emersyn",
+        "text": "Ooh, and can we go to the food court? I want popcorn chicken and Frooti!",
+        "action": "highlight_button",
+        "target": "food_court_button"
+      },
+      {
+        "speaker": "narrator",
+        "text": "Tap on items to buy them. Don't forget to check your coins!",
+        "action": "wait_tap",
+        "target": "coin_display"
+      }
+    ]
+  },
+  {
+    "id": "tutorial_first_dance",
+    "title": "Dance Party!",
+    "trigger": "first_dance",
+    "steps": [
+      {
+        "speaker": "emersyn",
+        "text": "It's dance time! I know all the moves from the reels I watch on my tablet!",
+        "action": "animate_character",
+        "target": "emersyn_dance_pose"
+      },
+      {
+        "speaker": "narrator",
+        "text": "Follow the dance moves by tapping the arrows when they light up!",
+        "action": "show_arrow",
+        "target": "dance_arrows"
+      },
+      {
+        "speaker": "emersyn",
+        "text": "This song is SO good! It's the one everyone is dancing to on YouTube!",
+        "action": "animate_character",
+        "target": "emersyn_groove"
+      },
+      {
+        "speaker": "ava",
+        "text": "Emersyn, you're such a good dancer! Teach me that step!",
+        "action": "animate_character",
+        "target": "ava_clap"
+      },
+      {
+        "speaker": "narrator",
+        "text": "Get a perfect score to unlock new dance moves and songs!",
+        "action": "wait_tap",
+        "target": "start_dance_button"
+      }
+    ]
+  },
+  {
+    "id": "tutorial_first_karate",
+    "title": "Karate Kid Emersyn",
+    "trigger": "first_karate",
+    "steps": [
+      {
+        "speaker": "emersyn",
+        "text": "HAI-YAH! Welcome to my karate dojo! I'm working on getting my next belt!",
+        "action": "animate_character",
+        "target": "emersyn_karate_pose"
+      },
+      {
+        "speaker": "narrator",
+        "text": "Practice your kata by following the move patterns on screen!",
+        "action": "show_arrow",
+        "target": "kata_display"
+      },
+      {
+        "speaker": "emersyn",
+        "text": "My sensei says I'm really good at kicks! Watch this — KIYA!",
+        "action": "animate_character",
+        "target": "emersyn_kick"
+      },
+      {
+        "speaker": "narrator",
+        "text": "Swipe in the direction shown to perform each karate move correctly!",
+        "action": "highlight_button",
+        "target": "move_tutorial"
+      },
+      {
+        "speaker": "emersyn",
+        "text": "If I practice hard, I'll earn a new belt! I want the yellow one next!",
+        "action": "wait_tap",
+        "target": "start_practice_button"
+      }
+    ]
+  },
+  {
+    "id": "tutorial_first_pet",
+    "title": "Pet Care with Love",
+    "trigger": "first_pet",
+    "steps": [
+      {
+        "speaker": "emersyn",
+        "text": "These are my babies! Whiskers the cat, Buddy the dog, and Cotton the bunny!",
+        "action": "animate_character",
+        "target": "pets_appear"
+      },
+      {
+        "speaker": "narrator",
+        "text": "Your pets need food, water, and lots of love! Check their happiness meters.",
+        "action": "show_arrow",
+        "target": "happiness_meter"
+      },
+      {
+        "speaker": "emersyn",
+        "text": "Whiskers loves chin scratches, and Buddy wants to play fetch ALL the time!",
+        "action": "highlight_button",
+        "target": "pet_toy_box"
+      },
+      {
+        "speaker": "narrator",
+        "text": "Tap on a pet to feed them, play with them, or give them a bath!",
+        "action": "show_arrow",
+        "target": "pet_care_buttons"
+      },
+      {
+        "speaker": "emersyn",
+        "text": "Cotton is so fluffy! She likes carrots, just like in cartoons!",
+        "action": "wait_tap",
+        "target": "feed_pet_button"
+      }
+    ]
+  },
+  {
+    "id": "tutorial_first_reel",
+    "title": "Make Your First Reel!",
+    "trigger": "first_reel",
+    "steps": [
+      {
+        "speaker": "emersyn",
+        "text": "FINALLY! We're making a reel! I watch these on my tablet all day — now I get to make one!",
+        "action": "animate_character",
+        "target": "emersyn_super_excited"
+      },
+      {
+        "speaker": "narrator",
+        "text": "First, pick a fun background for your video! Tap to choose.",
+        "action": "show_arrow",
+        "target": "background_selector"
+      },
+      {
+        "speaker": "emersyn",
+        "text": "I want the one with sparkles! Or maybe the Holi colors one with all the pink and blue!",
+        "action": "highlight_button",
+        "target": "holi_background"
+      },
+      {
+        "speaker": "narrator",
+        "text": "Now pick a song and record your dance! Add stickers and effects to make it pop!",
+        "action": "show_arrow",
+        "target": "effects_panel"
+      },
+      {
+        "speaker": "emersyn",
+        "text": "This is going to be SO cool! Ava is going to be so jealous! Ready? 3, 2, 1... ACTION!",
+        "action": "wait_tap",
+        "target": "record_button"
+      }
+    ]
+  }
+]

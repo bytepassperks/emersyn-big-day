@@ -1,0 +1,1424 @@
+[
+  {
+    "id": "first_steps",
+    "name": "First Steps",
+    "description": "Complete your first activity in any category",
+    "category": "milestone",
+    "difficulty": "easy",
+    "icon": "👶",
+    "reward_coins": 10,
+    "reward_xp": 25,
+    "reward_stars": 1,
+    "reward_sticker": "baby_star",
+    "requirement": {
+      "type": "count",
+      "target": "complete_activity",
+      "count": 1
+    },
+    "hidden": false
+  },
+  {
+    "id": "social_butterfly",
+    "name": "Social Butterfly",
+    "description": "Make 10 friends in the neighborhood",
+    "category": "social",
+    "difficulty": "medium",
+    "icon": "🦋",
+    "reward_coins": 100,
+    "reward_xp": 200,
+    "reward_stars": 3,
+    "reward_sticker": "butterfly_wings",
+    "requirement": {
+      "type": "count",
+      "target": "make_friend",
+      "count": 10
+    },
+    "hidden": false
+  },
+  {
+    "id": "master_chef",
+    "name": "Master Chef",
+    "description": "Cook 50 delicious meals in the kitchen",
+    "category": "cooking",
+    "difficulty": "hard",
+    "icon": "👨‍🍳",
+    "reward_coins": 250,
+    "reward_xp": 500,
+    "reward_stars": 5,
+    "reward_sticker": "golden_spatula",
+    "requirement": {
+      "type": "count",
+      "target": "cook_meal",
+      "count": 50
+    },
+    "hidden": false
+  },
+  {
+    "id": "fashionista",
+    "name": "Fashionista",
+    "description": "Collect 30 different outfits for your wardrobe",
+    "category": "fashion",
+    "difficulty": "hard",
+    "icon": "👗",
+    "reward_coins": 200,
+    "reward_xp": 400,
+    "reward_stars": 5,
+    "reward_sticker": "fashion_crown",
+    "requirement": {
+      "type": "count",
+      "target": "collect_outfit",
+      "count": 30
+    },
+    "hidden": false
+  },
+  {
+    "id": "green_thumb",
+    "name": "Green Thumb",
+    "description": "Harvest 100 plants from your garden",
+    "category": "garden",
+    "difficulty": "hard",
+    "icon": "🌱",
+    "reward_coins": 225,
+    "reward_xp": 450,
+    "reward_stars": 5,
+    "reward_sticker": "golden_flower",
+    "requirement": {
+      "type": "count",
+      "target": "harvest_plant",
+      "count": 100
+    },
+    "hidden": false
+  },
+  {
+    "id": "bookworm",
+    "name": "Bookworm",
+    "description": "Read 25 books at school or the library",
+    "category": "school",
+    "difficulty": "medium",
+    "icon": "📚",
+    "reward_coins": 150,
+    "reward_xp": 300,
+    "reward_stars": 4,
+    "reward_sticker": "wise_owl",
+    "requirement": {
+      "type": "count",
+      "target": "read_book",
+      "count": 25
+    },
+    "hidden": false
+  },
+  {
+    "id": "explorer_extraordinaire",
+    "name": "Explorer Extraordinaire",
+    "description": "Discover 20 hidden locations around town",
+    "category": "exploration",
+    "difficulty": "hard",
+    "icon": "🗺️",
+    "reward_coins": 300,
+    "reward_xp": 600,
+    "reward_stars": 6,
+    "reward_sticker": "compass_rose",
+    "requirement": {
+      "type": "count",
+      "target": "discover_location",
+      "count": 20
+    },
+    "hidden": false
+  },
+  {
+    "id": "treasure_hunter",
+    "name": "Treasure Hunter",
+    "description": "Find 50 collectible items throughout the world",
+    "category": "collection",
+    "difficulty": "hard",
+    "icon": "💎",
+    "reward_coins": 275,
+    "reward_xp": 550,
+    "reward_stars": 5,
+    "reward_sticker": "treasure_chest",
+    "requirement": {
+      "type": "count",
+      "target": "find_collectible",
+      "count": 50
+    },
+    "hidden": false
+  },
+  {
+    "id": "game_champion",
+    "name": "Game Champion",
+    "description": "Win 30 minigames with a perfect score",
+    "category": "minigame",
+    "difficulty": "hard",
+    "icon": "🏆",
+    "reward_coins": 250,
+    "reward_xp": 500,
+    "reward_stars": 5,
+    "reward_sticker": "champion_medal",
+    "requirement": {
+      "type": "count",
+      "target": "perfect_minigame",
+      "count": 30
+    },
+    "hidden": false
+  },
+  {
+    "id": "pet_whisperer",
+    "name": "Pet Whisperer",
+    "description": "Adopt and care for 5 different pets",
+    "category": "pet",
+    "difficulty": "medium",
+    "icon": "🐾",
+    "reward_coins": 175,
+    "reward_xp": 350,
+    "reward_stars": 4,
+    "reward_sticker": "paw_print",
+    "requirement": {
+      "type": "count",
+      "target": "adopt_pet",
+      "count": 5
+    },
+    "hidden": false
+  },
+  {
+    "id": "artistic_genius",
+    "name": "Artistic Genius",
+    "description": "Create 40 original artworks",
+    "category": "creativity",
+    "difficulty": "hard",
+    "icon": "🎨",
+    "reward_coins": 225,
+    "reward_xp": 450,
+    "reward_stars": 5,
+    "reward_sticker": "rainbow_palette",
+    "requirement": {
+      "type": "count",
+      "target": "create_artwork",
+      "count": 40
+    },
+    "hidden": false
+  },
+  {
+    "id": "birthday_superstar",
+    "name": "Birthday Superstar",
+    "description": "Celebrate your first in-game birthday",
+    "category": "milestone",
+    "difficulty": "easy",
+    "icon": "🎂",
+    "reward_coins": 100,
+    "reward_xp": 200,
+    "reward_stars": 3,
+    "reward_sticker": "birthday_cake",
+    "requirement": {
+      "type": "count",
+      "target": "celebrate_birthday",
+      "count": 1
+    },
+    "hidden": false
+  },
+  {
+    "id": "best_friend_forever",
+    "name": "Best Friend Forever",
+    "description": "Reach maximum friendship with one character",
+    "category": "social",
+    "difficulty": "hard",
+    "icon": "💕",
+    "reward_coins": 200,
+    "reward_xp": 400,
+    "reward_stars": 5,
+    "reward_sticker": "heart_locket",
+    "requirement": {
+      "type": "count",
+      "target": "max_friendship",
+      "count": 1
+    },
+    "hidden": false
+  },
+  {
+    "id": "cookie_monster",
+    "name": "Cookie Monster",
+    "description": "Bake 25 batches of cookies",
+    "category": "cooking",
+    "difficulty": "medium",
+    "icon": "🍪",
+    "reward_coins": 125,
+    "reward_xp": 250,
+    "reward_stars": 3,
+    "reward_sticker": "cookie_jar",
+    "requirement": {
+      "type": "count",
+      "target": "bake_cookies",
+      "count": 25
+    },
+    "hidden": false
+  },
+  {
+    "id": "runway_ready",
+    "name": "Runway Ready",
+    "description": "Complete 15 fashion shows",
+    "category": "fashion",
+    "difficulty": "medium",
+    "icon": "💃",
+    "reward_coins": 150,
+    "reward_xp": 300,
+    "reward_stars": 4,
+    "reward_sticker": "sparkle_heels",
+    "requirement": {
+      "type": "count",
+      "target": "fashion_show",
+      "count": 15
+    },
+    "hidden": false
+  },
+  {
+    "id": "flower_power",
+    "name": "Flower Power",
+    "description": "Grow 50 different types of flowers",
+    "category": "garden",
+    "difficulty": "hard",
+    "icon": "🌸",
+    "reward_coins": 200,
+    "reward_xp": 400,
+    "reward_stars": 5,
+    "reward_sticker": "cherry_blossom",
+    "requirement": {
+      "type": "count",
+      "target": "grow_flower_type",
+      "count": 50
+    },
+    "hidden": false
+  },
+  {
+    "id": "straight_a_student",
+    "name": "Straight A Student",
+    "description": "Get perfect scores on 20 school activities",
+    "category": "school",
+    "difficulty": "hard",
+    "icon": "📝",
+    "reward_coins": 225,
+    "reward_xp": 450,
+    "reward_stars": 5,
+    "reward_sticker": "gold_star",
+    "requirement": {
+      "type": "count",
+      "target": "perfect_school_score",
+      "count": 20
+    },
+    "hidden": false
+  },
+  {
+    "id": "world_traveler",
+    "name": "World Traveler",
+    "description": "Visit every area on the map at least once",
+    "category": "exploration",
+    "difficulty": "medium",
+    "icon": "🌍",
+    "reward_coins": 175,
+    "reward_xp": 350,
+    "reward_stars": 4,
+    "reward_sticker": "globe_trotter",
+    "requirement": {
+      "type": "count",
+      "target": "visit_all_areas",
+      "count": 1
+    },
+    "hidden": false
+  },
+  {
+    "id": "sticker_collector",
+    "name": "Sticker Collector",
+    "description": "Collect 100 different stickers",
+    "category": "collection",
+    "difficulty": "hard",
+    "icon": "⭐",
+    "reward_coins": 250,
+    "reward_xp": 500,
+    "reward_stars": 5,
+    "reward_sticker": "sticker_album",
+    "requirement": {
+      "type": "count",
+      "target": "collect_sticker",
+      "count": 100
+    },
+    "hidden": false
+  },
+  {
+    "id": "puzzle_pro",
+    "name": "Puzzle Pro",
+    "description": "Complete 25 puzzle minigames",
+    "category": "minigame",
+    "difficulty": "medium",
+    "icon": "🧩",
+    "reward_coins": 150,
+    "reward_xp": 300,
+    "reward_stars": 4,
+    "reward_sticker": "puzzle_piece",
+    "requirement": {
+      "type": "count",
+      "target": "complete_puzzle",
+      "count": 25
+    },
+    "hidden": false
+  },
+  {
+    "id": "puppy_love",
+    "name": "Puppy Love",
+    "description": "Play with your pet 100 times",
+    "category": "pet",
+    "difficulty": "hard",
+    "icon": "🐕",
+    "reward_coins": 200,
+    "reward_xp": 400,
+    "reward_stars": 5,
+    "reward_sticker": "puppy_heart",
+    "requirement": {
+      "type": "count",
+      "target": "play_with_pet",
+      "count": 100
+    },
+    "hidden": false
+  },
+  {
+    "id": "rainbow_creator",
+    "name": "Rainbow Creator",
+    "description": "Use every color in 10 different artworks",
+    "category": "creativity",
+    "difficulty": "medium",
+    "icon": "🌈",
+    "reward_coins": 125,
+    "reward_xp": 250,
+    "reward_stars": 3,
+    "reward_sticker": "rainbow_brush",
+    "requirement": {
+      "type": "count",
+      "target": "rainbow_artwork",
+      "count": 10
+    },
+    "hidden": false
+  },
+  {
+    "id": "level_up_legend",
+    "name": "Level Up Legend",
+    "description": "Reach level 25",
+    "category": "milestone",
+    "difficulty": "hard",
+    "icon": "🚀",
+    "reward_coins": 300,
+    "reward_xp": 600,
+    "reward_stars": 6,
+    "reward_sticker": "rocket_badge",
+    "requirement": {
+      "type": "count",
+      "target": "reach_level",
+      "count": 25
+    },
+    "hidden": false
+  },
+  {
+    "id": "party_planner",
+    "name": "Party Planner",
+    "description": "Host 10 parties with friends",
+    "category": "social",
+    "difficulty": "medium",
+    "icon": "🎉",
+    "reward_coins": 150,
+    "reward_xp": 300,
+    "reward_stars": 4,
+    "reward_sticker": "party_hat",
+    "requirement": {
+      "type": "count",
+      "target": "host_party",
+      "count": 10
+    },
+    "hidden": false
+  },
+  {
+    "id": "smoothie_star",
+    "name": "Smoothie Star",
+    "description": "Blend 30 fruit smoothies",
+    "category": "cooking",
+    "difficulty": "medium",
+    "icon": "🥤",
+    "reward_coins": 100,
+    "reward_xp": 200,
+    "reward_stars": 3,
+    "reward_sticker": "fruity_cup",
+    "requirement": {
+      "type": "count",
+      "target": "make_smoothie",
+      "count": 30
+    },
+    "hidden": false
+  },
+  {
+    "id": "accessory_addict",
+    "name": "Accessory Addict",
+    "description": "Collect 50 different accessories",
+    "category": "fashion",
+    "difficulty": "hard",
+    "icon": "👒",
+    "reward_coins": 200,
+    "reward_xp": 400,
+    "reward_stars": 5,
+    "reward_sticker": "jewel_box",
+    "requirement": {
+      "type": "count",
+      "target": "collect_accessory",
+      "count": 50
+    },
+    "hidden": false
+  },
+  {
+    "id": "veggie_victor",
+    "name": "Veggie Victor",
+    "description": "Grow and harvest 75 vegetables",
+    "category": "garden",
+    "difficulty": "hard",
+    "icon": "🥕",
+    "reward_coins": 175,
+    "reward_xp": 350,
+    "reward_stars": 4,
+    "reward_sticker": "veggie_basket",
+    "requirement": {
+      "type": "count",
+      "target": "harvest_vegetable",
+      "count": 75
+    },
+    "hidden": false
+  },
+  {
+    "id": "science_whiz",
+    "name": "Science Whiz",
+    "description": "Complete 15 science experiments",
+    "category": "school",
+    "difficulty": "medium",
+    "icon": "🔬",
+    "reward_coins": 150,
+    "reward_xp": 300,
+    "reward_stars": 4,
+    "reward_sticker": "lab_coat",
+    "requirement": {
+      "type": "count",
+      "target": "science_experiment",
+      "count": 15
+    },
+    "hidden": false
+  },
+  {
+    "id": "secret_finder",
+    "name": "Secret Finder",
+    "description": "Discover 10 secret areas",
+    "category": "exploration",
+    "difficulty": "hard",
+    "icon": "🔍",
+    "reward_coins": 225,
+    "reward_xp": 450,
+    "reward_stars": 5,
+    "reward_sticker": "magnifying_glass",
+    "requirement": {
+      "type": "count",
+      "target": "find_secret",
+      "count": 10
+    },
+    "hidden": true
+  },
+  {
+    "id": "shell_seeker",
+    "name": "Shell Seeker",
+    "description": "Collect 40 seashells from the beach",
+    "category": "collection",
+    "difficulty": "medium",
+    "icon": "🐚",
+    "reward_coins": 125,
+    "reward_xp": 250,
+    "reward_stars": 3,
+    "reward_sticker": "pearl_shell",
+    "requirement": {
+      "type": "count",
+      "target": "collect_shell",
+      "count": 40
+    },
+    "hidden": false
+  },
+  {
+    "id": "memory_master",
+    "name": "Memory Master",
+    "description": "Win 20 memory matching games",
+    "category": "minigame",
+    "difficulty": "medium",
+    "icon": "🧠",
+    "reward_coins": 150,
+    "reward_xp": 300,
+    "reward_stars": 4,
+    "reward_sticker": "brain_power",
+    "requirement": {
+      "type": "count",
+      "target": "win_memory_game",
+      "count": 20
+    },
+    "hidden": false
+  },
+  {
+    "id": "pet_stylist",
+    "name": "Pet Stylist",
+    "description": "Give your pets 30 makeovers",
+    "category": "pet",
+    "difficulty": "medium",
+    "icon": "✨",
+    "reward_coins": 125,
+    "reward_xp": 250,
+    "reward_stars": 3,
+    "reward_sticker": "grooming_bow",
+    "requirement": {
+      "type": "count",
+      "target": "pet_makeover",
+      "count": 30
+    },
+    "hidden": false
+  },
+  {
+    "id": "music_maker",
+    "name": "Music Maker",
+    "description": "Create 20 original songs",
+    "category": "creativity",
+    "difficulty": "medium",
+    "icon": "🎵",
+    "reward_coins": 150,
+    "reward_xp": 300,
+    "reward_stars": 4,
+    "reward_sticker": "musical_note",
+    "requirement": {
+      "type": "count",
+      "target": "create_song",
+      "count": 20
+    },
+    "hidden": false
+  },
+  {
+    "id": "coin_collector",
+    "name": "Coin Collector",
+    "description": "Earn a total of 5000 coins",
+    "category": "milestone",
+    "difficulty": "hard",
+    "icon": "💰",
+    "reward_coins": 500,
+    "reward_xp": 1000,
+    "reward_stars": 10,
+    "reward_sticker": "money_bag",
+    "requirement": {
+      "type": "count",
+      "target": "total_coins_earned",
+      "count": 5000
+    },
+    "hidden": false
+  },
+  {
+    "id": "gift_giver",
+    "name": "Gift Giver",
+    "description": "Give 25 gifts to friends",
+    "category": "social",
+    "difficulty": "medium",
+    "icon": "🎁",
+    "reward_coins": 125,
+    "reward_xp": 250,
+    "reward_stars": 3,
+    "reward_sticker": "wrapped_present",
+    "requirement": {
+      "type": "count",
+      "target": "give_gift",
+      "count": 25
+    },
+    "hidden": false
+  },
+  {
+    "id": "cupcake_queen",
+    "name": "Cupcake Queen",
+    "description": "Decorate 40 cupcakes",
+    "category": "cooking",
+    "difficulty": "medium",
+    "icon": "🧁",
+    "reward_coins": 150,
+    "reward_xp": 300,
+    "reward_stars": 4,
+    "reward_sticker": "cupcake_crown",
+    "requirement": {
+      "type": "count",
+      "target": "decorate_cupcake",
+      "count": 40
+    },
+    "hidden": false
+  },
+  {
+    "id": "sparkle_sensation",
+    "name": "Sparkle Sensation",
+    "description": "Wear 20 different sparkly outfits",
+    "category": "fashion",
+    "difficulty": "medium",
+    "icon": "✨",
+    "reward_coins": 125,
+    "reward_xp": 250,
+    "reward_stars": 3,
+    "reward_sticker": "glitter_star",
+    "requirement": {
+      "type": "count",
+      "target": "wear_sparkly_outfit",
+      "count": 20
+    },
+    "hidden": false
+  },
+  {
+    "id": "butterfly_garden",
+    "name": "Butterfly Garden",
+    "description": "Attract 30 butterflies to your garden",
+    "category": "garden",
+    "difficulty": "medium",
+    "icon": "🦋",
+    "reward_coins": 150,
+    "reward_xp": 300,
+    "reward_stars": 4,
+    "reward_sticker": "butterfly_net",
+    "requirement": {
+      "type": "count",
+      "target": "attract_butterfly",
+      "count": 30
+    },
+    "hidden": false
+  },
+  {
+    "id": "math_magician",
+    "name": "Math Magician",
+    "description": "Solve 50 math problems correctly",
+    "category": "school",
+    "difficulty": "hard",
+    "icon": "🔢",
+    "reward_coins": 200,
+    "reward_xp": 400,
+    "reward_stars": 5,
+    "reward_sticker": "number_wand",
+    "requirement": {
+      "type": "count",
+      "target": "solve_math",
+      "count": 50
+    },
+    "hidden": false
+  },
+  {
+    "id": "nature_navigator",
+    "name": "Nature Navigator",
+    "description": "Explore all nature trails",
+    "category": "exploration",
+    "difficulty": "medium",
+    "icon": "🌲",
+    "reward_coins": 175,
+    "reward_xp": 350,
+    "reward_stars": 4,
+    "reward_sticker": "leaf_badge",
+    "requirement": {
+      "type": "count",
+      "target": "explore_trail",
+      "count": 10
+    },
+    "hidden": false
+  },
+  {
+    "id": "gem_gatherer",
+    "name": "Gem Gatherer",
+    "description": "Collect 60 precious gems",
+    "category": "collection",
+    "difficulty": "hard",
+    "icon": "💎",
+    "reward_coins": 225,
+    "reward_xp": 450,
+    "reward_stars": 5,
+    "reward_sticker": "diamond_ring",
+    "requirement": {
+      "type": "count",
+      "target": "collect_gem",
+      "count": 60
+    },
+    "hidden": false
+  },
+  {
+    "id": "dance_dynamo",
+    "name": "Dance Dynamo",
+    "description": "Get perfect scores in 15 dance minigames",
+    "category": "minigame",
+    "difficulty": "medium",
+    "icon": "💃",
+    "reward_coins": 150,
+    "reward_xp": 300,
+    "reward_stars": 4,
+    "reward_sticker": "dancing_shoes",
+    "requirement": {
+      "type": "count",
+      "target": "perfect_dance",
+      "count": 15
+    },
+    "hidden": false
+  },
+  {
+    "id": "kitty_cuddles",
+    "name": "Kitty Cuddles",
+    "description": "Pet your cat 50 times",
+    "category": "pet",
+    "difficulty": "easy",
+    "icon": "🐱",
+    "reward_coins": 75,
+    "reward_xp": 150,
+    "reward_stars": 2,
+    "reward_sticker": "cat_whiskers",
+    "requirement": {
+      "type": "count",
+      "target": "pet_cat",
+      "count": 50
+    },
+    "hidden": false
+  },
+  {
+    "id": "story_spinner",
+    "name": "Story Spinner",
+    "description": "Write 15 original stories",
+    "category": "creativity",
+    "difficulty": "medium",
+    "icon": "📖",
+    "reward_coins": 150,
+    "reward_xp": 300,
+    "reward_stars": 4,
+    "reward_sticker": "quill_pen",
+    "requirement": {
+      "type": "count",
+      "target": "write_story",
+      "count": 15
+    },
+    "hidden": false
+  },
+  {
+    "id": "week_warrior",
+    "name": "Week Warrior",
+    "description": "Play for 7 days in a row",
+    "category": "milestone",
+    "difficulty": "medium",
+    "icon": "📅",
+    "reward_coins": 175,
+    "reward_xp": 350,
+    "reward_stars": 4,
+    "reward_sticker": "calendar_star",
+    "requirement": {
+      "type": "count",
+      "target": "consecutive_days",
+      "count": 7
+    },
+    "hidden": false
+  },
+  {
+    "id": "helping_hand",
+    "name": "Helping Hand",
+    "description": "Help neighbors with 20 tasks",
+    "category": "social",
+    "difficulty": "medium",
+    "icon": "🤝",
+    "reward_coins": 150,
+    "reward_xp": 300,
+    "reward_stars": 4,
+    "reward_sticker": "helping_heart",
+    "requirement": {
+      "type": "count",
+      "target": "help_neighbor",
+      "count": 20
+    },
+    "hidden": false
+  },
+  {
+    "id": "pizza_perfectionist",
+    "name": "Pizza Perfectionist",
+    "description": "Make 20 perfect pizzas",
+    "category": "cooking",
+    "difficulty": "medium",
+    "icon": "🍕",
+    "reward_coins": 125,
+    "reward_xp": 250,
+    "reward_stars": 3,
+    "reward_sticker": "pizza_slice",
+    "requirement": {
+      "type": "count",
+      "target": "make_pizza",
+      "count": 20
+    },
+    "hidden": false
+  },
+  {
+    "id": "shoe_fanatic",
+    "name": "Shoe Fanatic",
+    "description": "Collect 25 pairs of shoes",
+    "category": "fashion",
+    "difficulty": "medium",
+    "icon": "👠",
+    "reward_coins": 150,
+    "reward_xp": 300,
+    "reward_stars": 4,
+    "reward_sticker": "glass_slipper",
+    "requirement": {
+      "type": "count",
+      "target": "collect_shoes",
+      "count": 25
+    },
+    "hidden": false
+  },
+  {
+    "id": "sunflower_superstar",
+    "name": "Sunflower Superstar",
+    "description": "Grow 20 giant sunflowers",
+    "category": "garden",
+    "difficulty": "medium",
+    "icon": "🌻",
+    "reward_coins": 125,
+    "reward_xp": 250,
+    "reward_stars": 3,
+    "reward_sticker": "sunny_flower",
+    "requirement": {
+      "type": "count",
+      "target": "grow_sunflower",
+      "count": 20
+    },
+    "hidden": false
+  },
+  {
+    "id": "spelling_bee",
+    "name": "Spelling Bee Champion",
+    "description": "Spell 100 words correctly",
+    "category": "school",
+    "difficulty": "hard",
+    "icon": "🐝",
+    "reward_coins": 200,
+    "reward_xp": 400,
+    "reward_stars": 5,
+    "reward_sticker": "bee_trophy",
+    "requirement": {
+      "type": "count",
+      "target": "spell_word",
+      "count": 100
+    },
+    "hidden": false
+  },
+  {
+    "id": "map_master",
+    "name": "Map Master",
+    "description": "Unlock the entire game map",
+    "category": "exploration",
+    "difficulty": "legendary",
+    "icon": "🗺️",
+    "reward_coins": 400,
+    "reward_xp": 800,
+    "reward_stars": 8,
+    "reward_sticker": "golden_map",
+    "requirement": {
+      "type": "count",
+      "target": "unlock_map",
+      "count": 1
+    },
+    "hidden": false
+  },
+  {
+    "id": "bug_catcher",
+    "name": "Bug Catcher",
+    "description": "Catch 35 different bugs",
+    "category": "collection",
+    "difficulty": "medium",
+    "icon": "🦗",
+    "reward_coins": 125,
+    "reward_xp": 250,
+    "reward_stars": 3,
+    "reward_sticker": "bug_jar",
+    "requirement": {
+      "type": "count",
+      "target": "catch_bug",
+      "count": 35
+    },
+    "hidden": false
+  },
+  {
+    "id": "bubble_blaster",
+    "name": "Bubble Blaster",
+    "description": "Pop 500 bubbles in bubble games",
+    "category": "minigame",
+    "difficulty": "medium",
+    "icon": "🫧",
+    "reward_coins": 100,
+    "reward_xp": 200,
+    "reward_stars": 3,
+    "reward_sticker": "bubble_wand",
+    "requirement": {
+      "type": "count",
+      "target": "pop_bubble",
+      "count": 500
+    },
+    "hidden": false
+  },
+  {
+    "id": "bunny_buddy",
+    "name": "Bunny Buddy",
+    "description": "Feed your bunny 75 carrots",
+    "category": "pet",
+    "difficulty": "medium",
+    "icon": "🐰",
+    "reward_coins": 125,
+    "reward_xp": 250,
+    "reward_stars": 3,
+    "reward_sticker": "bunny_ears",
+    "requirement": {
+      "type": "count",
+      "target": "feed_bunny",
+      "count": 75
+    },
+    "hidden": false
+  },
+  {
+    "id": "craft_queen",
+    "name": "Craft Queen",
+    "description": "Complete 30 DIY craft projects",
+    "category": "creativity",
+    "difficulty": "hard",
+    "icon": "🎀",
+    "reward_coins": 200,
+    "reward_xp": 400,
+    "reward_stars": 5,
+    "reward_sticker": "craft_scissors",
+    "requirement": {
+      "type": "count",
+      "target": "complete_craft",
+      "count": 30
+    },
+    "hidden": false
+  },
+  {
+    "id": "star_collector",
+    "name": "Star Collector",
+    "description": "Earn 100 stars total",
+    "category": "milestone",
+    "difficulty": "hard",
+    "icon": "⭐",
+    "reward_coins": 250,
+    "reward_xp": 500,
+    "reward_stars": 5,
+    "reward_sticker": "shooting_star",
+    "requirement": {
+      "type": "count",
+      "target": "total_stars",
+      "count": 100
+    },
+    "hidden": false
+  },
+  {
+    "id": "tea_party_host",
+    "name": "Tea Party Host",
+    "description": "Host 15 tea parties",
+    "category": "social",
+    "difficulty": "medium",
+    "icon": "🫖",
+    "reward_coins": 150,
+    "reward_xp": 300,
+    "reward_stars": 4,
+    "reward_sticker": "teacup",
+    "requirement": {
+      "type": "count",
+      "target": "host_tea_party",
+      "count": 15
+    },
+    "hidden": false
+  },
+  {
+    "id": "ice_cream_artist",
+    "name": "Ice Cream Artist",
+    "description": "Create 35 ice cream sundaes",
+    "category": "cooking",
+    "difficulty": "medium",
+    "icon": "🍨",
+    "reward_coins": 125,
+    "reward_xp": 250,
+    "reward_stars": 3,
+    "reward_sticker": "cherry_top",
+    "requirement": {
+      "type": "count",
+      "target": "make_sundae",
+      "count": 35
+    },
+    "hidden": false
+  },
+  {
+    "id": "princess_perfect",
+    "name": "Princess Perfect",
+    "description": "Unlock all princess dresses",
+    "category": "fashion",
+    "difficulty": "legendary",
+    "icon": "👑",
+    "reward_coins": 400,
+    "reward_xp": 800,
+    "reward_stars": 8,
+    "reward_sticker": "royal_crown",
+    "requirement": {
+      "type": "count",
+      "target": "unlock_princess_dress",
+      "count": 15
+    },
+    "hidden": false
+  },
+  {
+    "id": "fruit_farmer",
+    "name": "Fruit Farmer",
+    "description": "Harvest 80 fruits from trees",
+    "category": "garden",
+    "difficulty": "hard",
+    "icon": "🍎",
+    "reward_coins": 175,
+    "reward_xp": 350,
+    "reward_stars": 4,
+    "reward_sticker": "fruit_basket",
+    "requirement": {
+      "type": "count",
+      "target": "harvest_fruit",
+      "count": 80
+    },
+    "hidden": false
+  },
+  {
+    "id": "art_class_ace",
+    "name": "Art Class Ace",
+    "description": "Complete 25 art class projects",
+    "category": "school",
+    "difficulty": "medium",
+    "icon": "🖼️",
+    "reward_coins": 150,
+    "reward_xp": 300,
+    "reward_stars": 4,
+    "reward_sticker": "art_ribbon",
+    "requirement": {
+      "type": "count",
+      "target": "art_class_project",
+      "count": 25
+    },
+    "hidden": false
+  },
+  {
+    "id": "cloud_walker",
+    "name": "Cloud Walker",
+    "description": "Find all sky-high secret spots",
+    "category": "exploration",
+    "difficulty": "hard",
+    "icon": "☁️",
+    "reward_coins": 225,
+    "reward_xp": 450,
+    "reward_stars": 5,
+    "reward_sticker": "cloud_wings",
+    "requirement": {
+      "type": "count",
+      "target": "find_sky_spot",
+      "count": 8
+    },
+    "hidden": true
+  },
+  {
+    "id": "card_collector",
+    "name": "Card Collector",
+    "description": "Collect 75 trading cards",
+    "category": "collection",
+    "difficulty": "hard",
+    "icon": "🃏",
+    "reward_coins": 200,
+    "reward_xp": 400,
+    "reward_stars": 5,
+    "reward_sticker": "rare_card",
+    "requirement": {
+      "type": "count",
+      "target": "collect_card",
+      "count": 75
+    },
+    "hidden": false
+  },
+  {
+    "id": "racing_rocket",
+    "name": "Racing Rocket",
+    "description": "Win 25 racing minigames",
+    "category": "minigame",
+    "difficulty": "hard",
+    "icon": "🏎️",
+    "reward_coins": 200,
+    "reward_xp": 400,
+    "reward_stars": 5,
+    "reward_sticker": "checkered_flag",
+    "requirement": {
+      "type": "count",
+      "target": "win_race",
+      "count": 25
+    },
+    "hidden": false
+  },
+  {
+    "id": "fish_friend",
+    "name": "Fish Friend",
+    "description": "Take care of aquarium fish for 30 days",
+    "category": "pet",
+    "difficulty": "hard",
+    "icon": "🐠",
+    "reward_coins": 175,
+    "reward_xp": 350,
+    "reward_stars": 4,
+    "reward_sticker": "fish_tank",
+    "requirement": {
+      "type": "count",
+      "target": "care_fish_days",
+      "count": 30
+    },
+    "hidden": false
+  },
+  {
+    "id": "photo_phenom",
+    "name": "Photo Phenom",
+    "description": "Take 50 photos in photo mode",
+    "category": "creativity",
+    "difficulty": "medium",
+    "icon": "📸",
+    "reward_coins": 125,
+    "reward_xp": 250,
+    "reward_stars": 3,
+    "reward_sticker": "camera_badge",
+    "requirement": {
+      "type": "count",
+      "target": "take_photo",
+      "count": 50
+    },
+    "hidden": false
+  },
+  {
+    "id": "emersyn_elite",
+    "name": "Emersyn Elite",
+    "description": "Reach level 50",
+    "category": "milestone",
+    "difficulty": "legendary",
+    "icon": "🌟",
+    "reward_coins": 500,
+    "reward_xp": 1000,
+    "reward_stars": 10,
+    "reward_sticker": "elite_badge",
+    "requirement": {
+      "type": "count",
+      "target": "reach_level",
+      "count": 50
+    },
+    "hidden": false
+  },
+  {
+    "id": "pen_pal",
+    "name": "Pen Pal",
+    "description": "Send 30 letters to friends",
+    "category": "social",
+    "difficulty": "medium",
+    "icon": "✉️",
+    "reward_coins": 100,
+    "reward_xp": 200,
+    "reward_stars": 3,
+    "reward_sticker": "letter_seal",
+    "requirement": {
+      "type": "count",
+      "target": "send_letter",
+      "count": 30
+    },
+    "hidden": false
+  },
+  {
+    "id": "breakfast_boss",
+    "name": "Breakfast Boss",
+    "description": "Make 25 breakfast dishes",
+    "category": "cooking",
+    "difficulty": "medium",
+    "icon": "🥞",
+    "reward_coins": 125,
+    "reward_xp": 250,
+    "reward_stars": 3,
+    "reward_sticker": "pancake_stack",
+    "requirement": {
+      "type": "count",
+      "target": "make_breakfast",
+      "count": 25
+    },
+    "hidden": false
+  },
+  {
+    "id": "color_coordinator",
+    "name": "Color Coordinator",
+    "description": "Create 20 matching outfit sets",
+    "category": "fashion",
+    "difficulty": "medium",
+    "icon": "🎨",
+    "reward_coins": 150,
+    "reward_xp": 300,
+    "reward_stars": 4,
+    "reward_sticker": "color_wheel",
+    "requirement": {
+      "type": "count",
+      "target": "matching_outfit",
+      "count": 20
+    },
+    "hidden": false
+  },
+  {
+    "id": "water_wizard",
+    "name": "Water Wizard",
+    "description": "Water plants 200 times",
+    "category": "garden",
+    "difficulty": "hard",
+    "icon": "💧",
+    "reward_coins": 175,
+    "reward_xp": 350,
+    "reward_stars": 4,
+    "reward_sticker": "watering_can",
+    "requirement": {
+      "type": "count",
+      "target": "water_plant",
+      "count": 200
+    },
+    "hidden": false
+  },
+  {
+    "id": "music_class_maestro",
+    "name": "Music Class Maestro",
+    "description": "Complete 20 music lessons",
+    "category": "school",
+    "difficulty": "medium",
+    "icon": "🎹",
+    "reward_coins": 150,
+    "reward_xp": 300,
+    "reward_stars": 4,
+    "reward_sticker": "piano_keys",
+    "requirement": {
+      "type": "count",
+      "target": "music_lesson",
+      "count": 20
+    },
+    "hidden": false
+  },
+  {
+    "id": "underwater_explorer",
+    "name": "Underwater Explorer",
+    "description": "Discover all underwater locations",
+    "category": "exploration",
+    "difficulty": "hard",
+    "icon": "🤿",
+    "reward_coins": 250,
+    "reward_xp": 500,
+    "reward_stars": 5,
+    "reward_sticker": "diving_mask",
+    "requirement": {
+      "type": "count",
+      "target": "underwater_location",
+      "count": 12
+    },
+    "hidden": false
+  },
+  {
+    "id": "fossil_finder",
+    "name": "Fossil Finder",
+    "description": "Dig up 25 fossils",
+    "category": "collection",
+    "difficulty": "hard",
+    "icon": "🦴",
+    "reward_coins": 200,
+    "reward_xp": 400,
+    "reward_stars": 5,
+    "reward_sticker": "dino_bone",
+    "requirement": {
+      "type": "count",
+      "target": "find_fossil",
+      "count": 25
+    },
+    "hidden": false
+  },
+  {
+    "id": "catch_champion",
+    "name": "Catch Champion",
+    "description": "Win 30 catching minigames",
+    "category": "minigame",
+    "difficulty": "hard",
+    "icon": "🥎",
+    "reward_coins": 175,
+    "reward_xp": 350,
+    "reward_stars": 4,
+    "reward_sticker": "golden_glove",
+    "requirement": {
+      "type": "count",
+      "target": "win_catch_game",
+      "count": 30
+    },
+    "hidden": false
+  },
+  {
+    "id": "hamster_hero",
+    "name": "Hamster Hero",
+    "description": "Keep your hamster happy for 20 days",
+    "category": "pet",
+    "difficulty": "medium",
+    "icon": "🐹",
+    "reward_coins": 125,
+    "reward_xp": 250,
+    "reward_stars": 3,
+    "reward_sticker": "hamster_wheel",
+    "requirement": {
+      "type": "count",
+      "target": "happy_hamster_days",
+      "count": 20
+    },
+    "hidden": false
+  },
+  {
+    "id": "decoration_diva",
+    "name": "Decoration Diva",
+    "description": "Decorate 25 rooms",
+    "category": "creativity",
+    "difficulty": "hard",
+    "icon": "🏠",
+    "reward_coins": 200,
+    "reward_xp": 400,
+    "reward_stars": 5,
+    "reward_sticker": "interior_star",
+    "requirement": {
+      "type": "count",
+      "target": "decorate_room",
+      "count": 25
+    },
+    "hidden": false
+  },
+  {
+    "id": "early_bird",
+    "name": "Early Bird",
+    "description": "Log in before 8 AM 10 times",
+    "category": "milestone",
+    "difficulty": "medium",
+    "icon": "🌅",
+    "reward_coins": 150,
+    "reward_xp": 300,
+    "reward_stars": 4,
+    "reward_sticker": "sunrise_badge",
+    "requirement": {
+      "type": "count",
+      "target": "early_login",
+      "count": 10
+    },
+    "hidden": false
+  },
+  {
+    "id": "compliment_champion",
+    "name": "Compliment Champion",
+    "description": "Give 50 compliments to friends",
+    "category": "social",
+    "difficulty": "hard",
+    "icon": "💬",
+    "reward_coins": 175,
+    "reward_xp": 350,
+    "reward_stars": 4,
+    "reward_sticker": "kind_heart",
+    "requirement": {
+      "type": "count",
+      "target": "give_compliment",
+      "count": 50
+    },
+    "hidden": false
+  }
+]

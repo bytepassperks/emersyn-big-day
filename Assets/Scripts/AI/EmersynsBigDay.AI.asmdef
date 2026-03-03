@@ -1,0 +1,17 @@
+{
+  "name": "EmersynsBigDay.AI",
+  "rootNamespace": "EmersynsBigDay.AI",
+  "references": [
+    "EmersynsBigDay",
+    "Unity.Mathematics"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

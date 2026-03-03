@@ -1,0 +1,75 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!78 &1
+TagManager:
+  serializedVersion: 2
+  tags:
+  - Player
+  - NPC
+  - Pet
+  - Furniture
+  - Food
+  - Clothing
+  - Decoration
+  - Interactable
+  - MiniGame
+  - Collectible
+  - Particle
+  - UIElement
+  - RoomBoundary
+  - Waypoint
+  layers:
+  - Default
+  - TransparentFX
+  - Ignore Raycast
+  -
+  - Water
+  - UI
+  -
+  -
+  - Characters
+  - Furniture
+  - Interactables
+  - Particles
+  - Ground
+  - Walls
+  - Decorations
+  - MiniGameObjects
+  -
+  -
+  -
+  -
+  -
+  -
+  -
+  -
+  -
+  -
+  -
+  -
+  -
+  -
+  -
+  -
+  m_SortingLayers:
+  - name: Default
+    uniqueID: 0
+    locked: 0
+  - name: Background
+    uniqueID: 1
+    locked: 0
+  - name: Midground
+    uniqueID: 2
+    locked: 0
+  - name: Characters
+    uniqueID: 3
+    locked: 0
+  - name: Foreground
+    uniqueID: 4
+    locked: 0
+  - name: UI
+    uniqueID: 5
+    locked: 0
+  - name: Overlay
+    uniqueID: 6
+    locked: 0

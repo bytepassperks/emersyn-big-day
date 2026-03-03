@@ -1,0 +1,179 @@
+{
+  "whiskers": {
+    "species": "cat",
+    "breed": "Indian tabby",
+    "personality_traits": [
+      "curious and mischievous",
+      "loves attention and being pampered",
+      "secretly protective of Emersyn",
+      "dramatic when hungry",
+      "enjoys being the center of attention during reels"
+    ],
+    "favorite_activities": [
+      "sitting near chai cups to feel the warm steam",
+      "photobombing Emersyn's makeup videos",
+      "chasing rangoli powder across the floor",
+      "napping in warm spots near the kitchen",
+      "watching YouTube videos on TV with Emersyn",
+      "playing with dangling dupattas",
+      "hiding in shopping bags from the mall"
+    ],
+    "favorite_foods": [
+      "warm milk with a tiny bit of malai",
+      "small pieces of tandoori chicken",
+      "fish curry scraps",
+      "cream from the top of chai"
+    ],
+    "tricks": [
+      "high-five for treats",
+      "spin in a circle",
+      "play dead dramatically",
+      "fetch small hair ties",
+      "pose for photos on command"
+    ],
+    "moods": {
+      "happy": "Whiskers purrs loudly and rubs against Emersyn's legs, tail held high like a flag",
+      "sad": "Whiskers hides under the bed and makes soft, pitiful mewing sounds",
+      "playful": "Whiskers zooms around the room, pouncing on shadows and batting at anything that moves",
+      "sleepy": "Whiskers curls into a perfect cinnamon roll shape and twitches whiskers while dreaming",
+      "hungry": "Whiskers follows Emersyn everywhere, meowing dramatically as if starving for days"
+    },
+    "sounds": {
+      "happy": "purrrr purrrr",
+      "excited": "mew mew!",
+      "hungry": "MEOOOW!",
+      "content": "prrrp",
+      "surprised": "mrrp?!"
+    },
+    "backstory": "Whiskers was found as a tiny kitten during Diwali, hiding behind a stack of diyas in the local market. The little tabby was shivering and scared of all the firecrackers, and Emersyn immediately fell in love with those big golden eyes. Papa couldn't say no when Emersyn promised to take care of the kitten forever, and Whiskers came home wrapped in Emersyn's favorite dupatta.\n\nNow Whiskers is the unofficial queen of the household, believing the entire home was built just for her comfort. She has a special spot on the windowsill where she watches the street vendors and birds, and she's become famous in the neighborhood for appearing in Emersyn's dance reels. Whiskers even has her own fan following among Emersyn's friends, who always ask to see the 'dancing cat' when they visit.",
+    "fun_facts": [
+      "Whiskers can predict when the chai is ready by the smell and always appears in the kitchen at the perfect moment",
+      "She once got orange paws from walking through Holi colors and looked like a tiger for a week",
+      "Whiskers is afraid of the vacuum cleaner but pretends she's not by hissing at it bravely",
+      "She has a favorite toy mouse that she carries around like a baby",
+      "Whiskers learned to open the treat cabinet by watching Emersyn do it"
+    ]
+  },
+  "buddy": {
+    "species": "dog",
+    "breed": "Indian Spitz",
+    "personality_traits": [
+      "loyal and endlessly enthusiastic",
+      "protective of the whole family",
+      "loves making new friends at the park",
+      "surprisingly gentle despite his energy",
+      "always ready for an adventure"
+    ],
+    "favorite_activities": [
+      "doing morning yoga stretches with Emersyn",
+      "accompanying the family to the park",
+      "greeting the doodh-wala every morning",
+      "playing fetch in the garden",
+      "going for rides to the mall in the car",
+      "dancing along when Emersyn makes reels",
+      "guarding the house during Diwali fireworks",
+      "splashing in puddles during monsoon"
+    ],
+    "favorite_foods": [
+      "roti pieces dipped in dal",
+      "chicken tikka bits as special treats",
+      "paneer cubes",
+      "dog-safe biscuits shaped like bones",
+      "the occasional french fry sneaked by Emersyn"
+    ],
+    "tricks": [
+      "downward dog yoga pose",
+      "shake hands with both paws",
+      "roll over and play dead",
+      "catch treats mid-air",
+      "speak on command",
+      "spin like a Bollywood dancer",
+      "bow like a karate greeting"
+    ],
+    "moods": {
+      "happy": "Buddy's entire back half wiggles along with his tail, and he does excited tippy-taps",
+      "sad": "Buddy lies flat on the floor with his chin on his paws, looking up with big puppy eyes",
+      "playful": "Buddy does a play bow and zooms in circles, barking invitations to chase him",
+      "sleepy": "Buddy stretches out completely flat like a fluffy white rug, snoring softly",
+      "hungry": "Buddy sits perfectly still by his bowl, staring at it intensely as if willing food to appear"
+    },
+    "sounds": {
+      "happy": "woof woof!",
+      "excited": "arf arf arf!",
+      "hungry": "whiiine",
+      "alert": "BORK BORK!",
+      "content": "happy grumble"
+    },
+    "backstory": "Buddy was adopted from a local animal shelter when he was just a fluffy puppy who looked like a cotton ball with legs. Emersyn had been asking for a dog for her birthday, and when she saw Buddy doing his wiggly dance at the shelter, it was love at first sight. He came home wearing a tiny orange bandana and immediately claimed the sunny spot in the garden as his kingdom.\n\nBuddy quickly became Emersyn's yoga partner after he started copying her stretches one morning. Now he's famous in the family for his perfect 'downward dog' pose and his habit of howling along to Emersyn's favorite dance songs. He takes his job as family protector very seriously, barking at suspicious squirrels and escorting Emersyn safely to school every day. During festivals, Buddy wears matching outfits with Emersyn and has become the star of many family photos.",
+    "fun_facts": [
+      "Buddy howls every time he hears the ice cream truck jingle",
+      "He learned to wipe his paws on the doormat after monsoon walks",
+      "Buddy is scared of the tiny kitten Whiskers but pretends to be brave",
+      "He once ate an entire plate of samosas meant for guests and felt very sorry afterward",
+      "Buddy knows the word 'walk' in three languages and gets excited for all of them",
+      "He does a special happy dance when Papa comes home from work"
+    ]
+  },
+  "cotton": {
+    "species": "bunny",
+    "breed": "Indian white rabbit",
+    "personality_traits": [
+      "sweet and gentle",
+      "surprisingly clever and sneaky about treats",
+      "loves cuddles and being held",
+      "curious explorer of every corner",
+      "gets the zoomies at unexpected moments"
+    ],
+    "favorite_activities": [
+      "hunting for gol gappe crumbs after snack time",
+      "hopping through the garden looking for clover",
+      "binkying during Emersyn's dance practice",
+      "hiding in cozy spots around the house",
+      "watching Emersyn do makeup from her lap",
+      "exploring new cardboard boxes",
+      "sitting in the cool bathroom tiles during summer",
+      "being carried around the mall in a special bunny bag"
+    ],
+    "favorite_foods": [
+      "fresh coriander leaves from the kitchen",
+      "carrot pieces cut into tiny stars",
+      "mint leaves from the garden",
+      "cucumber slices",
+      "the occasional gol gappe crumb from the floor",
+      "fresh spinach palak leaves",
+      "apple slices as special treats"
+    ],
+    "tricks": [
+      "come when called by name",
+      "stand up on hind legs for treats",
+      "hop through a small hoop",
+      "give bunny kisses on command",
+      "spin in a circle",
+      "push a tiny ball with nose"
+    ],
+    "moods": {
+      "happy": "Cotton does excited binkies, jumping and twisting in the air with pure joy",
+      "sad": "Cotton sits very still in a loaf shape, ears flat against her back",
+      "playful": "Cotton zooms around the room in wild circles, tossing toys with her mouth",
+      "sleepy": "Cotton flops completely on her side, looking almost like a fluffy cloud puddle",
+      "hungry": "Cotton stands on hind legs and wiggles her nose rapidly at anyone holding food"
+    },
+    "sounds": {
+      "happy": "soft tooth purring",
+      "excited": "quiet honking sounds",
+      "hungry": "gentle nudging",
+      "content": "relaxed grinding teeth",
+      "startled": "thump thump"
+    },
+    "backstory": "Cotton came to live with Emersyn after a school trip to a petting zoo, where the little white bunny hopped right into Emersyn's lap and refused to leave. The zookeeper said Cotton had never done that before with anyone, so it was clearly meant to be. Emersyn named her Cotton because she looked exactly like the cotton candy at the amusement park, soft and fluffy and perfectly white.\n\nCotton has become the gentlest member of the family, loved by everyone for her calm nature and adorable nose wiggles. She has a special talent for finding any dropped food, especially the crispy crumbs from gol gappe that fall during snack time. Cotton loves festival days because there are always extra treats and colorful decorations to explore. She's learned to binky on cue for Emersyn's videos and has become quite the little star, with her own collection of tiny festive outfits for Diwali and Holi.",
+    "fun_facts": [
+      "Cotton's nose wiggles exactly 120 times per minute when she smells something yummy",
+      "She once turned slightly pink after hopping through Holi gulal powder",
+      "Cotton has a favorite hiding spot behind the TV that she thinks is secret",
+      "She learned to recognize the sound of the refrigerator opening from anywhere in the house",
+      "Cotton does her biggest binkies during Emersyn's Bollywood dance practice",
+      "She sleeps in a special bed shaped like a marigold flower",
+      "Cotton is best friends with Whiskers and they often nap together"
+    ]
+  }
+}

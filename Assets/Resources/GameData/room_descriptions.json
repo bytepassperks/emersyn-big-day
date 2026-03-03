@@ -1,0 +1,737 @@
+{
+  "bedroom": {
+    "name": "Emersyn's Bedroom",
+    "tagline": "Where dreams, dance moves, and dazzling makeovers come to life!",
+    "description": "A magical pink and purple haven filled with sparkles, Bollywood posters, and everything a 6-year-old superstar needs. The walls are decorated with rangoli stickers and photos from Emersyn's favorite reel videos, while her prized karate belts hang proudly on a special display rack.",
+    "atmosphere": "Cheerful, creative, and bursting with personality - a perfect blend of Indian culture and childhood wonder",
+    "sounds": [
+      "Bollywood music playing softly",
+      "wind chimes tinkling",
+      "Whiskers purring on the bed",
+      "notification sounds from the tablet"
+    ],
+    "time_variants": {
+      "morning": "Golden sunlight streams through the curtains decorated with little diyas, making the glitter on Emersyn's craft table sparkle like magic dust. The room feels fresh and ready for a new adventure!",
+      "afternoon": "The room is bright and lively, perfect for practicing dance moves in front of the ring light or having a pretend makeup session with friends.",
+      "evening": "Warm fairy lights twinkle around the bed frame, and the Bollywood posters seem to glow. It's the perfect time for making reels!",
+      "night": "The glow-in-the-dark rangoli stickers on the ceiling create a peaceful starry pattern. Whiskers is curled up on the bed, and everything feels cozy and safe."
+    },
+    "interactive_spots": [
+      {
+        "name": "Reel Recording Corner",
+        "description": "A special corner with a bright ring light, a tablet stand, and a sparkly backdrop perfect for making dance videos",
+        "actions": [
+          "Record a dance reel",
+          "Practice new moves",
+          "Watch trending videos",
+          "Change the backdrop color"
+        ]
+      },
+      {
+        "name": "Makeup Vanity Table",
+        "description": "A princess-style table with a heart-shaped mirror, covered in kid-friendly play makeup, nail polish in every color, and sparkly hair accessories",
+        "actions": [
+          "Apply play lipstick",
+          "Paint nails rainbow colors",
+          "Try eyeshadow looks",
+          "Style hair with clips",
+          "Admire reflection"
+        ]
+      },
+      {
+        "name": "Karate Belt Display",
+        "description": "A wooden rack shaped like a lotus flower, proudly displaying all of Emersyn's earned karate belts in order",
+        "actions": [
+          "Practice kata moves",
+          "Count the belts",
+          "Remember each belt ceremony",
+          "Show off to friends"
+        ]
+      },
+      {
+        "name": "Cozy Bed with Canopy",
+        "description": "A fluffy bed with a sheer canopy, covered in pillows shaped like gol gappe, cotton candy, and french fries",
+        "actions": [
+          "Bounce on the bed",
+          "Hide under the canopy",
+          "Cuddle with Whiskers",
+          "Have a pillow fight",
+          "Take a nap"
+        ]
+      },
+      {
+        "name": "Dress-Up Wardrobe",
+        "description": "A magical wardrobe filled with lehengas, tutus, karate gi, and costumes for making the best reels",
+        "actions": [
+          "Try on a lehenga",
+          "Wear the karate uniform",
+          "Pick a tutu",
+          "Mix and match outfits",
+          "Find accessories"
+        ]
+      }
+    ],
+    "easter_eggs": [
+      "A tiny framed photo of Emersyn's first Holi celebration, covered in colorful powder",
+      "A secret diary hidden under the mattress with a lock shaped like a mango",
+      "A Frooti bottle cap collection in a little box",
+      "Whiskers' favorite spot has a tiny cat-sized rangoli mat"
+    ]
+  },
+  "kitchen": {
+    "name": "Family Kitchen",
+    "tagline": "Where yummy chai meets crispy gol gappe magic!",
+    "description": "A warm, bustling kitchen filled with the amazing smells of Indian spices and sweet treats. Colorful masala jars line the shelves, the fridge is always stocked with Frooti, and there's a special kid-friendly counter where Emersyn helps make snacks.",
+    "atmosphere": "Warm, aromatic, and full of love - the heart of the home where delicious memories are made",
+    "sounds": [
+      "Pressure cooker whistling",
+      "chai bubbling on the stove",
+      "spices sizzling in a pan",
+      "fridge humming",
+      "Buddy hoping for treats"
+    ],
+    "time_variants": {
+      "morning": "The kitchen smells like fresh parathas and chai. Sunlight makes the steel dabba containers shine, and there's a warm glass of milk waiting on Emersyn's special plate.",
+      "afternoon": "Time for snacks! The counter has a plate of freshly made french fries, and there might be popcorn chicken if Emersyn asks nicely.",
+      "evening": "The kitchen is busy with dinner preparations. The smell of spices fills the air, and the mixer grinder whirs as chutneys are made.",
+      "night": "The kitchen is quiet and clean, with only the fridge light glowing. A box of leftover sweets sits on the counter for tomorrow."
+    },
+    "interactive_spots": [
+      {
+        "name": "Colorful Spice Shelf",
+        "description": "Glass jars filled with vibrant turmeric yellow, chili red, and mysterious garam masala, each with a picture label",
+        "actions": [
+          "Smell the spices",
+          "Learn spice names",
+          "Help organize jars",
+          "Count the colors",
+          "Find the secret candy jar"
+        ]
+      },
+      {
+        "name": "Frooti Fridge",
+        "description": "A big refrigerator covered in alphabet magnets and Emersyn's drawings, always stocked with Frooti mango drinks and yummy leftovers",
+        "actions": [
+          "Grab a Frooti",
+          "Look for snacks",
+          "Rearrange magnets",
+          "Find hidden chocolates",
+          "Check for cotton candy"
+        ]
+      },
+      {
+        "name": "Gol Gappe Station",
+        "description": "A special corner with puris, spicy pani, and all the fillings needed to make the perfect gol gappe",
+        "actions": [
+          "Fill a puri",
+          "Mix the pani",
+          "Make one for a friend",
+          "Have an eating contest",
+          "Learn the recipe"
+        ]
+      },
+      {
+        "name": "Kid's Cooking Counter",
+        "description": "A low counter just Emersyn's height, with safe cooking tools, cookie cutters shaped like diyas, and a tiny apron hook",
+        "actions": [
+          "Wear the apron",
+          "Cut cookie shapes",
+          "Mix ingredients",
+          "Decorate treats",
+          "Lick the spoon"
+        ]
+      },
+      {
+        "name": "Chai Corner",
+        "description": "A cozy nook where the family chai is made, with a special tiny cup for Emersyn's milk-chai",
+        "actions": [
+          "Watch chai being made",
+          "Smell the cardamom",
+          "Dunk a biscuit",
+          "Blow on hot milk",
+          "Help add sugar"
+        ]
+      }
+    ],
+    "easter_eggs": [
+      "A secret stash of candies hidden inside the rice container",
+      "Buddy's nose prints on the lower fridge door from sniffing for treats",
+      "A 'World's Best Helper' certificate taped to the cabinet, given to Emersyn",
+      "A recipe book with Emersyn's crayon additions to make everything 'more yummy'"
+    ]
+  },
+  "bathroom": {
+    "name": "Bubble Bathroom",
+    "tagline": "Splish, splash, and sparkle clean!",
+    "description": "A bright, cheerful bathroom with ocean-themed tiles and a bathtub perfect for bubble adventures. There's a special step stool with Emersyn's name painted on it, and the mirror has encouraging stickers all around it.",
+    "atmosphere": "Clean, playful, and refreshing - where getting ready becomes an adventure",
+    "sounds": [
+      "Water splashing",
+      "rubber ducky squeaking",
+      "toothbrush timer playing music",
+      "bubbles popping",
+      "exhaust fan humming"
+    ],
+    "time_variants": {
+      "morning": "Fresh and bright! The bathroom sparkles clean, and Emersyn's toothbrush is ready in its special holder shaped like a dancing girl.",
+      "afternoon": "Quiet and peaceful, with sunlight making rainbow patterns through the frosted window. Perfect for a quick wash-up after playing.",
+      "evening": "Warm and steamy from bath time! Bubbles pile high in the tub, and all the bath toys are ready for an adventure.",
+      "night": "Soft night-light glowing near the floor, making the bathroom feel safe for late-night trips. Everything is calm and quiet."
+    },
+    "interactive_spots": [
+      {
+        "name": "Bubble Bath Tub",
+        "description": "A big white tub filled with colorful bubbles, bath bombs that fizz in rainbow colors, and floating toys",
+        "actions": [
+          "Make bubble mountains",
+          "Play with rubber duckies",
+          "Drop a bath bomb",
+          "Splash gently",
+          "Create bubble beards"
+        ]
+      },
+      {
+        "name": "Sparkle Mirror Station",
+        "description": "A mirror surrounded by star and diya stickers, with a special step stool so Emersyn can see herself perfectly",
+        "actions": [
+          "Make funny faces",
+          "Practice dance expressions",
+          "Check outfit",
+          "Brush teeth",
+          "Pretend to do makeup"
+        ]
+      },
+      {
+        "name": "Toothbrush Dance Party",
+        "description": "A musical toothbrush holder that plays fun songs for exactly two minutes of brushing time",
+        "actions": [
+          "Brush teeth to music",
+          "Dance while brushing",
+          "Choose a song",
+          "Make brushing faces",
+          "Rinse and spit"
+        ]
+      },
+      {
+        "name": "Towel Hooks",
+        "description": "Colorful hooks at kid-height, each with a different animal shape - elephant, peacock, and tiger",
+        "actions": [
+          "Grab fluffy towel",
+          "Wrap up like a burrito",
+          "Hang towel properly",
+          "Play peek-a-boo",
+          "Choose favorite hook"
+        ]
+      },
+      {
+        "name": "Bath Toy Basket",
+        "description": "A mesh basket overflowing with boats, cups, squirting fish, and a special mermaid doll",
+        "actions": [
+          "Choose bath toys",
+          "Have a boat race",
+          "Stack pouring cups",
+          "Make the fish squirt",
+          "Create water stories"
+        ]
+      }
+    ],
+    "easter_eggs": [
+      "A tiny rangoli pattern made of bath stickers on the tub floor",
+      "Cotton the bunny's picture on the hand soap dispenser",
+      "A height chart on the wall showing how much Emersyn has grown",
+      "Glow-in-the-dark stars on the ceiling that appear when the lights go off"
+    ]
+  },
+  "living_room": {
+    "name": "Family Living Room",
+    "tagline": "Where YouTube marathons and family fun happen!",
+    "description": "A cozy living room with a big TV perfect for watching YouTube videos, comfortable cushions on the floor for family time, and beautiful Diwali decorations that stay up all year. The walls display family photos and Emersyn's artwork.",
+    "atmosphere": "Warm, welcoming, and full of entertainment - the family's favorite gathering spot",
+    "sounds": [
+      "TV playing videos",
+      "tablet notification dings",
+      "Buddy's tail wagging against furniture",
+      "family laughter",
+      "ceiling fan whirring"
+    ],
+    "time_variants": {
+      "morning": "Sunlight pours through the windows onto the rangoli-patterned rug. The TV is off, and the room feels peaceful and ready for a new day.",
+      "afternoon": "Prime YouTube time! The curtains are drawn just enough to see the TV clearly, and snacks are arranged on the coffee table.",
+      "evening": "The room glows warmly with fairy lights. It's family time, and everyone gathers on the big sofa for stories or videos together.",
+      "night": "Only the TV light flickers in the darkness. The room is quiet except for the show playing, and everything feels cozy and sleepy."
+    },
+    "interactive_spots": [
+      {
+        "name": "Big Screen TV",
+        "description": "A large television mounted on the wall, connected to YouTube and all of Emersyn's favorite channels",
+        "actions": [
+          "Watch dance videos",
+          "Play kid's YouTube",
+          "Learn new reel trends",
+          "Watch cartoons",
+          "See Diwali specials"
+        ]
+      },
+      {
+        "name": "Tablet Corner",
+        "description": "A cozy bean bag with Emersyn's tablet, perfect for scrolling reels and watching videos up close",
+        "actions": [
+          "Scroll through reels",
+          "Watch favorite YouTubers",
+          "Play games",
+          "Video call Ava",
+          "Learn dance moves"
+        ]
+      },
+      {
+        "name": "Diwali Decoration Wall",
+        "description": "A beautiful wall with paper lanterns, toran hangings, and photos from every Diwali celebration",
+        "actions": [
+          "Count the diyas",
+          "Touch the lanterns",
+          "Look at old photos",
+          "Make the lights twinkle",
+          "Remember celebrations"
+        ]
+      },
+      {
+        "name": "Floor Cushion Circle",
+        "description": "Colorful cushions arranged in a circle on a beautiful rug, perfect for sitting with family or playing with pets",
+        "actions": [
+          "Build cushion forts",
+          "Sit for family time",
+          "Cuddle with Buddy",
+          "Play board games",
+          "Practice sitting poses"
+        ]
+      },
+      {
+        "name": "Family Photo Gallery",
+        "description": "A wall filled with framed photos of family trips, festivals, and Emersyn's achievements including karate ceremonies",
+        "actions": [
+          "Find yourself in photos",
+          "Count family members",
+          "Remember happy times",
+          "Spot the pets",
+          "Find the Holi photos"
+        ]
+      }
+    ],
+    "easter_eggs": [
+      "A remote control that plays a tiny Bollywood tune when you find it between cushions",
+      "Buddy's favorite chew toy hidden under the sofa",
+      "A small mandir (prayer area) in the corner with a kid-made clay Ganesha",
+      "Emersyn's first reel playing on a digital photo frame"
+    ]
+  },
+  "garden": {
+    "name": "Magical Garden",
+    "tagline": "Where flowers bloom and bunnies zoom!",
+    "description": "A beautiful garden filled with marigolds, jasmine, and roses, with a special corner for Cotton the bunny to hop around. There's a rangoli-making area with colored powders and a small vegetable patch where Emersyn helps grow tomatoes and chilies.",
+    "atmosphere": "Fresh, colorful, and alive with nature - a peaceful outdoor paradise",
+    "sounds": [
+      "Birds chirping",
+      "bees buzzing",
+      "Cotton hopping in grass",
+      "wind through leaves",
+      "wind chimes singing"
+    ],
+    "time_variants": {
+      "morning": "Dewdrops sparkle on flower petals like tiny diamonds. The marigolds are opening up, and Cotton is doing happy morning hops around the garden.",
+      "afternoon": "The garden is warm and sunny. Butterflies dance between flowers, and the jasmine smell is extra strong and sweet.",
+      "evening": "Golden hour makes everything glow beautifully - perfect lighting for garden reels! The flowers are starting to close for the night.",
+      "night": "Fairy lights wrapped around the trees create a magical wonderland. Fireflies might appear, and the garden feels like a secret enchanted place."
+    },
+    "interactive_spots": [
+      {
+        "name": "Cotton's Bunny Corner",
+        "description": "A safe, grassy area with a cute hutch, tunnels, and toys where Cotton the bunny lives and plays",
+        "actions": [
+          "Pet Cotton",
+          "Feed carrots",
+          "Watch bunny hops",
+          "Clean the hutch",
+          "Play tunnel chase"
+        ]
+      },
+      {
+        "name": "Rangoli Making Space",
+        "description": "A flat stone area with containers of colored powders and stencils for making beautiful rangoli designs",
+        "actions": [
+          "Create a rangoli",
+          "Mix colors",
+          "Use stencils",
+          "Make Diwali designs",
+          "Practice patterns"
+        ]
+      },
+      {
+        "name": "Marigold & Jasmine Beds",
+        "description": "Rows of bright orange marigolds and fragrant white jasmine, perfect for making flower garlands",
+        "actions": [
+          "Smell the flowers",
+          "Pick marigolds",
+          "Make a garland",
+          "Count the blooms",
+          "Water the plants"
+        ]
+      },
+      {
+        "name": "Veggie Patch",
+        "description": "A small garden bed with tomatoes, green chilies, and herbs that Emersyn helps take care of",
+        "actions": [
+          "Water the plants",
+          "Check for ripe tomatoes",
+          "Pull tiny weeds",
+          "Count the chilies",
+          "Smell the herbs"
+        ]
+      },
+      {
+        "name": "Garden Swing",
+        "description": "A wooden swing hanging from a big neem tree, decorated with ribbons and bells",
+        "actions": [
+          "Swing high",
+          "Sing while swinging",
+          "Make the bells ring",
+          "Watch clouds",
+          "Take reel videos"
+        ]
+      }
+    ],
+    "easter_eggs": [
+      "A tiny fairy door at the base of the neem tree",
+      "Buddy's buried treasure bone that he keeps forgetting about",
+      "A butterfly that seems to follow Emersyn around the garden",
+      "Holi color stains on the garden wall from last celebration"
+    ]
+  },
+  "school": {
+    "name": "Sunshine School",
+    "tagline": "Where learning is fun and friends are forever!",
+    "description": "A bright, cheerful school with colorful classrooms, a big playground, and wonderful teachers. The walls are covered with student artwork, alphabet charts in English and Hindi, and celebration decorations for every Indian festival.",
+    "atmosphere": "Exciting, educational, and full of friendship - where every day brings new discoveries",
+    "sounds": [
+      "School bell ringing",
+      "children laughing",
+      "Teacher reading stories",
+      "chalk on blackboard",
+      "lunch boxes opening"
+    ],
+    "time_variants": {
+      "morning": "The school is buzzing with energy as students arrive. The prayer assembly music plays, and everyone is excited to start learning.",
+      "afternoon": "Lunch time! The smell of different tiffins fills the air - parathas, sandwiches, and rice boxes. Friends share and trade snacks.",
+      "evening": "School is ending, and the halls echo with goodbyes. Art projects dry on tables, and the playground has one last burst of energy.",
+      "night": "The school is quiet and closed, with only the security lights on. It's resting and getting ready for another fun day tomorrow."
+    },
+    "interactive_spots": [
+      {
+        "name": "Colorful Classroom",
+        "description": "A bright room with tiny desks, a kind Teacher, alphabet charts, and a reading corner with cushions",
+        "actions": [
+          "Sit at desk",
+          "Raise hand to answer",
+          "Read with Teacher",
+          "Write in notebook",
+          "Learn Hindi letters"
+        ]
+      },
+      {
+        "name": "Art & Craft Corner",
+        "description": "A messy, wonderful space with paints, clay, glitter, and supplies for making beautiful creations",
+        "actions": [
+          "Paint a picture",
+          "Make clay diyas",
+          "Use glitter",
+          "Create with Mia",
+          "Display artwork"
+        ]
+      },
+      {
+        "name": "School Playground",
+        "description": "A fun outdoor area with slides, monkey bars, and painted games on the ground",
+        "actions": [
+          "Play with Ava",
+          "Slide down fast",
+          "Play hopscotch",
+          "Run races",
+          "Play catch with Leo"
+        ]
+      },
+      {
+        "name": "Library Corner",
+        "description": "Shelves of picture books and story collections, with bean bags for comfortable reading",
+        "actions": [
+          "Choose a book",
+          "Read with Leo",
+          "Look at pictures",
+          "Return books",
+          "Find new stories"
+        ]
+      },
+      {
+        "name": "Festival Stage",
+        "description": "A small stage where students perform for Diwali, Holi, and other celebrations throughout the year",
+        "actions": [
+          "Practice dance",
+          "Rehearse songs",
+          "Wear costume",
+          "Perform for friends",
+          "Take a bow"
+        ]
+      }
+    ],
+    "easter_eggs": [
+      "A gold star chart with Emersyn's name having the most stars",
+      "Leo's forgotten bookmark in a library book",
+      "Ava's glitter that somehow got everywhere and still sparkles",
+      "A class photo where everyone is making silly faces"
+    ]
+  },
+  "shop": {
+    "name": "Sharma's Corner Shop",
+    "tagline": "Everything you need and treats you want!",
+    "description": "A cozy neighborhood shop run by the friendly Shopkeeper, filled with jars of colorful candies, stacks of Frooti boxes, packets of chips, and all sorts of wonderful things. The shop smells like a mix of spices, sweets, and new toys.",
+    "atmosphere": "Friendly, exciting, and full of treasures - a magical place where pocket money becomes happiness",
+    "sounds": [
+      "Shop bell dinging",
+      "candy jar lids clinking",
+      "Shopkeeper greeting customers",
+      "coins counting",
+      "paper bags rustling"
+    ],
+    "time_variants": {
+      "morning": "The shop just opened! Everything is neatly arranged, the candy jars are full, and the Shopkeeper is arranging fresh stock with a smile.",
+      "afternoon": "Busy time! Kids from school stop by for snacks. The Frooti fridge is working hard, and the candy jars are getting emptier.",
+      "evening": "The shop glows warmly as the streetlights come on. Families stop by for last-minute groceries, and the Shopkeeper offers samples.",
+      "night": "The shop is closed, shutters down, but the window display still shows off the best candies for tomorrow's customers."
+    },
+    "interactive_spots": [
+      {
+        "name": "Candy Jar Wall",
+        "description": "A whole wall of glass jars filled with every candy imaginable - lollipops, toffees, gummies, and traditional Indian sweets",
+        "actions": [
+          "Choose candies",
+          "Count your money",
+          "Point at favorites",
+          "Get a mixed bag",
+          "Try something new"
+        ]
+      },
+      {
+        "name": "Frooti & Drinks Fridge",
+        "description": "A cold fridge stocked with Frooti mango drinks, lassi bottles, and other refreshing beverages",
+        "actions": [
+          "Grab a Frooti",
+          "Feel the cold air",
+          "Choose a flavor",
+          "Check for new drinks",
+          "Cool down on hot days"
+        ]
+      },
+      {
+        "name": "Snack Shelves",
+        "description": "Rows of chips, namkeen, biscuits, and packaged snacks in bright, crinkly packages",
+        "actions": [
+          "Pick chips flavor",
+          "Find favorite biscuits",
+          "Shake the namkeen",
+          "Read the packets",
+          "Choose movie snacks"
+        ]
+      },
+      {
+        "name": "Toy Corner",
+        "description": "A small section with bubbles, stickers, small toys, and fun things that make perfect treats",
+        "actions": [
+          "Spin the toy rack",
+          "Find stickers",
+          "Test the bubbles",
+          "Choose a small toy",
+          "Look at everything twice"
+        ]
+      },
+      {
+        "name": "Shopkeeper's Counter",
+        "description": "A wooden counter where the kind Shopkeeper sits, with a calculator, a bell, and a jar of free eclairs for good kids",
+        "actions": [
+          "Ring the bell",
+          "Pay for treats",
+          "Chat with Shopkeeper",
+          "Get a free eclair",
+          "Say thank you"
+        ]
+      }
+    ],
+    "easter_eggs": [
+      "A photo of the Shopkeeper with Emersyn from her first solo shopping trip",
+      "A 'Regular Customer' star next to Emersyn's name on a board",
+      "A secret stash of extra-special imported candies under the counter",
+      "Buddy's paw prints on the floor from when he sneaked in once"
+    ]
+  },
+  "playground": {
+    "name": "Rainbow Playground",
+    "tagline": "Where every game is an adventure!",
+    "description": "A wonderful neighborhood playground with colorful equipment, soft rubber flooring, and plenty of space to run, play, and make memories. There's always someone to play with, and the ice cream cart visits every evening.",
+    "atmosphere": "Energetic, joyful, and free - where childhood magic happens every single day",
+    "sounds": [
+      "Children laughing and shouting",
+      "swings creaking",
+      "balls bouncing",
+      "ice cream cart jingle",
+      "jump rope slapping ground"
+    ],
+    "time_variants": {
+      "morning": "The playground is quiet and peaceful, with morning dew on the slides. A few early birds are taking walks, and the equipment sparkles clean.",
+      "afternoon": "Getting busier! School is out and kids are arriving. The energy builds as more friends join in the fun.",
+      "evening": "Peak playground time! Every swing is taken, games are happening everywhere, and the ice cream cart has arrived with its happy jingle.",
+      "night": "The playground rests under streetlights. The swings sway gently in the breeze, waiting for tomorrow's adventures."
+    },
+    "interactive_spots": [
+      {
+        "name": "Rainbow Slide",
+        "description": "A tall, twisty slide painted in all the colors of the rainbow, with a fun climb to the top",
+        "actions": [
+          "Climb up high",
+          "Slide down fast",
+          "Race with Ava",
+          "Go down backwards",
+          "Count the colors"
+        ]
+      },
+      {
+        "name": "Swing Set",
+        "description": "Four swings in a row - two regular and two baby swings - perfect for soaring through the air",
+        "actions": [
+          "Pump legs high",
+          "Swing with friends",
+          "Jump off at the top",
+          "Swing in sync",
+          "Touch the sky"
+        ]
+      },
+      {
+        "name": "Monkey Bars",
+        "description": "Challenging bars painted like a caterpillar, great for building strength just like in karate",
+        "actions": [
+          "Swing across",
+          "Hang upside down",
+          "Practice grip strength",
+          "Race to the end",
+          "Do tricks"
+        ]
+      },
+      {
+        "name": "Sandbox Area",
+        "description": "A big sandbox with buckets, shovels, and molds for building castles and making sand art",
+        "actions": [
+          "Build a castle",
+          "Make sand rangoli",
+          "Dig for treasure",
+          "Fill buckets",
+          "Create sand food"
+        ]
+      },
+      {
+        "name": "Open Play Field",
+        "description": "A grassy area perfect for running, playing catch, practicing karate, or just rolling around",
+        "actions": [
+          "Run races",
+          "Practice kata",
+          "Play catch",
+          "Do cartwheels",
+          "Play tag with everyone"
+        ]
+      }
+    ],
+    "easter_eggs": [
+      "A heart carved in the big tree with 'E + A BFF' (Emersyn and Ava)",
+      "A lucky four-leaf clover patch near the sandbox",
+      "The ice cream uncle who remembers everyone's favorite flavor",
+      "A hopscotch grid that Emersyn helped paint last summer"
+    ]
+  },
+  "park": {
+    "name": "Nehru Garden Park",
+    "tagline": "Nature, picnics, and peaceful adventures!",
+    "description": "A beautiful large park with walking paths, a lotus pond, ancient banyan trees, and lots of space for picnics and play. Families gather here for evening walks, weekend picnics, and festival celebrations like Holi.",
+    "atmosphere": "Serene, natural, and spacious - a green oasis perfect for family time and outdoor fun",
+    "sounds": [
+      "Ducks quacking in pond",
+      "leaves rustling",
+      "distant cricket match cheers",
+      "birds singing",
+      "families chatting"
+    ],
+    "time_variants": {
+      "morning": "Joggers circle the paths and yoga groups practice on the grass. The lotus flowers are open, and the park feels fresh and energizing.",
+      "afternoon": "Families spread picnic blankets under shady trees. The gol gappe vendor sets up near the entrance, and kites dot the sky.",
+      "evening": "The park comes alive! Evening walkers fill the paths, the chaat vendors are busy, and kids play until the streetlights come on.",
+      "night": "The park is officially closed, but the moonlight on the lotus pond is magical. Night birds call softly in the ancient trees."
+    },
+    "interactive_spots": [
+      {
+        "name": "Lotus Pond",
+        "description": "A peaceful pond filled with pink and white lotus flowers, with friendly ducks and a small wooden bridge",
+        "actions": [
+          "Watch the ducks",
+          "Cross the bridge",
+          "Count lotus flowers",
+          "Make wishes",
+          "Feed the fish"
+        ]
+      },
+      {
+        "name": "Banyan Tree Circle",
+        "description": "Ancient banyan trees with hanging roots, creating a magical natural playground and shady retreat",
+        "actions": [
+          "Swing on roots",
+          "Play hide and seek",
+          "Have a picnic",
+          "Listen to tree stories",
+          "Hug the big trunk"
+        ]
+      },
+      {
+        "name": "Gol Gappe Cart",
+        "description": "A colorful cart where a friendly vendor makes the crispiest gol gappe with perfectly spicy pani",
+        "actions": [
+          "Order gol gappe",
+          "Choose spice level",
+          "Have an eating contest",
+          "Try different flavors",
+          "Watch them being made"
+        ]
+      },
+      {
+        "name": "Picnic Meadow",
+        "description": "A big grassy area where families spread blankets, share food, and enjoy lazy afternoons together",
+        "actions": [
+          "Spread the blanket",
+          "Share snacks",
+          "Play frisbee",
+          "Roll down the small hill",
+          "Cloud watch"
+        ]
+      },
+      {
+        "name": "Walking Path",
+        "description": "A winding path through the park, lined with flowers and benches, perfect for walks and scooter rides",
+        "actions": [
+          "Take a walk",
+          "Ride scooter",
+          "Count the benches",
+          "Smell the flowers",
+          "Race to the fountain"
+        ]
+      }
+    ],
+    "easter_eggs": [
+      "A squirrel family that Emersyn has named and visits regularly",
+      "The exact spot where the best Holi celebration happened",
+      "A wishing well that locals say really works",
+      "Cotton candy clouds that look like Emersyn's favorite foods"
+    ]
+  }
+}
