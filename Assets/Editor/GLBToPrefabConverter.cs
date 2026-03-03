@@ -4,6 +4,7 @@ using System.IO;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using GLTFast;
+using GLTFast.Logging;
 
 /// <summary>
 /// Claude 4.5 Bedrock recommendation: Convert GLB files to native Unity prefabs at EDITOR TIME.
@@ -116,11 +117,36 @@ public class GLBToPrefabConverter : EditorWindow
                 return false;
             }
 
-            // Create a temporary GameObject to instantiate the model
+            // Claude 4.5 Bedrock fix: Use InstantiateSceneAsync with GameObjectInstantiator
+            // instead of InstantiateMainSceneAsync which calls DontDestroyOnLoad (fails in batch mode)
             GameObject tempObj = new GameObject(glbName);
-            bool instantiateSuccess = await gltf.InstantiateMainSceneAsync(tempObj.transform);
+            var instantiator = new GameObjectInstantiator(gltf, tempObj.transform);
+            bool instantiateSuccess = await gltf.InstantiateSceneAsync(instantiator, 0);
 
             if (!instantiateSuccess)
+            {
+                // Fallback: try InstantiateMainSceneAsync wrapped in try-catch
+                Debug.LogWarning($"[GLBConverter] InstantiateSceneAsync failed for {glbName}, trying fallback...");
+                try
+                {
+                    instantiateSuccess = await gltf.InstantiateMainSceneAsync(tempObj.transform);
+                }
+                catch (System.Exception instantiateEx)
+                {
+                    // If DontDestroyOnLoad error, the object may still be instantiated
+                    if (instantiateEx.Message.Contains("DontDestroyOnLoad"))
+                    {
+                        Debug.LogWarning($"[GLBConverter] DontDestroyOnLoad caught for {glbName} - checking if object was instantiated anyway");
+                        instantiateSuccess = tempObj.transform.childCount > 0;
+                    }
+                    else
+                    {
+                        throw;
+                    }
+                }
+            }
+
+            if (!instantiateSuccess || tempObj.transform.childCount == 0)
             {
                 Debug.LogError($"[GLBConverter] Failed to instantiate GLB: {glbName}");
                 Object.DestroyImmediate(tempObj);
