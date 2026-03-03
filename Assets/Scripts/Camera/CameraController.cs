@@ -25,18 +25,18 @@ namespace EmersynBigDay.CameraSystem
 
         [Header("Zoom")]
         public float MinZoom = 3f;
-        public float MaxZoom = 40f; // Round 23 (Claude 4.5 Bedrock): Balanced max zoom
+        public float MaxZoom = 40f; // Round 24 (Claude 4.5 Bedrock): Balanced max zoom
         public float ZoomSpeed = 2f;
-        public float CurrentZoom = 26f; // Round 23: Sweet spot for full room view
+        public float CurrentZoom = 16.5f; // Round 24: Close enough to frame 12-wide room
 
         [Header("Orbital Control")]
         public float OrbitSpeed = 120f;
         public float MinPitch = 10f;
         public float MaxPitch = 80f;
-        // Round 23 (Claude 4.5 Bedrock): 50° pitch for balanced dollhouse view
-        public float DefaultPitch = 50f;
+        // Round 24 (Claude 4.5 Bedrock): 35° pitch for proper dollhouse angle showing floor + walls
+        public float DefaultPitch = 35f;
         private float currentYaw = 0f;
-        private float currentPitch = 50f; // Round 23: Default 50 degrees for proper overhead view
+        private float currentPitch = 35f; // Round 24: Shallower angle to see more room geometry
 
         [Header("Screen Shake")]
         public float ShakeDecay = 5f;
@@ -90,8 +90,8 @@ namespace EmersynBigDay.CameraSystem
             springVelocity += springForce * Time.deltaTime;
             transform.position += springVelocity * Time.deltaTime;
 
-            // Look at target
-            Vector3 lookTarget = Target.position + Vector3.up * 1.5f;
+            // Round 24 (Claude 4.5 Bedrock): Look at room center (y=2.5) not character feet (y=1.5)
+            Vector3 lookTarget = Target.position + Vector3.up * 2.5f;
             Quaternion targetRotation = Quaternion.LookRotation(lookTarget - transform.position);
             transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, RotationSpeed * Time.deltaTime);
         }
@@ -196,8 +196,8 @@ namespace EmersynBigDay.CameraSystem
         public void ResetToDefault()
         {
             currentYaw = 0f;
-            currentPitch = DefaultPitch; // Round 23: Use configurable pitch
-            CurrentZoom = 26f; // Round 23: Default to full room view
+            currentPitch = DefaultPitch; // Round 24: Use configurable pitch
+            CurrentZoom = 16.5f; // Round 24: Default to frame 12-wide room
             isTransitioning = false;
         }
 

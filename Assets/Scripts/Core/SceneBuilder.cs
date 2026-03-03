@@ -473,20 +473,20 @@ namespace EmersynBigDay.Core
             if (mainCamera.GetComponent<CameraSystem.CameraController>() == null)
             {
                 var ctrl = mainCamera.gameObject.AddComponent<CameraSystem.CameraController>();
-                // Round 23 (Claude 4.5 Bedrock): Zoom=26, Pitch=50° — sweet spot between R21 (too close) and R22 (too far)
-                ctrl.MinZoom = 10f;
+                // Round 24 (Claude 4.5 Bedrock): Zoom=16.5, Pitch=35° — frames 12-wide room perfectly
+                ctrl.MinZoom = 8f;
                 ctrl.MaxZoom = 40f;
-                ctrl.CurrentZoom = 26f; // Full room visible with characters at good size
-                ctrl.DefaultPitch = 50f; // Balanced overhead angle
+                ctrl.CurrentZoom = 16.5f; // Close enough to see room details + characters
+                ctrl.DefaultPitch = 35f; // Shallower angle shows floor + back wall
                 ctrl.SpringStiffness = 120f;
                 ctrl.SpringDamping = 25f;
-                ctrl.Offset = new Vector3(0f, 20f, -17f);
+                ctrl.Offset = new Vector3(0f, 10f, -14f);
             }
-            // Round 23 (Claude 4.5 Bedrock): Camera at (0, 19.9, -16.7) — shows full room
-            float pitchRad = 50f * Mathf.Deg2Rad;
+            // Round 24 (Claude 4.5 Bedrock): Camera at (0, 9.46, -13.53) — frames entire room
+            float pitchRad = 35f * Mathf.Deg2Rad;
             Vector3 camDir = new Vector3(0f, Mathf.Sin(pitchRad), -Mathf.Cos(pitchRad));
-            mainCamera.transform.position = camDir * 26f;
-            mainCamera.transform.LookAt(new Vector3(0f, 1.5f, 0f));
+            mainCamera.transform.position = camDir * 16.5f;
+            mainCamera.transform.LookAt(new Vector3(0f, 2.5f, 0f)); // Look at room center, not feet
         }
 
         private void CreateManagers()
