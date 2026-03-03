@@ -1,6 +1,5 @@
-// v12: Complete vertex color fix - destroy default map floor, all geometry colored
-// Fixes: v11 showed colored walls but checkerboard floor (default map ground plane)
-// Solution: Destroy default StaticMeshActors + larger PMC floors + sky background
+// v13: Sims Mobile-quality detailed furniture with vertex color gradients
+// Built on v12 proven pipeline: ProceduralMeshComponent + M_VertexColor material
 #include "EmersynGameMode.h"
 #include "Engine/Engine.h"
 #include "Materials/Material.h"
@@ -18,16 +17,94 @@
 #include "GameFramework/PlayerController.h"
 #include "Engine/StaticMeshActor.h"
 
+// Sims Mobile-inspired color palette (warm, inviting tones)
+namespace SimsColors {
+    // Wood tones
+    const FLinearColor WoodDark(0.35f, 0.22f, 0.12f);
+    const FLinearColor WoodMed(0.55f, 0.38f, 0.22f);
+    const FLinearColor WoodLight(0.75f, 0.58f, 0.38f);
+    const FLinearColor WoodPine(0.72f, 0.62f, 0.42f);
+    
+    // Fabric colors
+    const FLinearColor FabricPink(0.95f, 0.65f, 0.72f);
+    const FLinearColor FabricBlue(0.55f, 0.68f, 0.88f);
+    const FLinearColor FabricGreen(0.55f, 0.78f, 0.55f);
+    const FLinearColor FabricPurple(0.68f, 0.52f, 0.82f);
+    const FLinearColor FabricYellow(0.95f, 0.88f, 0.55f);
+    const FLinearColor FabricWhite(0.95f, 0.93f, 0.90f);
+    const FLinearColor FabricRed(0.85f, 0.28f, 0.25f);
+    
+    // Wall colors
+    const FLinearColor WallCream(0.95f, 0.92f, 0.85f);
+    const FLinearColor WallPink(0.95f, 0.85f, 0.88f);
+    const FLinearColor WallBlue(0.82f, 0.88f, 0.95f);
+    const FLinearColor WallGreen(0.85f, 0.92f, 0.85f);
+    const FLinearColor WallYellow(0.98f, 0.95f, 0.82f);
+    const FLinearColor WallLavender(0.88f, 0.82f, 0.95f);
+    
+    // Floor colors
+    const FLinearColor FloorWood(0.72f, 0.55f, 0.35f);
+    const FLinearColor FloorTile(0.85f, 0.88f, 0.90f);
+    const FLinearColor FloorGrass(0.35f, 0.65f, 0.28f);
+    const FLinearColor FloorSand(0.88f, 0.82f, 0.68f);
+    const FLinearColor FloorConcrete(0.72f, 0.72f, 0.72f);
+    
+    // Metal & glass
+    const FLinearColor MetalSilver(0.78f, 0.78f, 0.82f);
+    const FLinearColor MetalBlack(0.15f, 0.15f, 0.18f);
+    const FLinearColor GlassBlue(0.72f, 0.82f, 0.92f);
+    const FLinearColor Ceramic(0.95f, 0.95f, 0.97f);
+    
+    // Nature
+    const FLinearColor LeafGreen(0.25f, 0.55f, 0.18f);
+    const FLinearColor LeafDark(0.15f, 0.38f, 0.12f);
+    const FLinearColor TrunkBrown(0.42f, 0.28f, 0.15f);
+    
+    // School/office
+    const FLinearColor SchoolGold(0.35f, 0.55f, 0.85f);
+    
+    // Skin tones
+    const FLinearColor SkinLight(0.95f, 0.82f, 0.72f);
+    const FLinearColor SkinMed(0.85f, 0.68f, 0.52f);
+    const FLinearColor SkinTan(0.78f, 0.58f, 0.42f);
+    
+    // Hair colors
+    const FLinearColor HairBlonde(0.88f, 0.75f, 0.42f);
+    const FLinearColor HairBrown(0.35f, 0.22f, 0.12f);
+    const FLinearColor HairBlack(0.12f, 0.10f, 0.08f);
+    const FLinearColor HairPink(0.92f, 0.52f, 0.65f);
+    
+    // Sky gradients
+    const FLinearColor SkyTop(0.25f, 0.45f, 0.75f);
+    const FLinearColor SkyBot(0.72f, 0.85f, 0.95f);
+    const FLinearColor SkyNightTop(0.08f, 0.05f, 0.15f);
+    const FLinearColor SkyNightBot(0.18f, 0.12f, 0.25f);
+}
+
 AEmersynGameMode::AEmersynGameMode()
 {
     CurrentRoom = TEXT("Splash");
     RoomIndex = 0;
     Timer = 0.0f;
     SplashDuration = 3.0f;
-    RoomDuration = 6.0f;
+    RoomDuration = 8.0f;
     bInSplash = true;
     PrimaryActorTick.bCanEverTick = true;
     HUDClass = AEmersynHUD::StaticClass();
+
+    // Material loading - CRITICAL fallback chain
+    static ConstructorHelpers::FObjectFinder<UMaterialInterface> VMat(TEXT("/Game/Materials/M_VertexColor"));
+    if (VMat.Succeeded()) {
+        VertexColorMaterial = VMat.Object;
+    } else {
+        static ConstructorHelpers::FObjectFinder<UMaterialInterface> VMat2(TEXT("/Engine/EngineMaterials/VertexColorViewMode_ColorOnly"));
+        if (VMat2.Succeeded()) VertexColorMaterial = VMat2.Object;
+        else {
+            static ConstructorHelpers::FObjectFinder<UMaterialInterface> VMat3(TEXT("/Engine/EngineMaterials/VertexColorMaterial"));
+            if (VMat3.Succeeded()) VertexColorMaterial = VMat3.Object;
+            else if (GEngine) VertexColorMaterial = GEngine->VertexColorMaterial;
+        }
+    }
 
     RoomNames.Add(TEXT("MainMenu"));
     RoomNames.Add(TEXT("Bedroom"));
@@ -50,183 +127,83 @@ AEmersynGameMode::AEmersynGameMode()
     RoomDisplayNames.Add(TEXT("Bathroom"));
     RoomDisplayNames.Add(TEXT("Garden"));
     RoomDisplayNames.Add(TEXT("School"));
-    RoomDisplayNames.Add(TEXT("Toy Shop"));
+    RoomDisplayNames.Add(TEXT("Shop"));
     RoomDisplayNames.Add(TEXT("Playground"));
     RoomDisplayNames.Add(TEXT("Park"));
-    RoomDisplayNames.Add(TEXT("Shopping Mall"));
+    RoomDisplayNames.Add(TEXT("Mall"));
     RoomDisplayNames.Add(TEXT("Arcade"));
     RoomDisplayNames.Add(TEXT("Amusement Park"));
-}
-
-void AEmersynGameMode::InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage)
-{
-    Super::InitGame(MapName, Options, ErrorMessage);
-    UE_LOG(LogTemp, Log, TEXT("EmersynGameMode v12: InitGame - Full color fix"));
 }
 
 void AEmersynGameMode::BeginPlay()
 {
     Super::BeginPlay();
-
-    UWorld* World = GetWorld();
-
-    // ======================================================================
-    // v12 FIX #1: DESTROY ALL DEFAULT MAP ACTORS (floor, sky sphere, fog, etc.)
-    // The default UE5 map includes a StaticMeshActor floor with WorldGridMaterial
-    // (checkerboard pattern). We must destroy it so only our colored PMC geometry shows.
-    // ======================================================================
-    if (World)
-    {
-        TArray<AActor*> StaticMeshActors;
-        UGameplayStatics::GetAllActorsOfClass(World, AStaticMeshActor::StaticClass(), StaticMeshActors);
-        
-        for (AActor* Actor : StaticMeshActors)
-        {
-            if (Actor && IsValid(Actor))
-            {
-                UE_LOG(LogTemp, Display, TEXT("v12: Destroying default map StaticMeshActor: %s"), *Actor->GetName());
-                Actor->Destroy();
-            }
-        }
-        
-        UE_LOG(LogTemp, Display, TEXT("v12: Destroyed %d default StaticMeshActors"), StaticMeshActors.Num());
+    
+    // CRITICAL: Destroy all default map geometry (removes WorldGridMaterial checkerboard floor)
+    TArray<AActor*> AllActors;
+    UGameplayStatics::GetAllActorsOfClass(GetWorld(), AStaticMeshActor::StaticClass(), AllActors);
+    for (AActor* Actor : AllActors) {
+        Actor->Destroy();
     }
+    
+    BuildCurrentRoom();
+}
 
-    // ======================================================================
-    // v12 FIX #2: Load vertex color material (same as v11 - working!)
-    // ======================================================================
-    VertexColorMaterial = nullptr;
-
-    // Try 1: Our custom M_VertexColor created by commandlet (VertexColor->EmissiveColor, Unlit)
-    VertexColorMaterial = Cast<UMaterialInterface>(StaticLoadObject(
-        UMaterialInterface::StaticClass(), nullptr,
-        TEXT("/Game/Materials/M_VertexColor")));
-
-    if (VertexColorMaterial)
-    {
-        UE_LOG(LogTemp, Display, TEXT("v12: Custom M_VertexColor loaded from /Game/Materials/"));
-    }
-
-    // Try 2: Engine built-in vertex color material
-    if (!VertexColorMaterial)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("v12: Custom material not found, trying engine VertexColorViewMode_ColorOnly"));
-        VertexColorMaterial = Cast<UMaterialInterface>(StaticLoadObject(
-            UMaterialInterface::StaticClass(), nullptr,
-            TEXT("/Engine/EngineDebugMaterials/VertexColorViewMode_ColorOnly")));
-    }
-
-    // Try 3: Another engine vertex color material
-    if (!VertexColorMaterial)
-    {
-        VertexColorMaterial = Cast<UMaterialInterface>(StaticLoadObject(
-            UMaterialInterface::StaticClass(), nullptr,
-            TEXT("/Engine/EngineDebugMaterials/VertexColorMaterial")));
-    }
-
-    // Try 4: Runtime engine reference
-    if (!VertexColorMaterial && GEngine)
-    {
-        VertexColorMaterial = GEngine->VertexColorViewModeMaterial_ColorOnly;
-    }
-
-    if (VertexColorMaterial)
-    {
-        UE_LOG(LogTemp, Display, TEXT("v12: Vertex color material loaded: %s"), *VertexColorMaterial->GetName());
-    }
-    else
-    {
-        UE_LOG(LogTemp, Error, TEXT("v12: FAILED to load ANY vertex color material!"));
-    }
-
-    UE_LOG(LogTemp, Log, TEXT("EmersynGameMode v12: BeginPlay - Starting splash"));
-
-    if (World)
-    {
-        APlayerController* PC = World->GetFirstPlayerController();
-        if (PC)
-        {
-            AEmersynHUD* HUD = Cast<AEmersynHUD>(PC->GetHUD());
-            if (HUD)
-            {
-                HUD->bShowSplash = true;
-                HUD->SplashAlpha = 1.0f;
-                HUD->RoomDisplayName = TEXT("");
-            }
-        }
-    }
-
-    BuildSplashScreen();
+void AEmersynGameMode::InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage)
+{
+    Super::InitGame(MapName, Options, ErrorMessage);
 }
 
 void AEmersynGameMode::Tick(float DeltaSeconds)
 {
     Super::Tick(DeltaSeconds);
+    
     Timer += DeltaSeconds;
-
-    UWorld* World = GetWorld();
-    AEmersynHUD* HUD = nullptr;
-    if (World)
-    {
-        APlayerController* PC = World->GetFirstPlayerController();
-        if (PC) HUD = Cast<AEmersynHUD>(PC->GetHUD());
-    }
-
-    if (bInSplash && Timer >= SplashDuration)
-    {
+    
+    if (bInSplash && Timer >= SplashDuration) {
         bInSplash = false;
         Timer = 0.0f;
         RoomIndex = 0;
-        if (HUD)
-        {
+        CurrentRoom = RoomNames[RoomIndex];
+        
+        AEmersynHUD* HUD = Cast<AEmersynHUD>(UGameplayStatics::GetPlayerController(GetWorld(), 0)->GetHUD());
+        if (HUD) {
             HUD->bShowSplash = false;
             HUD->RoomDisplayName = RoomDisplayNames[RoomIndex];
         }
-        LoadRoom(RoomNames[RoomIndex]);
+        
+        BuildCurrentRoom();
     }
-    else if (!bInSplash && Timer >= RoomDuration)
-    {
+    else if (!bInSplash && Timer >= RoomDuration) {
         Timer = 0.0f;
         RoomIndex = (RoomIndex + 1) % RoomNames.Num();
-        if (HUD)
-        {
+        CurrentRoom = RoomNames[RoomIndex];
+        
+        AEmersynHUD* HUD = Cast<AEmersynHUD>(UGameplayStatics::GetPlayerController(GetWorld(), 0)->GetHUD());
+        if (HUD) {
             HUD->RoomDisplayName = RoomDisplayNames[RoomIndex];
         }
-        LoadRoom(RoomNames[RoomIndex]);
+        
+        BuildCurrentRoom();
     }
-    else if (bInSplash && HUD)
-    {
-        float FadeStart = SplashDuration * 0.7f;
-        if (Timer > FadeStart)
-        {
-            HUD->SplashAlpha = 1.0f - (Timer - FadeStart) / (SplashDuration - FadeStart);
-        }
+    
+    if (bInSplash) {
+        float Alpha = 1.0f - (Timer / SplashDuration);
+        AEmersynHUD* HUD = Cast<AEmersynHUD>(UGameplayStatics::GetPlayerController(GetWorld(), 0)->GetHUD());
+        if (HUD) HUD->SplashAlpha = Alpha;
     }
 }
 
 void AEmersynGameMode::LoadRoom(const FString& RoomName)
 {
-    ClearRoom();
     CurrentRoom = RoomName;
     BuildCurrentRoom();
 }
 
-void AEmersynGameMode::ClearRoom()
-{
-    for (AActor* Actor : SpawnedActors)
-    {
-        if (Actor && IsValid(Actor))
-        {
-            Actor->Destroy();
-        }
-    }
-    SpawnedActors.Empty();
-}
-
 void AEmersynGameMode::BuildCurrentRoom()
 {
-    UE_LOG(LogTemp, Log, TEXT("v12 Building room: %s"), *CurrentRoom);
-
+    ClearRoom();
+    
     if (CurrentRoom == TEXT("Splash")) BuildSplashScreen();
     else if (CurrentRoom == TEXT("MainMenu")) BuildMainMenu();
     else if (CurrentRoom == TEXT("Bedroom")) BuildBedroom();
@@ -241,817 +218,905 @@ void AEmersynGameMode::BuildCurrentRoom()
     else if (CurrentRoom == TEXT("Mall")) BuildMall();
     else if (CurrentRoom == TEXT("Arcade")) BuildArcade();
     else if (CurrentRoom == TEXT("AmusementPark")) BuildAmusementPark();
-    else BuildMainMenu();
 }
 
-// =============================================================================
-// v12: PROCEDURAL MESH GENERATION WITH VERTEX COLORS
-// =============================================================================
-
-void AEmersynGameMode::GenerateBoxMesh(UProceduralMeshComponent* PMC, FVector HalfExtent, FLinearColor Color)
+void AEmersynGameMode::ClearRoom()
 {
-    TArray<FVector> Vertices;
-    TArray<int32> Triangles;
-    TArray<FVector> Normals;
-    TArray<FVector2D> UV0;
-    TArray<FLinearColor> VertexColors;
-    TArray<FProcMeshTangent> Tangents;
+    for (AActor* Actor : SpawnedActors) {
+        if (Actor) Actor->Destroy();
+    }
+    SpawnedActors.Empty();
+}
 
-    float X = HalfExtent.X;
-    float Y = HalfExtent.Y;
-    float Z = HalfExtent.Z;
+// ============================================================
+// PRIMITIVE SPAWNERS (ProceduralMeshComponent + Vertex Colors)
+// ============================================================
 
-    // 6 faces, 4 vertices each = 24 vertices
-    // Front face (-Y)
-    Vertices.Add(FVector(-X, -Y, -Z)); Vertices.Add(FVector(X, -Y, -Z)); 
-    Vertices.Add(FVector(X, -Y, Z));  Vertices.Add(FVector(-X, -Y, Z));
-    // Back face (+Y)
-    Vertices.Add(FVector(X, Y, -Z));  Vertices.Add(FVector(-X, Y, -Z)); 
-    Vertices.Add(FVector(-X, Y, Z));  Vertices.Add(FVector(X, Y, Z));
-    // Left face (-X)
-    Vertices.Add(FVector(-X, Y, -Z));  Vertices.Add(FVector(-X, -Y, -Z)); 
-    Vertices.Add(FVector(-X, -Y, Z));  Vertices.Add(FVector(-X, Y, Z));
-    // Right face (+X)
-    Vertices.Add(FVector(X, -Y, -Z)); Vertices.Add(FVector(X, Y, -Z)); 
-    Vertices.Add(FVector(X, Y, Z));   Vertices.Add(FVector(X, -Y, Z));
-    // Top face (+Z)
-    Vertices.Add(FVector(-X, -Y, Z)); Vertices.Add(FVector(X, -Y, Z)); 
-    Vertices.Add(FVector(X, Y, Z));   Vertices.Add(FVector(-X, Y, Z));
-    // Bottom face (-Z)
-    Vertices.Add(FVector(-X, Y, -Z));  Vertices.Add(FVector(X, Y, -Z)); 
-    Vertices.Add(FVector(X, -Y, -Z));  Vertices.Add(FVector(-X, -Y, -Z));
+AActor* AEmersynGameMode::SpawnBox(FVector Loc, FVector Scale, FLinearColor Color)
+{
+    AActor* Actor = GetWorld()->SpawnActor<AActor>(AActor::StaticClass(), FTransform(FRotator::ZeroRotator, Loc));
+    UProceduralMeshComponent* PMC = NewObject<UProceduralMeshComponent>(Actor);
+    PMC->RegisterComponent();
+    Actor->SetRootComponent(PMC);
+    GenerateBoxMesh(PMC, Scale, Color);
+    if (VertexColorMaterial) PMC->SetMaterial(0, VertexColorMaterial);
+    SpawnedActors.Add(Actor);
+    return Actor;
+}
 
-    FVector FaceNormals[] = {
-        FVector(0, -1, 0), FVector(0, 1, 0), FVector(-1, 0, 0),
-        FVector(1, 0, 0), FVector(0, 0, 1), FVector(0, 0, -1)
+AActor* AEmersynGameMode::SpawnGradientBox(FVector Loc, FVector Scale, FLinearColor TopCol, FLinearColor BotCol)
+{
+    AActor* Actor = GetWorld()->SpawnActor<AActor>(AActor::StaticClass(), FTransform(FRotator::ZeroRotator, Loc));
+    UProceduralMeshComponent* PMC = NewObject<UProceduralMeshComponent>(Actor);
+    PMC->RegisterComponent();
+    Actor->SetRootComponent(PMC);
+    GenerateGradientBoxMesh(PMC, Scale, TopCol, BotCol);
+    if (VertexColorMaterial) PMC->SetMaterial(0, VertexColorMaterial);
+    SpawnedActors.Add(Actor);
+    return Actor;
+}
+
+AActor* AEmersynGameMode::SpawnSphere(FVector Loc, float Radius, FLinearColor Color)
+{
+    AActor* Actor = GetWorld()->SpawnActor<AActor>(AActor::StaticClass(), FTransform(FRotator::ZeroRotator, Loc));
+    UProceduralMeshComponent* PMC = NewObject<UProceduralMeshComponent>(Actor);
+    PMC->RegisterComponent();
+    Actor->SetRootComponent(PMC);
+    GenerateSphereMesh(PMC, Radius, 16, Color);
+    if (VertexColorMaterial) PMC->SetMaterial(0, VertexColorMaterial);
+    SpawnedActors.Add(Actor);
+    return Actor;
+}
+
+AActor* AEmersynGameMode::SpawnCylinder(FVector Loc, FVector Scale, FLinearColor Color)
+{
+    AActor* Actor = GetWorld()->SpawnActor<AActor>(AActor::StaticClass(), FTransform(FRotator::ZeroRotator, Loc));
+    UProceduralMeshComponent* PMC = NewObject<UProceduralMeshComponent>(Actor);
+    PMC->RegisterComponent();
+    Actor->SetRootComponent(PMC);
+    GenerateCylinderMesh(PMC, Scale.X, Scale.Z, 16, Color);
+    if (VertexColorMaterial) PMC->SetMaterial(0, VertexColorMaterial);
+    SpawnedActors.Add(Actor);
+    return Actor;
+}
+
+// ============================================================
+// MESH GENERATORS
+// ============================================================
+
+void AEmersynGameMode::GenerateBoxMesh(UProceduralMeshComponent* PMC, FVector HE, FLinearColor Col)
+{
+    TArray<FVector> V;
+    TArray<int32> T;
+    TArray<FVector> N;
+    TArray<FVector2D> UV;
+    TArray<FLinearColor> VC;
+
+    V = {
+        FVector(-HE.X,-HE.Y,-HE.Z), FVector(HE.X,-HE.Y,-HE.Z), FVector(HE.X,HE.Y,-HE.Z), FVector(-HE.X,HE.Y,-HE.Z),
+        FVector(-HE.X,-HE.Y,HE.Z), FVector(HE.X,-HE.Y,HE.Z), FVector(HE.X,HE.Y,HE.Z), FVector(-HE.X,HE.Y,HE.Z),
+        FVector(-HE.X,-HE.Y,-HE.Z), FVector(-HE.X,HE.Y,-HE.Z), FVector(-HE.X,HE.Y,HE.Z), FVector(-HE.X,-HE.Y,HE.Z),
+        FVector(HE.X,-HE.Y,-HE.Z), FVector(HE.X,HE.Y,-HE.Z), FVector(HE.X,HE.Y,HE.Z), FVector(HE.X,-HE.Y,HE.Z),
+        FVector(-HE.X,-HE.Y,-HE.Z), FVector(HE.X,-HE.Y,-HE.Z), FVector(HE.X,-HE.Y,HE.Z), FVector(-HE.X,-HE.Y,HE.Z),
+        FVector(-HE.X,HE.Y,-HE.Z), FVector(HE.X,HE.Y,-HE.Z), FVector(HE.X,HE.Y,HE.Z), FVector(-HE.X,HE.Y,HE.Z)
     };
+    T = {0,2,1, 0,3,2, 4,5,6, 4,6,7, 8,9,10, 8,10,11, 12,14,13, 12,15,14, 16,17,18, 16,18,19, 20,22,21, 20,23,22};
+    N = {
+        FVector(0,0,-1), FVector(0,0,-1), FVector(0,0,-1), FVector(0,0,-1),
+        FVector(0,0,1), FVector(0,0,1), FVector(0,0,1), FVector(0,0,1),
+        FVector(-1,0,0), FVector(-1,0,0), FVector(-1,0,0), FVector(-1,0,0),
+        FVector(1,0,0), FVector(1,0,0), FVector(1,0,0), FVector(1,0,0),
+        FVector(0,-1,0), FVector(0,-1,0), FVector(0,-1,0), FVector(0,-1,0),
+        FVector(0,1,0), FVector(0,1,0), FVector(0,1,0), FVector(0,1,0)
+    };
+    UV.SetNumUninitialized(24);
+    for (int i=0; i<24; i++) UV[i] = FVector2D(0,0);
+    VC.SetNumUninitialized(24);
+    for (int i=0; i<24; i++) VC[i] = Col;
 
-    for (int32 Face = 0; Face < 6; Face++)
-    {
-        int32 Base = Face * 4;
-        Triangles.Add(Base); Triangles.Add(Base + 1); Triangles.Add(Base + 2);
-        Triangles.Add(Base); Triangles.Add(Base + 2); Triangles.Add(Base + 3);
-
-        for (int32 V = 0; V < 4; V++)
-        {
-            Normals.Add(FaceNormals[Face]);
-            VertexColors.Add(Color);
-            UV0.Add(FVector2D(V % 2, V / 2));
-            Tangents.Add(FProcMeshTangent(1, 0, 0));
-        }
-    }
-
-    PMC->CreateMeshSection_LinearColor(0, Vertices, Triangles, Normals, UV0, VertexColors, Tangents, false);
+    PMC->CreateMeshSection_LinearColor(0, V, T, N, UV, VC, TArray<FProcMeshTangent>(), true);
 }
 
-void AEmersynGameMode::GenerateSphereMesh(UProceduralMeshComponent* PMC, float Radius, int32 Segments, FLinearColor Color)
+void AEmersynGameMode::GenerateGradientBoxMesh(UProceduralMeshComponent* PMC, FVector HE, FLinearColor Top, FLinearColor Bot)
 {
-    TArray<FVector> Vertices;
-    TArray<int32> Triangles;
-    TArray<FVector> Normals;
-    TArray<FVector2D> UV0;
-    TArray<FLinearColor> VertexColors;
-    TArray<FProcMeshTangent> Tangents;
+    TArray<FVector> V;
+    TArray<int32> T;
+    TArray<FVector> N;
+    TArray<FVector2D> UV;
+    TArray<FLinearColor> VC;
 
-    int32 Rings = Segments;
-    int32 Sectors = Segments;
+    V = {
+        FVector(-HE.X,-HE.Y,-HE.Z), FVector(HE.X,-HE.Y,-HE.Z), FVector(HE.X,HE.Y,-HE.Z), FVector(-HE.X,HE.Y,-HE.Z),
+        FVector(-HE.X,-HE.Y,HE.Z), FVector(HE.X,-HE.Y,HE.Z), FVector(HE.X,HE.Y,HE.Z), FVector(-HE.X,HE.Y,HE.Z),
+        FVector(-HE.X,-HE.Y,-HE.Z), FVector(-HE.X,HE.Y,-HE.Z), FVector(-HE.X,HE.Y,HE.Z), FVector(-HE.X,-HE.Y,HE.Z),
+        FVector(HE.X,-HE.Y,-HE.Z), FVector(HE.X,HE.Y,-HE.Z), FVector(HE.X,HE.Y,HE.Z), FVector(HE.X,-HE.Y,HE.Z),
+        FVector(-HE.X,-HE.Y,-HE.Z), FVector(HE.X,-HE.Y,-HE.Z), FVector(HE.X,-HE.Y,HE.Z), FVector(-HE.X,-HE.Y,HE.Z),
+        FVector(-HE.X,HE.Y,-HE.Z), FVector(HE.X,HE.Y,-HE.Z), FVector(HE.X,HE.Y,HE.Z), FVector(-HE.X,HE.Y,HE.Z)
+    };
+    T = {0,2,1, 0,3,2, 4,5,6, 4,6,7, 8,9,10, 8,10,11, 12,14,13, 12,15,14, 16,17,18, 16,18,19, 20,22,21, 20,23,22};
+    N = {
+        FVector(0,0,-1), FVector(0,0,-1), FVector(0,0,-1), FVector(0,0,-1),
+        FVector(0,0,1), FVector(0,0,1), FVector(0,0,1), FVector(0,0,1),
+        FVector(-1,0,0), FVector(-1,0,0), FVector(-1,0,0), FVector(-1,0,0),
+        FVector(1,0,0), FVector(1,0,0), FVector(1,0,0), FVector(1,0,0),
+        FVector(0,-1,0), FVector(0,-1,0), FVector(0,-1,0), FVector(0,-1,0),
+        FVector(0,1,0), FVector(0,1,0), FVector(0,1,0), FVector(0,1,0)
+    };
+    UV.SetNumUninitialized(24);
+    for (int i=0; i<24; i++) UV[i] = FVector2D(0,0);
+    
+    // Gradient: bottom faces darker, top faces brighter
+    VC.SetNumUninitialized(24);
+    for (int i=0; i<4; i++) VC[i] = Bot;      // Bottom face
+    for (int i=4; i<8; i++) VC[i] = Top;      // Top face
+    for (int i=8; i<12; i++) VC[i] = FMath::Lerp(Bot, Top, 0.5f);  // Left
+    for (int i=12; i<16; i++) VC[i] = FMath::Lerp(Bot, Top, 0.5f); // Right
+    for (int i=16; i<20; i++) VC[i] = Bot;    // Front
+    for (int i=20; i<24; i++) VC[i] = Top;    // Back
 
-    for (int32 Ring = 0; Ring <= Rings; Ring++)
-    {
-        float Phi = PI * Ring / Rings;
-        for (int32 Sector = 0; Sector <= Sectors; Sector++)
-        {
-            float Theta = 2.0f * PI * Sector / Sectors;
-            
-            FVector Pos;
-            Pos.X = Radius * FMath::Sin(Phi) * FMath::Cos(Theta);
-            Pos.Y = Radius * FMath::Sin(Phi) * FMath::Sin(Theta);
-            Pos.Z = Radius * FMath::Cos(Phi);
-
-            FVector Normal = Pos.GetSafeNormal();
-            
-            Vertices.Add(Pos);
-            Normals.Add(Normal);
-            VertexColors.Add(Color);
-            UV0.Add(FVector2D((float)Sector / Sectors, (float)Ring / Rings));
-            Tangents.Add(FProcMeshTangent(FVector(-FMath::Sin(Theta), FMath::Cos(Theta), 0), false));
-        }
-    }
-
-    for (int32 Ring = 0; Ring < Rings; Ring++)
-    {
-        for (int32 Sector = 0; Sector < Sectors; Sector++)
-        {
-            int32 Current = Ring * (Sectors + 1) + Sector;
-            int32 Next = Current + Sectors + 1;
-
-            Triangles.Add(Current);
-            Triangles.Add(Next);
-            Triangles.Add(Current + 1);
-
-            Triangles.Add(Current + 1);
-            Triangles.Add(Next);
-            Triangles.Add(Next + 1);
-        }
-    }
-
-    PMC->CreateMeshSection_LinearColor(0, Vertices, Triangles, Normals, UV0, VertexColors, Tangents, false);
+    PMC->CreateMeshSection_LinearColor(0, V, T, N, UV, VC, TArray<FProcMeshTangent>(), true);
 }
 
-void AEmersynGameMode::GenerateCylinderMesh(UProceduralMeshComponent* PMC, float Radius, float HalfHeight, int32 Segments, FLinearColor Color)
+void AEmersynGameMode::GenerateSphereMesh(UProceduralMeshComponent* PMC, float R, int32 Seg, FLinearColor Col)
 {
-    TArray<FVector> Vertices;
-    TArray<int32> Triangles;
-    TArray<FVector> Normals;
-    TArray<FVector2D> UV0;
-    TArray<FLinearColor> VertexColors;
-    TArray<FProcMeshTangent> Tangents;
+    TArray<FVector> V;
+    TArray<int32> T;
+    TArray<FVector> N;
+    TArray<FVector2D> UV;
+    TArray<FLinearColor> VC;
+
+    for (int lat=0; lat<=Seg; lat++) {
+        float theta = PI * lat / Seg;
+        float sinT = FMath::Sin(theta);
+        float cosT = FMath::Cos(theta);
+        for (int lon=0; lon<=Seg; lon++) {
+            float phi = 2 * PI * lon / Seg;
+            float x = R * sinT * FMath::Cos(phi);
+            float y = R * sinT * FMath::Sin(phi);
+            float z = R * cosT;
+            V.Add(FVector(x, y, z));
+            N.Add(FVector(x, y, z).GetSafeNormal());
+            UV.Add(FVector2D((float)lon/Seg, (float)lat/Seg));
+            VC.Add(Col);
+        }
+    }
+
+    for (int lat=0; lat<Seg; lat++) {
+        for (int lon=0; lon<Seg; lon++) {
+            int c = lat * (Seg+1) + lon;
+            int n = c + Seg + 1;
+            T.Add(c); T.Add(n); T.Add(c+1);
+            T.Add(c+1); T.Add(n); T.Add(n+1);
+        }
+    }
+
+    PMC->CreateMeshSection_LinearColor(0, V, T, N, UV, VC, TArray<FProcMeshTangent>(), true);
+}
+
+void AEmersynGameMode::GenerateCylinderMesh(UProceduralMeshComponent* PMC, float R, float HH, int32 Seg, FLinearColor Col)
+{
+    TArray<FVector> V;
+    TArray<int32> T;
+    TArray<FVector> N;
+    TArray<FVector2D> UV;
+    TArray<FLinearColor> VC;
 
     // Side vertices
-    for (int32 i = 0; i <= Segments; i++)
-    {
-        float Angle = 2.0f * PI * i / Segments;
-        float CosA = FMath::Cos(Angle);
-        float SinA = FMath::Sin(Angle);
-        FVector Normal(CosA, SinA, 0);
-
-        Vertices.Add(FVector(CosA * Radius, SinA * Radius, -HalfHeight));
-        Normals.Add(Normal);
-        VertexColors.Add(Color);
-        UV0.Add(FVector2D((float)i / Segments, 1.0f));
-        Tangents.Add(FProcMeshTangent(FVector(-SinA, CosA, 0), false));
-
-        Vertices.Add(FVector(CosA * Radius, SinA * Radius, HalfHeight));
-        Normals.Add(Normal);
-        VertexColors.Add(Color);
-        UV0.Add(FVector2D((float)i / Segments, 0.0f));
-        Tangents.Add(FProcMeshTangent(FVector(-SinA, CosA, 0), false));
+    for (int i=0; i<=Seg; i++) {
+        float a = 2*PI*i/Seg;
+        float x = R * FMath::Cos(a);
+        float y = R * FMath::Sin(a);
+        V.Add(FVector(x, y, -HH));
+        N.Add(FVector(x, y, 0).GetSafeNormal());
+        UV.Add(FVector2D((float)i/Seg, 0));
+        VC.Add(Col);
+        V.Add(FVector(x, y, HH));
+        N.Add(FVector(x, y, 0).GetSafeNormal());
+        UV.Add(FVector2D((float)i/Seg, 1));
+        VC.Add(Col);
     }
 
-    for (int32 i = 0; i < Segments; i++)
-    {
-        int32 Base = i * 2;
-        Triangles.Add(Base); Triangles.Add(Base + 1); Triangles.Add(Base + 2);
-        Triangles.Add(Base + 2); Triangles.Add(Base + 1); Triangles.Add(Base + 3);
+    // Side triangles
+    for (int i=0; i<Seg; i++) {
+        int b = i*2;
+        T.Add(b); T.Add(b+2); T.Add(b+1);
+        T.Add(b+1); T.Add(b+2); T.Add(b+3);
     }
 
-    // Top cap
-    int32 TopCenter = Vertices.Num();
-    Vertices.Add(FVector(0, 0, HalfHeight));
-    Normals.Add(FVector(0, 0, 1));
-    VertexColors.Add(Color);
-    UV0.Add(FVector2D(0.5f, 0.5f));
-    Tangents.Add(FProcMeshTangent(FVector(1, 0, 0), false));
-
-    for (int32 i = 0; i <= Segments; i++)
-    {
-        float Angle = 2.0f * PI * i / Segments;
-        Vertices.Add(FVector(FMath::Cos(Angle) * Radius, FMath::Sin(Angle) * Radius, HalfHeight));
-        Normals.Add(FVector(0, 0, 1));
-        VertexColors.Add(Color);
-        UV0.Add(FVector2D(FMath::Cos(Angle) * 0.5f + 0.5f, FMath::Sin(Angle) * 0.5f + 0.5f));
-        Tangents.Add(FProcMeshTangent(FVector(1, 0, 0), false));
-    }
-    for (int32 i = 0; i < Segments; i++)
-    {
-        Triangles.Add(TopCenter);
-        Triangles.Add(TopCenter + 1 + i);
-        Triangles.Add(TopCenter + 2 + i);
-    }
-
-    // Bottom cap
-    int32 BotCenter = Vertices.Num();
-    Vertices.Add(FVector(0, 0, -HalfHeight));
-    Normals.Add(FVector(0, 0, -1));
-    VertexColors.Add(Color);
-    UV0.Add(FVector2D(0.5f, 0.5f));
-    Tangents.Add(FProcMeshTangent(FVector(1, 0, 0), false));
-
-    for (int32 i = 0; i <= Segments; i++)
-    {
-        float Angle = 2.0f * PI * i / Segments;
-        Vertices.Add(FVector(FMath::Cos(Angle) * Radius, FMath::Sin(Angle) * Radius, -HalfHeight));
-        Normals.Add(FVector(0, 0, -1));
-        VertexColors.Add(Color);
-        UV0.Add(FVector2D(FMath::Cos(Angle) * 0.5f + 0.5f, FMath::Sin(Angle) * 0.5f + 0.5f));
-        Tangents.Add(FProcMeshTangent(FVector(1, 0, 0), false));
-    }
-    for (int32 i = 0; i < Segments; i++)
-    {
-        Triangles.Add(BotCenter);
-        Triangles.Add(BotCenter + 2 + i);
-        Triangles.Add(BotCenter + 1 + i);
-    }
-
-    PMC->CreateMeshSection_LinearColor(0, Vertices, Triangles, Normals, UV0, VertexColors, Tangents, false);
+    PMC->CreateMeshSection_LinearColor(0, V, T, N, UV, VC, TArray<FProcMeshTangent>(), true);
 }
 
-// =============================================================================
-// SPAWN FUNCTIONS - All using ProceduralMeshComponent with vertex colors
-// =============================================================================
+// ============================================================
+// DETAILED FURNITURE BUILDERS
+// ============================================================
 
-AActor* AEmersynGameMode::SpawnBox(FVector Location, FVector Scale, FLinearColor Color)
+void AEmersynGameMode::SpawnBed(FVector L, FLinearColor Frame, FLinearColor Sheet, FLinearColor Pillow)
 {
-    UWorld* World = GetWorld();
-    if (!World) return nullptr;
-    
-    AActor* Actor = World->SpawnActor<AActor>(AActor::StaticClass(), Location, FRotator::ZeroRotator);
-    if (!Actor) return nullptr;
-    
-    UProceduralMeshComponent* PMC = NewObject<UProceduralMeshComponent>(Actor, TEXT("ProceduralMesh"));
-    PMC->RegisterComponent();
-    Actor->SetRootComponent(PMC);
-    
-    FVector HalfExtent = Scale * 50.0f;
-    GenerateBoxMesh(PMC, HalfExtent, Color);
-    
-    // v12: ALWAYS assign vertex color material
-    if (VertexColorMaterial)
-    {
-        PMC->SetMaterial(0, VertexColorMaterial);
-    }
-    
-    SpawnedActors.Add(Actor);
-    return Actor;
+    // Frame (dark gradient)
+    SpawnGradientBox(L + FVector(0,0,15), FVector(120,80,15), Frame * 1.1f, Frame * 0.7f);
+    // Mattress (lighter gradient)
+    SpawnGradientBox(L + FVector(0,0,35), FVector(115,75,10), Sheet * 1.15f, Sheet * 0.85f);
+    // Headboard
+    SpawnGradientBox(L + FVector(0,-85,50), FVector(120,5,30), Frame * 1.1f, Frame * 0.8f);
+    // Pillows
+    SpawnBox(L + FVector(-40,-50,50), FVector(25,15,8), Pillow);
+    SpawnBox(L + FVector(40,-50,50), FVector(25,15,8), Pillow);
+    // Legs (4 corners)
+    SpawnBox(L + FVector(-100,-70,0), FVector(5,5,15), Frame * 0.6f);
+    SpawnBox(L + FVector(100,-70,0), FVector(5,5,15), Frame * 0.6f);
+    SpawnBox(L + FVector(-100,70,0), FVector(5,5,15), Frame * 0.6f);
+    SpawnBox(L + FVector(100,70,0), FVector(5,5,15), Frame * 0.6f);
 }
 
-AActor* AEmersynGameMode::SpawnSphere(FVector Location, float Radius, FLinearColor Color)
+void AEmersynGameMode::SpawnSofa(FVector L, FLinearColor Fabric, FLinearColor Cushion)
 {
-    UWorld* World = GetWorld();
-    if (!World) return nullptr;
-    
-    AActor* Actor = World->SpawnActor<AActor>(AActor::StaticClass(), Location, FRotator::ZeroRotator);
-    if (!Actor) return nullptr;
-    
-    UProceduralMeshComponent* PMC = NewObject<UProceduralMeshComponent>(Actor, TEXT("ProceduralMesh"));
-    PMC->RegisterComponent();
-    Actor->SetRootComponent(PMC);
-    
-    float ActualRadius = Radius * 50.0f;
-    GenerateSphereMesh(PMC, ActualRadius, 12, Color);
-    
-    if (VertexColorMaterial)
-    {
-        PMC->SetMaterial(0, VertexColorMaterial);
-    }
-    
-    SpawnedActors.Add(Actor);
-    return Actor;
+    // Base frame
+    SpawnGradientBox(L + FVector(0,0,25), FVector(150,40,20), Fabric * 0.75f, Fabric * 0.55f);
+    // Backrest
+    SpawnGradientBox(L + FVector(0,-35,60), FVector(150,8,35), Fabric * 1.05f, Fabric * 0.85f);
+    // Left armrest
+    SpawnGradientBox(L + FVector(-140,0,45), FVector(10,40,40), Fabric * 0.95f, Fabric * 0.7f);
+    // Right armrest
+    SpawnGradientBox(L + FVector(140,0,45), FVector(10,40,40), Fabric * 0.95f, Fabric * 0.7f);
+    // Cushions (3)
+    SpawnGradientBox(L + FVector(-80,0,45), FVector(35,35,12), Cushion * 1.2f, Cushion * 0.9f);
+    SpawnGradientBox(L + FVector(0,0,45), FVector(35,35,12), Cushion * 1.2f, Cushion * 0.9f);
+    SpawnGradientBox(L + FVector(80,0,45), FVector(35,35,12), Cushion * 1.2f, Cushion * 0.9f);
 }
 
-AActor* AEmersynGameMode::SpawnCylinder(FVector Location, FVector Scale, FLinearColor Color)
+void AEmersynGameMode::SpawnTable(FVector L, FLinearColor Top, FLinearColor Leg)
 {
-    UWorld* World = GetWorld();
-    if (!World) return nullptr;
-    
-    AActor* Actor = World->SpawnActor<AActor>(AActor::StaticClass(), Location, FRotator::ZeroRotator);
-    if (!Actor) return nullptr;
-    
-    UProceduralMeshComponent* PMC = NewObject<UProceduralMeshComponent>(Actor, TEXT("ProceduralMesh"));
-    PMC->RegisterComponent();
-    Actor->SetRootComponent(PMC);
-    
-    float ActualRadius = Scale.X * 50.0f;
-    float ActualHalfHeight = Scale.Z * 50.0f;
-    GenerateCylinderMesh(PMC, ActualRadius, ActualHalfHeight, 16, Color);
-    
-    if (VertexColorMaterial)
-    {
-        PMC->SetMaterial(0, VertexColorMaterial);
-    }
-    
-    SpawnedActors.Add(Actor);
-    return Actor;
+    // Tabletop (gradient top brighter)
+    SpawnGradientBox(L + FVector(0,0,70), FVector(80,60,5), Top * 1.15f, Top * 0.95f);
+    // 4 legs
+    SpawnBox(L + FVector(-70,-50,35), FVector(5,5,35), Leg * 0.75f);
+    SpawnBox(L + FVector(70,-50,35), FVector(5,5,35), Leg * 0.75f);
+    SpawnBox(L + FVector(-70,50,35), FVector(5,5,35), Leg * 0.75f);
+    SpawnBox(L + FVector(70,50,35), FVector(5,5,35), Leg * 0.75f);
 }
 
-void AEmersynGameMode::SpawnLight(FVector Location, float Intensity, FLinearColor Color)
+void AEmersynGameMode::SpawnChair(FVector L, FLinearColor Col)
 {
-    UWorld* World = GetWorld();
-    if (!World) return;
-    APointLight* Light = World->SpawnActor<APointLight>(APointLight::StaticClass(), Location, FRotator::ZeroRotator);
-    if (Light)
-    {
-        UPointLightComponent* LC = Light->PointLightComponent;
-        if (LC)
-        {
-            LC->SetIntensity(Intensity);
-            LC->SetLightColor(Color);
-            LC->SetAttenuationRadius(3000.0f);
-            LC->SetCastShadows(false);
+    // Seat
+    SpawnGradientBox(L + FVector(0,0,45), FVector(25,25,5), Col * 1.1f, Col * 0.85f);
+    // Backrest
+    SpawnGradientBox(L + FVector(0,-22,70), FVector(25,5,25), Col * 1.05f, Col * 0.8f);
+    // 4 legs
+    SpawnBox(L + FVector(-20,-20,22), FVector(3,3,22), Col * 0.7f);
+    SpawnBox(L + FVector(20,-20,22), FVector(3,3,22), Col * 0.7f);
+    SpawnBox(L + FVector(-20,20,22), FVector(3,3,22), Col * 0.7f);
+    SpawnBox(L + FVector(20,20,22), FVector(3,3,22), Col * 0.7f);
+}
+
+void AEmersynGameMode::SpawnBookshelf(FVector L, FLinearColor Wood)
+{
+    // Frame (tall vertical)
+    SpawnGradientBox(L + FVector(0,0,100), FVector(60,15,100), Wood * 1.05f, Wood * 0.75f);
+    // 4 shelves
+    SpawnBox(L + FVector(0,0,50), FVector(58,14,3), Wood * 0.9f);
+    SpawnBox(L + FVector(0,0,100), FVector(58,14,3), Wood * 0.9f);
+    SpawnBox(L + FVector(0,0,150), FVector(58,14,3), Wood * 0.9f);
+    SpawnBox(L + FVector(0,0,190), FVector(58,14,3), Wood * 0.9f);
+    // Books (colored boxes)
+    SpawnBox(L + FVector(-40,0,58), FVector(8,12,18), SimsColors::FabricRed);
+    SpawnBox(L + FVector(-20,0,58), FVector(8,12,20), SimsColors::FabricBlue);
+    SpawnBox(L + FVector(0,0,58), FVector(8,12,16), SimsColors::FabricGreen);
+    SpawnBox(L + FVector(20,0,58), FVector(8,12,22), SimsColors::FabricYellow);
+    SpawnBox(L + FVector(-30,0,108), FVector(8,12,17), SimsColors::FabricPurple);
+    SpawnBox(L + FVector(-10,0,108), FVector(8,12,19), SimsColors::FabricPink);
+    SpawnBox(L + FVector(10,0,108), FVector(8,12,15), SimsColors::FabricBlue);
+    SpawnBox(L + FVector(30,0,108), FVector(8,12,21), SimsColors::FabricGreen);
+}
+
+void AEmersynGameMode::SpawnTV(FVector L)
+{
+    // Screen (dark glass)
+    SpawnBox(L + FVector(0,0,80), FVector(70,5,45), SimsColors::MetalBlack);
+    // Stand base
+    SpawnGradientBox(L + FVector(0,0,30), FVector(40,15,5), SimsColors::MetalSilver * 1.1f, SimsColors::MetalSilver * 0.8f);
+    // Stand pole
+    SpawnBox(L + FVector(0,0,55), FVector(5,5,25), SimsColors::MetalSilver * 0.9f);
+}
+
+void AEmersynGameMode::SpawnStove(FVector L)
+{
+    // Body
+    SpawnGradientBox(L + FVector(0,0,45), FVector(50,40,45), SimsColors::Ceramic * 1.05f, SimsColors::Ceramic * 0.85f);
+    // 4 burners
+    SpawnBox(L + FVector(-20,-15,92), FVector(12,12,3), SimsColors::MetalBlack);
+    SpawnBox(L + FVector(20,-15,92), FVector(12,12,3), SimsColors::MetalBlack);
+    SpawnBox(L + FVector(-20,15,92), FVector(12,12,3), SimsColors::MetalBlack);
+    SpawnBox(L + FVector(20,15,92), FVector(12,12,3), SimsColors::MetalBlack);
+    // Oven door handle
+    SpawnBox(L + FVector(0,42,65), FVector(40,3,3), SimsColors::MetalSilver);
+}
+
+void AEmersynGameMode::SpawnFridge(FVector L)
+{
+    // Body (tall gradient)
+    SpawnGradientBox(L + FVector(0,0,100), FVector(45,40,100), SimsColors::Ceramic * 1.1f, SimsColors::Ceramic * 0.9f);
+    // Handle (top door)
+    SpawnBox(L + FVector(0,42,140), FVector(5,3,30), SimsColors::MetalSilver);
+    // Handle (bottom door)
+    SpawnBox(L + FVector(0,42,60), FVector(5,3,20), SimsColors::MetalSilver);
+}
+
+void AEmersynGameMode::SpawnSink(FVector L)
+{
+    // Counter
+    SpawnGradientBox(L + FVector(0,0,75), FVector(60,35,5), SimsColors::FloorTile * 1.05f, SimsColors::FloorTile * 0.9f);
+    // Basin (recessed)
+    SpawnBox(L + FVector(0,0,68), FVector(25,25,8), SimsColors::Ceramic * 0.95f);
+    // Faucet base
+    SpawnCylinder(L + FVector(0,-30,85), FVector(4,4,10), SimsColors::MetalSilver);
+    // Faucet spout
+    SpawnBox(L + FVector(0,-10,95), FVector(3,20,3), SimsColors::MetalSilver);
+}
+
+void AEmersynGameMode::SpawnBathtub(FVector L)
+{
+    // Outer shell (gradient)
+    SpawnGradientBox(L + FVector(0,0,30), FVector(90,45,30), SimsColors::Ceramic * 1.1f, SimsColors::Ceramic * 0.85f);
+    // Inner basin (darker)
+    SpawnBox(L + FVector(0,0,45), FVector(80,40,15), SimsColors::Ceramic * 0.75f);
+    // Faucet
+    SpawnCylinder(L + FVector(0,-45,70), FVector(5,5,10), SimsColors::MetalSilver);
+}
+
+void AEmersynGameMode::SpawnToilet(FVector L)
+{
+    // Bowl
+    SpawnGradientBox(L + FVector(0,0,30), FVector(25,35,20), SimsColors::Ceramic * 1.1f, SimsColors::Ceramic * 0.9f);
+    // Tank
+    SpawnGradientBox(L + FVector(0,-30,55), FVector(25,20,25), SimsColors::Ceramic * 1.05f, SimsColors::Ceramic * 0.85f);
+    // Lid
+    SpawnBox(L + FVector(0,0,52), FVector(26,36,3), SimsColors::Ceramic * 1.15f);
+}
+
+void AEmersynGameMode::SpawnLamp(FVector L, FLinearColor Shade)
+{
+    // Base
+    SpawnCylinder(L + FVector(0,0,10), FVector(12,12,10), SimsColors::WoodDark);
+    // Pole
+    SpawnCylinder(L + FVector(0,0,50), FVector(3,3,40), SimsColors::MetalSilver * 0.85f);
+    // Shade
+    SpawnCylinder(L + FVector(0,0,95), FVector(20,20,15), Shade);
+}
+
+void AEmersynGameMode::SpawnRug(FVector L, FLinearColor C1, FLinearColor C2, FVector Size)
+{
+    // Flat rectangle on floor with gradient
+    SpawnGradientBox(L + FVector(0,0,2), Size, C1, C2);
+}
+
+void AEmersynGameMode::SpawnPlant(FVector L, float S)
+{
+    // Pot
+    SpawnCylinder(L + FVector(0,0,15*S), FVector(15*S,15*S,15*S), SimsColors::TrunkBrown);
+    // Stem
+    SpawnCylinder(L + FVector(0,0,40*S), FVector(3*S,3*S,25*S), SimsColors::LeafGreen);
+    // Leaves (sphere)
+    SpawnSphere(L + FVector(0,0,70*S), 20*S, SimsColors::LeafGreen);
+}
+
+void AEmersynGameMode::SpawnTree(FVector L, float S)
+{
+    // Trunk
+    SpawnCylinder(L + FVector(0,0,80*S), FVector(15*S,15*S,80*S), SimsColors::TrunkBrown);
+    // Canopy
+    SpawnSphere(L + FVector(0,0,180*S), 60*S, SimsColors::LeafGreen);
+    // Top accent
+    SpawnSphere(L + FVector(0,0,220*S), 35*S, SimsColors::LeafDark);
+}
+
+void AEmersynGameMode::SpawnSwing(FVector L)
+{
+    // Left pole
+    SpawnBox(L + FVector(-80,0,100), FVector(5,5,100), SimsColors::MetalSilver * 0.8f);
+    // Right pole
+    SpawnBox(L + FVector(80,0,100), FVector(5,5,100), SimsColors::MetalSilver * 0.8f);
+    // Top bar
+    SpawnBox(L + FVector(0,0,200), FVector(80,5,5), SimsColors::MetalSilver * 0.9f);
+    // Seat
+    SpawnBox(L + FVector(0,0,50), FVector(30,25,5), SimsColors::FabricRed);
+    // Chains (visual only, 2 per side)
+    SpawnCylinder(L + FVector(-15,0,125), FVector(2,2,75), SimsColors::MetalSilver * 0.7f);
+    SpawnCylinder(L + FVector(15,0,125), FVector(2,2,75), SimsColors::MetalSilver * 0.7f);
+}
+
+void AEmersynGameMode::SpawnSlide(FVector L)
+{
+    // Platform
+    SpawnGradientBox(L + FVector(0,-80,100), FVector(40,30,5), SimsColors::FabricYellow * 1.1f, SimsColors::FabricYellow * 0.85f);
+    // Slide surface (angled plane approximated with boxes)
+    for (int i=0; i<8; i++) {
+        float z = 90 - i*12;
+        float y = -60 + i*15;
+        SpawnBox(L + FVector(0,y,z), FVector(38,12,3), SimsColors::FabricBlue * (1.0f - i*0.05f));
+    }
+    // Support poles
+    SpawnBox(L + FVector(-30,-80,50), FVector(5,5,50), SimsColors::MetalSilver * 0.75f);
+    SpawnBox(L + FVector(30,-80,50), FVector(5,5,50), SimsColors::MetalSilver * 0.75f);
+}
+
+void AEmersynGameMode::SpawnBench(FVector L)
+{
+    // Seat
+    SpawnGradientBox(L + FVector(0,0,50), FVector(80,25,5), SimsColors::WoodMed * 1.15f, SimsColors::WoodMed * 0.9f);
+    // Backrest
+    SpawnGradientBox(L + FVector(0,-22,75), FVector(80,5,25), SimsColors::WoodMed * 1.1f, SimsColors::WoodMed * 0.85f);
+    // Legs
+    SpawnBox(L + FVector(-60,0,25), FVector(5,20,25), SimsColors::WoodDark * 0.8f);
+    SpawnBox(L + FVector(60,0,25), FVector(5,20,25), SimsColors::WoodDark * 0.8f);
+}
+
+void AEmersynGameMode::SpawnShopShelf(FVector L, FLinearColor Col)
+{
+    // Frame
+    SpawnGradientBox(L + FVector(0,0,100), FVector(70,20,100), Col * 1.05f, Col * 0.8f);
+    // 3 shelves
+    SpawnBox(L + FVector(0,0,60), FVector(68,18,3), Col * 0.95f);
+    SpawnBox(L + FVector(0,0,110), FVector(68,18,3), Col * 0.95f);
+    SpawnBox(L + FVector(0,0,160), FVector(68,18,3), Col * 0.95f);
+    // Items (colored boxes)
+    SpawnBox(L + FVector(-40,0,70), FVector(10,15,12), SimsColors::FabricRed);
+    SpawnBox(L + FVector(-10,0,70), FVector(10,15,15), SimsColors::FabricBlue);
+    SpawnBox(L + FVector(20,0,70), FVector(10,15,10), SimsColors::FabricGreen);
+}
+
+void AEmersynGameMode::SpawnArcadeMachine(FVector L, FLinearColor Col)
+{
+    // Cabinet body
+    SpawnGradientBox(L + FVector(0,0,80), FVector(40,35,80), Col * 1.05f, Col * 0.75f);
+    // Screen
+    SpawnBox(L + FVector(0,-30,120), FVector(35,5,40), SimsColors::MetalBlack);
+    // Control panel
+    SpawnGradientBox(L + FVector(0,0,60), FVector(38,40,5), Col * 0.95f, Col * 0.7f);
+    // Joystick
+    SpawnCylinder(L + FVector(-15,5,70), FVector(4,4,10), SimsColors::FabricRed);
+}
+
+void AEmersynGameMode::SpawnDesk(FVector L, FLinearColor Col)
+{
+    // Tabletop
+    SpawnGradientBox(L + FVector(0,0,70), FVector(90,50,5), Col * 1.15f, Col * 0.95f);
+    // Drawer
+    SpawnGradientBox(L + FVector(0,35,50), FVector(40,10,15), Col * 0.95f, Col * 0.75f);
+    // Legs
+    SpawnBox(L + FVector(-80,-40,35), FVector(5,5,35), Col * 0.7f);
+    SpawnBox(L + FVector(80,-40,35), FVector(5,5,35), Col * 0.7f);
+    SpawnBox(L + FVector(-80,40,35), FVector(5,5,35), Col * 0.7f);
+    SpawnBox(L + FVector(80,40,35), FVector(5,5,35), Col * 0.7f);
+}
+
+void AEmersynGameMode::SpawnWindow(FVector L, FLinearColor Frame, FLinearColor Glass)
+{
+    // Frame (vertical)
+    SpawnGradientBox(L + FVector(0,0,100), FVector(60,8,80), Frame * 1.05f, Frame * 0.85f);
+    // Glass panes (4 quadrants)
+    SpawnBox(L + FVector(-20,-5,120), FVector(25,3,30), Glass);
+    SpawnBox(L + FVector(20,-5,120), FVector(25,3,30), Glass);
+    SpawnBox(L + FVector(-20,-5,80), FVector(25,3,30), Glass);
+    SpawnBox(L + FVector(20,-5,80), FVector(25,3,30), Glass);
+}
+
+void AEmersynGameMode::SpawnPainting(FVector L, FLinearColor Frame, FLinearColor Canvas)
+{
+    // Frame
+    SpawnBox(L + FVector(0,0,100), FVector(50,5,60), Frame);
+    // Canvas
+    SpawnBox(L + FVector(0,-3,100), FVector(45,2,55), Canvas);
+}
+
+void AEmersynGameMode::SpawnFountain(FVector L)
+{
+    // Base (large)
+    SpawnCylinder(L + FVector(0,0,20), FVector(60,60,20), SimsColors::FloorConcrete);
+    // Pillar
+    SpawnCylinder(L + FVector(0,0,60), FVector(15,15,40), SimsColors::Ceramic);
+    // Top bowl
+    SpawnCylinder(L + FVector(0,0,105), FVector(30,30,15), SimsColors::Ceramic * 1.1f);
+    // Water (blue sphere at top)
+    SpawnSphere(L + FVector(0,0,120), 12, SimsColors::GlassBlue);
+}
+
+void AEmersynGameMode::SpawnFerrisWheel(FVector L)
+{
+    // Central axis
+    SpawnCylinder(L + FVector(0,0,150), FVector(10,10,150), SimsColors::MetalSilver * 0.8f);
+    // Wheel rim (8 spokes approximated)
+    for (int i=0; i<8; i++) {
+        float angle = PI * 2 * i / 8;
+        float x = 120 * FMath::Cos(angle);
+        float z = 120 * FMath::Sin(angle) + 150;
+        SpawnBox(L + FVector(x,0,z), FVector(5,5,120), SimsColors::FabricYellow * (0.8f + i*0.03f));
+    }
+    // Gondolas (8)
+    for (int i=0; i<8; i++) {
+        float angle = PI * 2 * i / 8;
+        float x = 115 * FMath::Cos(angle);
+        float z = 115 * FMath::Sin(angle) + 150;
+        SpawnBox(L + FVector(x,0,z), FVector(15,20,20), SimsColors::FabricRed);
+    }
+}
+
+void AEmersynGameMode::SpawnCarousel(FVector L)
+{
+    // Platform
+    SpawnCylinder(L + FVector(0,0,10), FVector(100,100,10), SimsColors::FabricYellow);
+    // Central pole
+    SpawnCylinder(L + FVector(0,0,100), FVector(15,15,90), SimsColors::MetalSilver);
+    // Roof
+    SpawnCylinder(L + FVector(0,0,200), FVector(110,110,20), SimsColors::FabricRed);
+    // 4 horses (simplified as colored boxes)
+    SpawnBox(L + FVector(50,0,50), FVector(15,25,30), SimsColors::FabricWhite);
+    SpawnBox(L + FVector(-50,0,50), FVector(15,25,30), SimsColors::FabricPink);
+    SpawnBox(L + FVector(0,50,50), FVector(15,25,30), SimsColors::FabricBlue);
+    SpawnBox(L + FVector(0,-50,50), FVector(15,25,30), SimsColors::FabricGreen);
+}
+
+void AEmersynGameMode::SpawnCounter(FVector L, FLinearColor Col)
+{
+    // Counter top
+    SpawnGradientBox(L + FVector(0,0,90), FVector(100,40,5), Col * 1.15f, Col * 0.95f);
+    // Base cabinet
+    SpawnGradientBox(L + FVector(0,0,45), FVector(95,38,45), Col * 0.9f, Col * 0.7f);
+}
+
+void AEmersynGameMode::SpawnCabinet(FVector L, FLinearColor Col)
+{
+    // Box
+    SpawnGradientBox(L + FVector(0,0,80), FVector(50,30,80), Col * 1.05f, Col * 0.8f);
+    // 2 doors (visual hint)
+    SpawnBox(L + FVector(-15,32,80), FVector(15,2,70), Col * 0.95f);
+    SpawnBox(L + FVector(15,32,80), FVector(15,2,70), Col * 0.95f);
+}
+
+// ============================================================
+// CHARACTER & PET SPAWNERS
+// ============================================================
+
+void AEmersynGameMode::SpawnCharacter(FVector Loc, FLinearColor Skin, FLinearColor Hair, FLinearColor Outfit, const FString& Name, float Scale)
+{
+    // Head (sphere)
+    SpawnSphere(Loc + FVector(0,0,150*Scale), 20*Scale, Skin);
+    // Hair (smaller sphere on top)
+    SpawnSphere(Loc + FVector(0,0,170*Scale), 22*Scale, Hair);
+    // Body (box)
+    SpawnGradientBox(Loc + FVector(0,0,100*Scale), FVector(18*Scale,12*Scale,30*Scale), Outfit * 1.1f, Outfit * 0.85f);
+    // Arms
+    SpawnCylinder(Loc + FVector(-25*Scale,0,110*Scale), FVector(5*Scale,5*Scale,25*Scale), Skin * 0.95f);
+    SpawnCylinder(Loc + FVector(25*Scale,0,110*Scale), FVector(5*Scale,5*Scale,25*Scale), Skin * 0.95f);
+    // Legs
+    SpawnCylinder(Loc + FVector(-10*Scale,0,40*Scale), FVector(6*Scale,6*Scale,35*Scale), Outfit * 0.8f);
+    SpawnCylinder(Loc + FVector(10*Scale,0,40*Scale), FVector(6*Scale,6*Scale,35*Scale), Outfit * 0.8f);
+}
+
+void AEmersynGameMode::SpawnPet(FVector Loc, FLinearColor Body, FLinearColor Accent, const FString& Name, float Scale)
+{
+    // Body (horizontal box)
+    SpawnGradientBox(Loc + FVector(0,0,30*Scale), FVector(25*Scale,15*Scale,15*Scale), Body * 1.1f, Body * 0.85f);
+    // Head (sphere)
+    SpawnSphere(Loc + FVector(30*Scale,0,35*Scale), 12*Scale, Body);
+    // Ears (accent color)
+    SpawnBox(Loc + FVector(35*Scale,-8*Scale,48*Scale), FVector(3*Scale,3*Scale,8*Scale), Accent);
+    SpawnBox(Loc + FVector(35*Scale,8*Scale,48*Scale), FVector(3*Scale,3*Scale,8*Scale), Accent);
+    // Legs (4)
+    SpawnCylinder(Loc + FVector(-15*Scale,-10*Scale,15*Scale), FVector(3*Scale,3*Scale,15*Scale), Body * 0.75f);
+    SpawnCylinder(Loc + FVector(-15*Scale,10*Scale,15*Scale), FVector(3*Scale,3*Scale,15*Scale), Body * 0.75f);
+    SpawnCylinder(Loc + FVector(15*Scale,-10*Scale,15*Scale), FVector(3*Scale,3*Scale,15*Scale), Body * 0.75f);
+    SpawnCylinder(Loc + FVector(15*Scale,10*Scale,15*Scale), FVector(3*Scale,3*Scale,15*Scale), Body * 0.75f);
+}
+
+// ============================================================
+// LIGHTING
+// ============================================================
+
+void AEmersynGameMode::SpawnLight(FVector Loc, float Intensity, FLinearColor Color)
+{
+    APointLight* Light = GetWorld()->SpawnActor<APointLight>(APointLight::StaticClass(), FTransform(FRotator::ZeroRotator, Loc));
+    if (Light && Light->PointLightComponent) {
+        Light->PointLightComponent->SetIntensity(Intensity);
+        Light->PointLightComponent->SetLightColor(Color);
+        Light->PointLightComponent->SetAttenuationRadius(1000.0f);
+    }
+    SpawnedActors.Add(Light);
+}
+
+void AEmersynGameMode::SpawnDirectionalLight(FRotator Rot, float Intensity, FLinearColor Color)
+{
+    ADirectionalLight* Light = GetWorld()->SpawnActor<ADirectionalLight>(ADirectionalLight::StaticClass(), FTransform(Rot, FVector::ZeroVector));
+    if (Light) {
+        UDirectionalLightComponent* DLC = Cast<UDirectionalLightComponent>(Light->GetLightComponent());
+        if (DLC) {
+            DLC->SetIntensity(Intensity);
+            DLC->SetLightColor(Color);
         }
-        SpawnedActors.Add(Light);
     }
+    SpawnedActors.Add(Light);
 }
 
-void AEmersynGameMode::SpawnDirectionalLight(FRotator Rotation, float Intensity, FLinearColor Color)
+// ============================================================
+// ENVIRONMENT BUILDERS
+// ============================================================
+
+void AEmersynGameMode::SpawnSkyBackground(FLinearColor TopColor, FLinearColor BottomColor)
 {
-    UWorld* World = GetWorld();
-    if (!World) return;
-    ADirectionalLight* Light = World->SpawnActor<ADirectionalLight>(ADirectionalLight::StaticClass(), FVector::ZeroVector, Rotation);
-    if (Light)
-    {
-        ULightComponent* LC = Light->GetLightComponent();
-        if (LC)
-        {
-            LC->SetIntensity(Intensity);
-            LC->SetLightColor(Color);
-            LC->SetCastShadows(false);
+    // Huge gradient sphere encompassing the entire scene
+    SpawnGradientBox(FVector(0,0,0), FVector(8000,8000,4000), TopColor, BottomColor);
+}
+
+void AEmersynGameMode::SpawnRoomShell(FVector Size, FLinearColor FloorCol, FLinearColor WallCol, FLinearColor CeilCol)
+{
+    float W = Size.X;
+    float D = Size.Y;
+    float H = Size.Z;
+    
+    // Floor (LARGE to cover any default ground)
+    SpawnGradientBox(FVector(0,0,-10), FVector(W,D,5), FloorCol * 1.1f, FloorCol * 0.95f);
+    
+    // Walls (4 sides with gradient)
+    SpawnGradientBox(FVector(-W,0,H/2), FVector(8,D,H/2), WallCol * 1.05f, WallCol * 0.85f);  // Left
+    SpawnGradientBox(FVector(W,0,H/2), FVector(8,D,H/2), WallCol * 1.05f, WallCol * 0.85f);   // Right
+    SpawnGradientBox(FVector(0,-D,H/2), FVector(W,8,H/2), WallCol * 1.05f, WallCol * 0.85f);  // Back
+    SpawnGradientBox(FVector(0,D,H/2), FVector(W,8,H/2), WallCol * 1.05f, WallCol * 0.85f);   // Front
+    
+    // Ceiling
+    SpawnBox(FVector(0,0,H), FVector(W,D,5), CeilCol);
+}
+
+void AEmersynGameMode::SetupCamera(FVector Loc, FRotator Rot)
+{
+    APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+    if (PC) {
+        PC->SetViewTarget(PC->GetPawn());
+        ACameraActor* Cam = GetWorld()->SpawnActor<ACameraActor>(ACameraActor::StaticClass(), FTransform(Rot, Loc));
+        if (Cam) {
+            PC->SetViewTarget(Cam);
+            SpawnedActors.Add(Cam);
         }
-        SpawnedActors.Add(Light);
     }
 }
 
-void AEmersynGameMode::SetupCamera(FVector Location, FRotator Rotation)
-{
-    UWorld* World = GetWorld();
-    if (!World) return;
-    ACameraActor* Camera = World->SpawnActor<ACameraActor>(ACameraActor::StaticClass(), Location, Rotation);
-    if (Camera)
-    {
-        APlayerController* PC = World->GetFirstPlayerController();
-        if (PC) PC->SetViewTarget(Camera);
-        SpawnedActors.Add(Camera);
-    }
-}
+// ============================================================
+// ROOM BUILDERS
+// ============================================================
 
-void AEmersynGameMode::SpawnCharacter(FVector Location, FLinearColor SkinColor, FLinearColor HairColor, FLinearColor OutfitColor, const FString& Name, float Scale)
-{
-    float S = Scale;
-    SpawnSphere(Location + FVector(0, 0, 140 * S), 0.45f * S, SkinColor);
-    SpawnSphere(Location + FVector(0, 0, 165 * S), 0.48f * S, HairColor);
-    SpawnBox(Location + FVector(0, 0, 80 * S), FVector(0.4f, 0.25f, 0.6f) * S, OutfitColor);
-    SpawnCylinder(Location + FVector(35 * S, 0, 90 * S), FVector(0.1f, 0.1f, 0.35f) * S, SkinColor);
-    SpawnCylinder(Location + FVector(-35 * S, 0, 90 * S), FVector(0.1f, 0.1f, 0.35f) * S, SkinColor);
-    SpawnCylinder(Location + FVector(12 * S, 0, 25 * S), FVector(0.12f, 0.12f, 0.3f) * S, OutfitColor * 0.8f);
-    SpawnCylinder(Location + FVector(-12 * S, 0, 25 * S), FVector(0.12f, 0.12f, 0.3f) * S, OutfitColor * 0.8f);
-    SpawnBox(Location + FVector(12 * S, 0, 5 * S), FVector(0.12f, 0.15f, 0.06f) * S, FLinearColor(0.3f, 0.2f, 0.15f));
-    SpawnBox(Location + FVector(-12 * S, 0, 5 * S), FVector(0.12f, 0.15f, 0.06f) * S, FLinearColor(0.3f, 0.2f, 0.15f));
-    SpawnSphere(Location + FVector(10 * S, -20 * S, 145 * S), 0.06f * S, FLinearColor(0.1f, 0.1f, 0.15f));
-    SpawnSphere(Location + FVector(-10 * S, -20 * S, 145 * S), 0.06f * S, FLinearColor(0.1f, 0.1f, 0.15f));
-}
-
-void AEmersynGameMode::SpawnPet(FVector Location, FLinearColor BodyColor, FLinearColor AccentColor, const FString& Name, float Scale)
-{
-    float S = Scale;
-    SpawnSphere(Location + FVector(0, 0, 25 * S), 0.4f * S, BodyColor);
-    SpawnSphere(Location + FVector(30 * S, 0, 40 * S), 0.3f * S, BodyColor);
-    SpawnSphere(Location + FVector(40 * S, 12 * S, 55 * S), 0.1f * S, AccentColor);
-    SpawnSphere(Location + FVector(40 * S, -12 * S, 55 * S), 0.1f * S, AccentColor);
-    SpawnCylinder(Location + FVector(-35 * S, 0, 35 * S), FVector(0.05f, 0.05f, 0.2f) * S, BodyColor);
-    SpawnCylinder(Location + FVector(15 * S, 12 * S, 8 * S), FVector(0.06f, 0.06f, 0.15f) * S, BodyColor);
-    SpawnCylinder(Location + FVector(15 * S, -12 * S, 8 * S), FVector(0.06f, 0.06f, 0.15f) * S, BodyColor);
-    SpawnCylinder(Location + FVector(-15 * S, 12 * S, 8 * S), FVector(0.06f, 0.06f, 0.15f) * S, BodyColor);
-    SpawnCylinder(Location + FVector(-15 * S, -12 * S, 8 * S), FVector(0.06f, 0.06f, 0.15f) * S, BodyColor);
-    SpawnSphere(Location + FVector(40 * S, -8 * S, 45 * S), 0.05f * S, FLinearColor(0.1f, 0.1f, 0.1f));
-    SpawnSphere(Location + FVector(40 * S, 8 * S, 45 * S), 0.05f * S, FLinearColor(0.1f, 0.1f, 0.1f));
-    SpawnSphere(Location + FVector(48 * S, 0, 40 * S), 0.04f * S, AccentColor);
-}
-
-// =============================================================================
-// v12: ROOM BUILDERS - All with sky background + enlarged floors
-// Every room now spawns: sky background box + colored floor + walls + furniture
-// =============================================================================
-
-// Helper: Spawn a sky-colored background that covers the entire viewport
-void AEmersynGameMode::SpawnSkyBackground(FLinearColor SkyColor)
-{
-    // Huge boxes to fill any void visible to camera
-    SpawnBox(FVector(0, 0, -100), FVector(200, 200, 0.5f), SkyColor * 0.3f);   // Ground extension (darker)
-    SpawnBox(FVector(0, 2000, 500), FVector(200, 0.5f, 40), SkyColor);          // Far back wall (sky)
-    SpawnBox(FVector(0, 0, 2000), FVector(200, 200, 0.5f), SkyColor * 0.9f);    // Ceiling/sky above
-}
-
-// ==================== SPLASH ====================
 void AEmersynGameMode::BuildSplashScreen()
 {
-    SetupCamera(FVector(0, -500, 200), FRotator(-10, 0, 0));
-
-    SpawnSkyBackground(FLinearColor(0.15f, 0.1f, 0.3f));
-
-    // v12: HUGE floor - ensures no checkerboard visible anywhere
-    SpawnBox(FVector(0, 0, -10), FVector(50, 50, 0.2f), FLinearColor(0.08f, 0.05f, 0.15f));
-    SpawnBox(FVector(0, 200, 200), FVector(50, 0.1f, 8), FLinearColor(0.12f, 0.08f, 0.2f));
-
-    // Rainbow columns
-    SpawnBox(FVector(-300, 0, 300), FVector(0.8f, 0.1f, 1.2f), FLinearColor(1.0f, 0.4f, 0.6f));
-    SpawnBox(FVector(-200, 0, 300), FVector(0.8f, 0.1f, 1.2f), FLinearColor(0.95f, 0.6f, 0.2f));
-    SpawnBox(FVector(-100, 0, 300), FVector(0.8f, 0.1f, 1.2f), FLinearColor(0.95f, 0.85f, 0.2f));
-    SpawnBox(FVector(0, 0, 300), FVector(0.8f, 0.1f, 1.2f), FLinearColor(0.3f, 0.85f, 0.4f));
-    SpawnBox(FVector(100, 0, 300), FVector(0.8f, 0.1f, 1.2f), FLinearColor(0.3f, 0.7f, 0.95f));
-    SpawnBox(FVector(200, 0, 300), FVector(0.8f, 0.1f, 1.2f), FLinearColor(0.7f, 0.4f, 0.95f));
-    SpawnBox(FVector(300, 0, 300), FVector(0.8f, 0.1f, 1.2f), FLinearColor(0.95f, 0.4f, 0.8f));
-
-    // Stars/particles
-    SpawnSphere(FVector(-400, -50, 450), 0.2f, FLinearColor(1.0f, 0.95f, 0.3f));
-    SpawnSphere(FVector(400, -50, 420), 0.15f, FLinearColor(1.0f, 0.8f, 0.9f));
-    SpawnSphere(FVector(-200, -50, 480), 0.12f, FLinearColor(0.8f, 0.9f, 1.0f));
-    SpawnSphere(FVector(300, -50, 500), 0.18f, FLinearColor(0.9f, 0.7f, 1.0f));
-    SpawnSphere(FVector(0, -50, 520), 0.25f, FLinearColor(1.0f, 0.6f, 0.7f));
-
-    SpawnCharacter(FVector(0, 50, 50), FLinearColor(0.95f, 0.82f, 0.72f), FLinearColor(0.85f, 0.55f, 0.2f), FLinearColor(1.0f, 0.5f, 0.7f), TEXT("Emersyn"), 1.5f);
-
-    SpawnBox(FVector(0, 0, 150), FVector(4.0f, 0.1f, 0.15f), FLinearColor(0.95f, 0.85f, 0.3f));
-
-    SpawnLight(FVector(0, -300, 400), 8000.0f, FLinearColor(0.95f, 0.8f, 0.9f));
-    SpawnLight(FVector(-300, -200, 300), 3000.0f, FLinearColor(0.6f, 0.4f, 0.9f));
-    SpawnLight(FVector(300, -200, 300), 3000.0f, FLinearColor(0.9f, 0.4f, 0.6f));
+    SpawnSkyBackground(SimsColors::SkyNightTop, SimsColors::SkyNightBot);
+    SetupCamera(FVector(0, -800, 400), FRotator(-20, 0, 0));
 }
 
-// ==================== MAIN MENU ====================
 void AEmersynGameMode::BuildMainMenu()
 {
-    SetupCamera(FVector(0, -800, 400), FRotator(-20, 0, 0));
-
-    SpawnSkyBackground(FLinearColor(0.6f, 0.8f, 1.0f));
-
-    SpawnBox(FVector(0, 0, -10), FVector(50, 50, 0.2f), FLinearColor(0.95f, 0.85f, 0.88f));
-    SpawnBox(FVector(0, 500, 250), FVector(50, 0.1f, 10), FLinearColor(0.92f, 0.82f, 0.9f));
-
-    SpawnBox(FVector(-400, 200, 100), FVector(1.2f, 0.1f, 0.8f), FLinearColor(1.0f, 0.7f, 0.8f));
-    SpawnBox(FVector(-200, 200, 100), FVector(1.2f, 0.1f, 0.8f), FLinearColor(0.95f, 0.9f, 0.6f));
-    SpawnBox(FVector(0, 200, 100), FVector(1.2f, 0.1f, 0.8f), FLinearColor(0.7f, 0.85f, 0.95f));
-    SpawnBox(FVector(200, 200, 100), FVector(1.2f, 0.1f, 0.8f), FLinearColor(0.9f, 0.85f, 0.75f));
-    SpawnBox(FVector(400, 200, 100), FVector(1.2f, 0.1f, 0.8f), FLinearColor(0.6f, 0.9f, 0.65f));
-
-    SpawnCharacter(FVector(-300, -100, 0), FLinearColor(0.95f, 0.82f, 0.72f), FLinearColor(0.85f, 0.55f, 0.2f), FLinearColor(1.0f, 0.5f, 0.7f), TEXT("Emersyn"));
-    SpawnCharacter(FVector(-100, -50, 0), FLinearColor(0.92f, 0.78f, 0.65f), FLinearColor(0.15f, 0.1f, 0.08f), FLinearColor(0.6f, 0.3f, 0.9f), TEXT("Ava"));
-    SpawnCharacter(FVector(100, -80, 0), FLinearColor(0.85f, 0.7f, 0.55f), FLinearColor(0.3f, 0.2f, 0.1f), FLinearColor(0.2f, 0.6f, 0.9f), TEXT("Leo"));
-    SpawnCharacter(FVector(300, -40, 0), FLinearColor(0.9f, 0.75f, 0.6f), FLinearColor(0.7f, 0.3f, 0.15f), FLinearColor(0.3f, 0.85f, 0.5f), TEXT("Mia"));
-
-    SpawnPet(FVector(-200, -180, 0), FLinearColor(0.9f, 0.6f, 0.3f), FLinearColor(0.95f, 0.8f, 0.6f), TEXT("Cat"));
-    SpawnPet(FVector(0, -200, 0), FLinearColor(0.7f, 0.5f, 0.3f), FLinearColor(0.4f, 0.25f, 0.15f), TEXT("Dog"));
-    SpawnPet(FVector(200, -170, 0), FLinearColor(0.95f, 0.95f, 0.92f), FLinearColor(0.95f, 0.7f, 0.75f), TEXT("Bunny"));
-
-    SpawnLight(FVector(0, -300, 500), 10000.0f, FLinearColor(1.0f, 0.95f, 0.9f));
-    SpawnLight(FVector(-400, 0, 300), 3000.0f, FLinearColor(1.0f, 0.8f, 0.85f));
-    SpawnLight(FVector(400, 0, 300), 3000.0f, FLinearColor(0.85f, 0.8f, 1.0f));
-    SpawnDirectionalLight(FRotator(-45, 30, 0), 3.0f, FLinearColor(1.0f, 0.97f, 0.92f));
+    SpawnSkyBackground(SimsColors::SkyTop, SimsColors::SkyBot);
+    
+    // Title decoration (colorful boxes)
+    SpawnBox(FVector(-200,0,150), FVector(30,30,30), SimsColors::FabricPink);
+    SpawnSphere(FVector(200,0,150), 35, SimsColors::FabricBlue);
+    SpawnBox(FVector(0,-150,100), FVector(25,25,25), SimsColors::FabricYellow);
+    
+    SetupCamera(FVector(0, -600, 300), FRotator(-15, 0, 0));
 }
 
-// ==================== BEDROOM ====================
 void AEmersynGameMode::BuildBedroom()
 {
-    SetupCamera(FVector(0, -550, 350), FRotator(-25, 0, 0));
-
-    SpawnSkyBackground(FLinearColor(0.7f, 0.6f, 0.9f));
-
-    SpawnBox(FVector(0, 0, -10), FVector(30, 30, 0.2f), FLinearColor(0.95f, 0.82f, 0.85f));
-    SpawnBox(FVector(0, 400, 200), FVector(30, 0.1f, 8), FLinearColor(0.88f, 0.82f, 0.95f));
-    SpawnBox(FVector(-400, 0, 200), FVector(0.1f, 30, 8), FLinearColor(0.9f, 0.84f, 0.96f));
-    SpawnBox(FVector(400, 0, 200), FVector(0.1f, 30, 8), FLinearColor(0.9f, 0.84f, 0.96f));
-
-    SpawnBox(FVector(-200, 200, 30), FVector(1.8f, 1.2f, 0.3f), FLinearColor(1.0f, 0.7f, 0.8f));
-    SpawnBox(FVector(-200, 200, 50), FVector(1.6f, 1.0f, 0.15f), FLinearColor(0.98f, 0.95f, 0.97f));
-    SpawnBox(FVector(-200, 280, 65), FVector(0.5f, 0.3f, 0.1f), FLinearColor(0.95f, 0.85f, 0.95f));
-    SpawnBox(FVector(-200, 310, 100), FVector(1.8f, 0.08f, 0.8f), FLinearColor(0.95f, 0.75f, 0.85f));
-
-    SpawnBox(FVector(250, 300, 50), FVector(0.8f, 0.4f, 1.0f), FLinearColor(0.95f, 0.88f, 0.92f));
-    SpawnBox(FVector(250, 310, 130), FVector(0.5f, 0.05f, 0.5f), FLinearColor(0.8f, 0.85f, 0.9f));
-
-    SpawnBox(FVector(-50, 280, 25), FVector(0.35f, 0.35f, 0.5f), FLinearColor(0.92f, 0.85f, 0.88f));
-    SpawnSphere(FVector(-50, 280, 72), 0.12f, FLinearColor(1.0f, 0.95f, 0.8f));
-
-    SpawnBox(FVector(0, 0, 1), FVector(2.5f, 2.0f, 0.02f), FLinearColor(0.85f, 0.65f, 0.75f));
-
-    SpawnBox(FVector(350, -100, 75), FVector(0.4f, 0.8f, 1.5f), FLinearColor(0.92f, 0.85f, 0.8f));
-    SpawnBox(FVector(200, -200, 20), FVector(0.6f, 0.4f, 0.4f), FLinearColor(0.95f, 0.6f, 0.3f));
-
-    SpawnCharacter(FVector(50, -100, 0), FLinearColor(0.95f, 0.82f, 0.72f), FLinearColor(0.85f, 0.55f, 0.2f), FLinearColor(1.0f, 0.5f, 0.7f), TEXT("Emersyn"));
-    SpawnPet(FVector(-100, -150, 0), FLinearColor(0.9f, 0.6f, 0.3f), FLinearColor(0.95f, 0.8f, 0.6f), TEXT("Cat"));
-
-    SpawnDirectionalLight(FRotator(-45, 20, 0), 3.0f, FLinearColor(1.0f, 0.95f, 0.9f));
-    SpawnLight(FVector(0, 0, 350), 5000.0f, FLinearColor(1.0f, 0.9f, 0.95f));
-    SpawnLight(FVector(-200, 200, 100), 2000.0f, FLinearColor(1.0f, 0.85f, 0.9f));
+    SpawnSkyBackground(SimsColors::SkyTop, SimsColors::SkyBot);
+    SpawnRoomShell(FVector(600,600,300), SimsColors::FloorWood, SimsColors::WallPink, SimsColors::WallCream);
+    
+    // Furniture
+    SpawnBed(FVector(-200, -300, 0), SimsColors::WoodDark, SimsColors::FabricPink, SimsColors::FabricWhite);
+    SpawnDesk(FVector(250, -250, 0), SimsColors::WoodMed);
+    SpawnChair(FVector(250, -150, 0), SimsColors::FabricPurple);
+    SpawnBookshelf(FVector(350, 200, 0), SimsColors::WoodLight);
+    SpawnLamp(FVector(-350, -350, 0), SimsColors::FabricYellow);
+    SpawnRug(FVector(0, 0, 0), SimsColors::FabricPink, SimsColors::FabricWhite, FVector(200,150,2));
+    SpawnWindow(FVector(-600, 0, 100), SimsColors::WoodDark, SimsColors::GlassBlue);
+    SpawnPainting(FVector(600, -200, 120), SimsColors::WoodDark, SimsColors::FabricBlue);
+    
+    // Character
+    SpawnCharacter(FVector(100, 0, 0), SimsColors::SkinLight, SimsColors::HairBrown, SimsColors::FabricPink, TEXT("Emersyn"));
+    
+    SetupCamera(FVector(0, -900, 400), FRotator(-20, 0, 0));
 }
 
-// ==================== KITCHEN ====================
 void AEmersynGameMode::BuildKitchen()
 {
-    SetupCamera(FVector(0, -600, 300), FRotator(-20, 0, 0));
-
-    SpawnSkyBackground(FLinearColor(0.9f, 0.85f, 0.7f));
-
-    SpawnBox(FVector(0, 0, -10), FVector(30, 30, 0.2f), FLinearColor(0.95f, 0.92f, 0.85f));
-    SpawnBox(FVector(0, 400, 200), FVector(30, 0.1f, 8), FLinearColor(0.98f, 0.95f, 0.88f));
-    SpawnBox(FVector(-400, 0, 200), FVector(0.1f, 30, 8), FLinearColor(0.95f, 0.92f, 0.85f));
-
-    SpawnBox(FVector(-350, 350, 50), FVector(0.6f, 3.0f, 1.0f), FLinearColor(0.92f, 0.88f, 0.82f));
-    SpawnBox(FVector(-350, 350, 110), FVector(0.55f, 2.8f, 0.05f), FLinearColor(0.85f, 0.82f, 0.78f));
-
-    SpawnBox(FVector(0, 100, 50), FVector(1.2f, 0.8f, 1.0f), FLinearColor(0.85f, 0.5f, 0.25f));
-    SpawnBox(FVector(0, 100, 110), FVector(1.3f, 0.9f, 0.03f), FLinearColor(0.92f, 0.88f, 0.8f));
-
-    SpawnBox(FVector(200, 350, 45), FVector(0.7f, 0.5f, 0.9f), FLinearColor(0.92f, 0.92f, 0.95f));
-    SpawnBox(FVector(200, 350, 100), FVector(0.6f, 0.4f, 0.03f), FLinearColor(0.3f, 0.3f, 0.32f));
-
-    SpawnSphere(FVector(-100, 100, 125), 0.08f, FLinearColor(0.95f, 0.2f, 0.15f));
-    SpawnSphere(FVector(-50, 100, 125), 0.06f, FLinearColor(0.2f, 0.85f, 0.2f));
-    SpawnSphere(FVector(50, 100, 125), 0.07f, FLinearColor(0.95f, 0.85f, 0.1f));
-
-    SpawnCharacter(FVector(100, -100, 0), FLinearColor(0.95f, 0.82f, 0.72f), FLinearColor(0.85f, 0.55f, 0.2f), FLinearColor(0.95f, 0.85f, 0.3f), TEXT("Emersyn"));
-    SpawnCharacter(FVector(-150, -50, 0), FLinearColor(0.9f, 0.75f, 0.6f), FLinearColor(0.7f, 0.3f, 0.15f), FLinearColor(0.3f, 0.85f, 0.5f), TEXT("Mia"));
-
-    SpawnDirectionalLight(FRotator(-40, 30, 0), 3.5f, FLinearColor(1.0f, 0.98f, 0.92f));
-    SpawnLight(FVector(0, 100, 300), 6000.0f, FLinearColor(1.0f, 0.97f, 0.9f));
+    SpawnSkyBackground(SimsColors::SkyTop, SimsColors::SkyBot);
+    SpawnRoomShell(FVector(600,600,300), SimsColors::FloorTile, SimsColors::WallYellow, SimsColors::WallCream);
+    
+    // Appliances
+    SpawnStove(FVector(-250, -300, 0));
+    SpawnFridge(FVector(-400, -300, 0));
+    SpawnSink(FVector(0, -300, 0));
+    SpawnCounter(FVector(200, -300, 0), SimsColors::WoodMed);
+    
+    // Dining
+    SpawnTable(FVector(0, 150, 0), SimsColors::WoodLight, SimsColors::WoodDark);
+    SpawnChair(FVector(-80, 80, 0), SimsColors::WoodMed);
+    SpawnChair(FVector(80, 80, 0), SimsColors::WoodMed);
+    SpawnChair(FVector(-80, 220, 0), SimsColors::WoodMed);
+    SpawnChair(FVector(80, 220, 0), SimsColors::WoodMed);
+    
+    // Decor
+    SpawnPlant(FVector(350, 200, 0), 0.8f);
+    
+    SetupCamera(FVector(0, -900, 400), FRotator(-20, 0, 0));
 }
 
-// ==================== BATHROOM ====================
 void AEmersynGameMode::BuildBathroom()
 {
-    SetupCamera(FVector(0, -450, 300), FRotator(-25, 0, 0));
-
-    SpawnSkyBackground(FLinearColor(0.7f, 0.85f, 0.95f));
-
-    SpawnBox(FVector(0, 0, -10), FVector(30, 30, 0.2f), FLinearColor(0.85f, 0.92f, 0.95f));
-    SpawnBox(FVector(0, 300, 200), FVector(30, 0.1f, 8), FLinearColor(0.82f, 0.9f, 0.95f));
-    SpawnBox(FVector(-300, 0, 200), FVector(0.1f, 30, 8), FLinearColor(0.85f, 0.92f, 0.96f));
-
-    SpawnBox(FVector(-200, 200, 40), FVector(1.0f, 0.6f, 0.4f), FLinearColor(0.95f, 0.95f, 0.97f));
-    SpawnBox(FVector(150, 250, 30), FVector(0.5f, 0.3f, 0.6f), FLinearColor(0.92f, 0.92f, 0.95f));
-    SpawnBox(FVector(150, 250, 70), FVector(0.4f, 0.25f, 0.15f), FLinearColor(0.85f, 0.88f, 0.92f));
-
-    SpawnBox(FVector(0, 295, 150), FVector(0.8f, 0.03f, 0.6f), FLinearColor(0.9f, 0.92f, 0.95f));
-
-    SpawnSphere(FVector(-150, -100, 40), 0.15f, FLinearColor(0.95f, 0.85f, 0.2f));
-
-    SpawnCharacter(FVector(50, -80, 0), FLinearColor(0.95f, 0.82f, 0.72f), FLinearColor(0.85f, 0.55f, 0.2f), FLinearColor(0.7f, 0.85f, 0.95f), TEXT("Emersyn"));
-
-    SpawnDirectionalLight(FRotator(-50, 20, 0), 3.0f, FLinearColor(0.95f, 0.97f, 1.0f));
-    SpawnLight(FVector(0, 0, 300), 5000.0f, FLinearColor(0.95f, 0.97f, 1.0f));
+    SpawnSkyBackground(SimsColors::SkyTop, SimsColors::SkyBot);
+    SpawnRoomShell(FVector(500,500,300), SimsColors::FloorTile, SimsColors::WallBlue, SimsColors::WallCream);
+    
+    SpawnBathtub(FVector(-200, -200, 0));
+    SpawnToilet(FVector(200, -200, 0));
+    SpawnSink(FVector(0, 200, 70));
+    SpawnRug(FVector(0, 0, 0), SimsColors::FabricBlue, SimsColors::FabricWhite, FVector(150,150,2));
+    
+    SetupCamera(FVector(0, -750, 350), FRotator(-22, 0, 0));
 }
 
-// ==================== LIVING ROOM ====================
 void AEmersynGameMode::BuildLivingRoom()
 {
-    SetupCamera(FVector(0, -700, 350), FRotator(-20, 0, 0));
-
-    SpawnSkyBackground(FLinearColor(0.85f, 0.75f, 0.6f));
-
-    SpawnBox(FVector(0, 0, -10), FVector(40, 40, 0.2f), FLinearColor(0.85f, 0.75f, 0.6f));
-    SpawnBox(FVector(0, 500, 250), FVector(40, 0.1f, 10), FLinearColor(0.92f, 0.88f, 0.82f));
-    SpawnBox(FVector(-500, 0, 250), FVector(0.1f, 40, 10), FLinearColor(0.9f, 0.86f, 0.8f));
-    SpawnBox(FVector(500, 0, 250), FVector(0.1f, 40, 10), FLinearColor(0.9f, 0.86f, 0.8f));
-
-    SpawnBox(FVector(-200, 300, 40), FVector(2.0f, 0.8f, 0.4f), FLinearColor(0.6f, 0.35f, 0.2f));
-    SpawnBox(FVector(-200, 300, 80), FVector(1.8f, 0.6f, 0.3f), FLinearColor(0.85f, 0.5f, 0.3f));
-
-    SpawnBox(FVector(200, 100, 30), FVector(1.5f, 0.8f, 0.3f), FLinearColor(0.95f, 0.92f, 0.88f));
-
-    SpawnBox(FVector(0, 480, 100), FVector(2.0f, 0.1f, 1.5f), FLinearColor(0.15f, 0.15f, 0.18f));
-    SpawnBox(FVector(0, 0, 1), FVector(3.0f, 2.5f, 0.02f), FLinearColor(0.7f, 0.55f, 0.4f));
-
-    SpawnCharacter(FVector(-100, -100, 0), FLinearColor(0.95f, 0.82f, 0.72f), FLinearColor(0.85f, 0.55f, 0.2f), FLinearColor(1.0f, 0.5f, 0.7f), TEXT("Emersyn"));
-    SpawnCharacter(FVector(150, -50, 0), FLinearColor(0.85f, 0.7f, 0.55f), FLinearColor(0.3f, 0.2f, 0.1f), FLinearColor(0.2f, 0.6f, 0.9f), TEXT("Leo"));
-    SpawnPet(FVector(0, -180, 0), FLinearColor(0.7f, 0.5f, 0.3f), FLinearColor(0.4f, 0.25f, 0.15f), TEXT("Dog"));
-
-    SpawnDirectionalLight(FRotator(-40, 25, 0), 3.0f, FLinearColor(1.0f, 0.95f, 0.88f));
-    SpawnLight(FVector(0, 0, 400), 8000.0f, FLinearColor(1.0f, 0.95f, 0.9f));
+    SpawnSkyBackground(SimsColors::SkyTop, SimsColors::SkyBot);
+    SpawnRoomShell(FVector(700,700,300), SimsColors::FloorWood, SimsColors::WallCream, SimsColors::WallCream);
+    
+    SpawnSofa(FVector(0, 0, 0), SimsColors::FabricBlue, SimsColors::FabricYellow);
+    SpawnTV(FVector(0, -400, 0));
+    SpawnBookshelf(FVector(-400, 300, 0), SimsColors::WoodMed);
+    SpawnLamp(FVector(-350, -350, 0), SimsColors::FabricWhite);
+    SpawnRug(FVector(0, -100, 0), SimsColors::FabricRed, SimsColors::FabricYellow, FVector(250,200,2));
+    SpawnPlant(FVector(350, 350, 0), 1.0f);
+    
+    // Pet
+    SpawnPet(FVector(150, 50, 0), SimsColors::TrunkBrown, SimsColors::FabricWhite, TEXT("Dog"));
+    
+    SetupCamera(FVector(0, -1000, 450), FRotator(-20, 0, 0));
 }
 
-// ==================== GARDEN ====================
 void AEmersynGameMode::BuildGarden()
 {
-    SetupCamera(FVector(0, -800, 400), FRotator(-20, 0, 0));
-
-    SpawnSkyBackground(FLinearColor(0.5f, 0.75f, 1.0f));
-
-    SpawnBox(FVector(0, 0, -10), FVector(60, 60, 0.2f), FLinearColor(0.35f, 0.65f, 0.25f));
-
-    SpawnCylinder(FVector(-300, 200, 80), FVector(0.3f, 0.3f, 1.6f), FLinearColor(0.5f, 0.35f, 0.2f));
-    SpawnSphere(FVector(-300, 200, 220), 1.2f, FLinearColor(0.2f, 0.65f, 0.15f));
-    SpawnCylinder(FVector(200, 300, 60), FVector(0.25f, 0.25f, 1.2f), FLinearColor(0.45f, 0.3f, 0.18f));
-    SpawnSphere(FVector(200, 300, 170), 0.9f, FLinearColor(0.25f, 0.7f, 0.2f));
-
-    SpawnSphere(FVector(-100, 100, 15), 0.15f, FLinearColor(0.95f, 0.3f, 0.35f));
-    SpawnSphere(FVector(-80, 120, 12), 0.12f, FLinearColor(0.95f, 0.8f, 0.2f));
-    SpawnSphere(FVector(-120, 90, 14), 0.13f, FLinearColor(0.95f, 0.4f, 0.7f));
-    SpawnSphere(FVector(100, -50, 12), 0.12f, FLinearColor(0.7f, 0.3f, 0.95f));
-    SpawnSphere(FVector(120, -30, 14), 0.14f, FLinearColor(0.95f, 0.6f, 0.2f));
-
-    SpawnBox(FVector(-400, -200, 15), FVector(0.6f, 1.5f, 0.3f), FLinearColor(0.6f, 0.4f, 0.25f));
-    SpawnBox(FVector(-400, -200, 35), FVector(0.55f, 1.4f, 0.1f), FLinearColor(0.3f, 0.55f, 0.2f));
-
-    SpawnCharacter(FVector(0, -150, 0), FLinearColor(0.95f, 0.82f, 0.72f), FLinearColor(0.85f, 0.55f, 0.2f), FLinearColor(0.6f, 0.85f, 0.4f), TEXT("Emersyn"));
-    SpawnPet(FVector(150, -100, 0), FLinearColor(0.95f, 0.95f, 0.92f), FLinearColor(0.95f, 0.7f, 0.75f), TEXT("Bunny"));
-
-    SpawnDirectionalLight(FRotator(-45, 30, 0), 5.0f, FLinearColor(1.0f, 0.98f, 0.9f));
-    SpawnLight(FVector(0, 0, 500), 10000.0f, FLinearColor(1.0f, 0.97f, 0.92f));
+    SpawnSkyBackground(SimsColors::SkyTop, SimsColors::SkyBot);
+    SpawnBox(FVector(0,0,-10), FVector(1500,1500,5), SimsColors::FloorGrass);
+    
+    // Trees
+    SpawnTree(FVector(-400, -400, 0), 1.2f);
+    SpawnTree(FVector(400, -400, 0), 1.0f);
+    SpawnTree(FVector(-400, 400, 0), 1.1f);
+    SpawnTree(FVector(400, 400, 0), 1.3f);
+    
+    // Plants
+    SpawnPlant(FVector(-200, 0, 0), 1.0f);
+    SpawnPlant(FVector(200, 0, 0), 1.0f);
+    SpawnPlant(FVector(0, -200, 0), 0.9f);
+    SpawnPlant(FVector(0, 200, 0), 1.1f);
+    
+    SpawnBench(FVector(0, 0, 0));
+    SpawnFountain(FVector(0, 350, 0));
+    
+    SetupCamera(FVector(0, -1200, 500), FRotator(-18, 0, 0));
 }
 
-// ==================== SCHOOL ====================
 void AEmersynGameMode::BuildSchool()
 {
-    SetupCamera(FVector(0, -600, 300), FRotator(-15, 0, 0));
-
-    SpawnSkyBackground(FLinearColor(0.75f, 0.82f, 0.7f));
-
-    SpawnBox(FVector(0, 0, -10), FVector(40, 40, 0.2f), FLinearColor(0.82f, 0.78f, 0.7f));
-    SpawnBox(FVector(0, 500, 200), FVector(40, 0.1f, 8), FLinearColor(0.85f, 0.88f, 0.82f));
-
-    SpawnBox(FVector(0, 450, 120), FVector(2.5f, 0.05f, 1.2f), FLinearColor(0.2f, 0.45f, 0.25f));
-
-    SpawnBox(FVector(-200, 200, 35), FVector(0.6f, 0.4f, 0.35f), FLinearColor(0.7f, 0.55f, 0.35f));
-    SpawnBox(FVector(-100, 200, 35), FVector(0.6f, 0.4f, 0.35f), FLinearColor(0.7f, 0.55f, 0.35f));
-    SpawnBox(FVector(100, 200, 35), FVector(0.6f, 0.4f, 0.35f), FLinearColor(0.7f, 0.55f, 0.35f));
-    SpawnBox(FVector(200, 200, 35), FVector(0.6f, 0.4f, 0.35f), FLinearColor(0.7f, 0.55f, 0.35f));
-
-    SpawnCharacter(FVector(-150, 50, 0), FLinearColor(0.95f, 0.82f, 0.72f), FLinearColor(0.85f, 0.55f, 0.2f), FLinearColor(0.3f, 0.5f, 0.85f), TEXT("Emersyn"));
-    SpawnCharacter(FVector(0, 80, 0), FLinearColor(0.92f, 0.78f, 0.65f), FLinearColor(0.15f, 0.1f, 0.08f), FLinearColor(0.3f, 0.5f, 0.85f), TEXT("Ava"));
-    SpawnCharacter(FVector(150, 50, 0), FLinearColor(0.85f, 0.7f, 0.55f), FLinearColor(0.3f, 0.2f, 0.1f), FLinearColor(0.3f, 0.5f, 0.85f), TEXT("Leo"));
-    SpawnCharacter(FVector(350, 350, 0), FLinearColor(0.88f, 0.72f, 0.58f), FLinearColor(0.4f, 0.25f, 0.15f), FLinearColor(0.6f, 0.3f, 0.2f), TEXT("Teacher"), 1.15f);
-
-    SpawnDirectionalLight(FRotator(-40, 20, 0), 3.0f, FLinearColor(1.0f, 0.97f, 0.92f));
-    SpawnLight(FVector(0, 200, 350), 6000.0f, FLinearColor(1.0f, 0.98f, 0.95f));
+    SpawnSkyBackground(SimsColors::SkyTop, SimsColors::SkyBot);
+    SpawnRoomShell(FVector(800,700,300), SimsColors::FloorWood, SimsColors::WallGreen, SimsColors::WallCream);
+    
+    // Student desks
+    SpawnDesk(FVector(-200, -200, 0), SimsColors::WoodLight);
+    SpawnChair(FVector(-200, -100, 0), SimsColors::SchoolGold);
+    SpawnDesk(FVector(0, -200, 0), SimsColors::WoodLight);
+    SpawnChair(FVector(0, -100, 0), SimsColors::SchoolGold);
+    SpawnDesk(FVector(200, -200, 0), SimsColors::WoodLight);
+    SpawnChair(FVector(200, -100, 0), SimsColors::SchoolGold);
+    
+    // Teacher desk
+    SpawnDesk(FVector(0, 350, 0), SimsColors::WoodDark);
+    SpawnBookshelf(FVector(-450, 300, 0), SimsColors::WoodMed);
+    
+    // Characters
+    SpawnCharacter(FVector(-200, -50, 0), SimsColors::SkinMed, SimsColors::HairBlack, SimsColors::FabricGreen, TEXT("Mia"), 0.9f);
+    SpawnCharacter(FVector(0, 400, 0), SimsColors::SkinLight, SimsColors::HairBrown, SimsColors::FabricPurple, TEXT("Teacher"), 1.1f);
+    
+    SetupCamera(FVector(0, -1100, 450), FRotator(-20, 0, 0));
 }
 
-// ==================== SHOP ====================
 void AEmersynGameMode::BuildShop()
 {
-    SetupCamera(FVector(0, -600, 350), FRotator(-20, 0, 0));
-
-    SpawnSkyBackground(FLinearColor(0.9f, 0.8f, 0.7f));
-
-    SpawnBox(FVector(0, 0, -10), FVector(40, 40, 0.2f), FLinearColor(0.92f, 0.88f, 0.82f));
-    SpawnBox(FVector(0, 500, 250), FVector(40, 0.1f, 10), FLinearColor(0.95f, 0.9f, 0.82f));
-
-    SpawnBox(FVector(-350, 200, 60), FVector(0.5f, 2.0f, 1.2f), FLinearColor(0.85f, 0.7f, 0.5f));
-    SpawnBox(FVector(350, 200, 60), FVector(0.5f, 2.0f, 1.2f), FLinearColor(0.85f, 0.7f, 0.5f));
-
-    SpawnSphere(FVector(-340, 100, 130), 0.12f, FLinearColor(0.95f, 0.4f, 0.5f));
-    SpawnSphere(FVector(-340, 200, 130), 0.1f, FLinearColor(0.4f, 0.7f, 0.95f));
-    SpawnSphere(FVector(-340, 300, 130), 0.11f, FLinearColor(0.95f, 0.85f, 0.2f));
-    SpawnSphere(FVector(340, 150, 130), 0.12f, FLinearColor(0.3f, 0.85f, 0.45f));
-    SpawnSphere(FVector(340, 250, 130), 0.1f, FLinearColor(0.95f, 0.6f, 0.8f));
-
-    SpawnBox(FVector(0, 400, 50), FVector(1.5f, 0.4f, 1.0f), FLinearColor(0.85f, 0.6f, 0.4f));
-
-    SpawnCharacter(FVector(-50, -100, 0), FLinearColor(0.95f, 0.82f, 0.72f), FLinearColor(0.85f, 0.55f, 0.2f), FLinearColor(0.95f, 0.7f, 0.8f), TEXT("Emersyn"));
-    SpawnCharacter(FVector(100, -50, 0), FLinearColor(0.9f, 0.75f, 0.6f), FLinearColor(0.7f, 0.3f, 0.15f), FLinearColor(0.3f, 0.85f, 0.5f), TEXT("Mia"));
-    SpawnCharacter(FVector(0, 380, 0), FLinearColor(0.88f, 0.72f, 0.58f), FLinearColor(0.5f, 0.4f, 0.3f), FLinearColor(0.6f, 0.5f, 0.8f), TEXT("Shopkeeper"), 1.1f);
-
-    SpawnDirectionalLight(FRotator(-40, 25, 0), 3.0f, FLinearColor(1.0f, 0.97f, 0.92f));
-    SpawnLight(FVector(0, 200, 400), 8000.0f, FLinearColor(1.0f, 0.95f, 0.9f));
+    SpawnSkyBackground(SimsColors::SkyTop, SimsColors::SkyBot);
+    SpawnRoomShell(FVector(700,600,300), SimsColors::FloorTile, SimsColors::WallCream, SimsColors::WallCream);
+    
+    SpawnShopShelf(FVector(-300, -250, 0), SimsColors::WoodMed);
+    SpawnShopShelf(FVector(0, -250, 0), SimsColors::WoodMed);
+    SpawnShopShelf(FVector(300, -250, 0), SimsColors::WoodMed);
+    SpawnCounter(FVector(0, 300, 0), SimsColors::WoodDark);
+    SpawnLamp(FVector(-350, 350, 0), SimsColors::FabricWhite);
+    
+    // Shopkeeper
+    SpawnCharacter(FVector(0, 350, 0), SimsColors::SkinTan, SimsColors::HairBlack, SimsColors::FabricWhite, TEXT("Shopkeeper"), 1.0f);
+    
+    SetupCamera(FVector(0, -950, 400), FRotator(-20, 0, 0));
 }
 
-// ==================== PLAYGROUND ====================
 void AEmersynGameMode::BuildPlayground()
 {
-    SetupCamera(FVector(0, -800, 400), FRotator(-20, 0, 0));
-
-    SpawnSkyBackground(FLinearColor(0.5f, 0.75f, 1.0f));
-
-    SpawnBox(FVector(0, 0, -10), FVector(60, 60, 0.2f), FLinearColor(0.45f, 0.7f, 0.35f));
-
-    SpawnBox(FVector(-300, 200, 100), FVector(0.3f, 0.3f, 2.0f), FLinearColor(0.95f, 0.3f, 0.35f));
-    SpawnBox(FVector(-300, 250, 120), FVector(0.6f, 1.0f, 0.05f), FLinearColor(0.95f, 0.85f, 0.2f));
-
-    SpawnBox(FVector(200, 100, 150), FVector(2.0f, 0.05f, 0.05f), FLinearColor(0.5f, 0.5f, 0.55f));
-    SpawnCylinder(FVector(100, 100, 75), FVector(0.08f, 0.08f, 1.5f), FLinearColor(0.5f, 0.5f, 0.55f));
-    SpawnCylinder(FVector(300, 100, 75), FVector(0.08f, 0.08f, 1.5f), FLinearColor(0.5f, 0.5f, 0.55f));
-    SpawnBox(FVector(200, 100, 50), FVector(0.3f, 0.15f, 0.03f), FLinearColor(0.85f, 0.6f, 0.3f));
-
-    SpawnBox(FVector(0, -200, 10), FVector(1.5f, 1.5f, 0.2f), FLinearColor(0.95f, 0.88f, 0.65f));
-
-    SpawnCharacter(FVector(-100, -50, 0), FLinearColor(0.95f, 0.82f, 0.72f), FLinearColor(0.85f, 0.55f, 0.2f), FLinearColor(0.95f, 0.5f, 0.7f), TEXT("Emersyn"));
-    SpawnCharacter(FVector(100, 50, 0), FLinearColor(0.92f, 0.78f, 0.65f), FLinearColor(0.15f, 0.1f, 0.08f), FLinearColor(0.6f, 0.3f, 0.9f), TEXT("Ava"));
-    SpawnPet(FVector(200, -100, 0), FLinearColor(0.7f, 0.5f, 0.3f), FLinearColor(0.4f, 0.25f, 0.15f), TEXT("Dog"));
-
-    SpawnDirectionalLight(FRotator(-45, 30, 0), 5.0f, FLinearColor(1.0f, 0.98f, 0.92f));
-    SpawnLight(FVector(0, 0, 500), 10000.0f, FLinearColor(1.0f, 0.97f, 0.9f));
+    SpawnSkyBackground(SimsColors::SkyTop, SimsColors::SkyBot);
+    SpawnBox(FVector(0,0,-10), FVector(1500,1500,5), SimsColors::FloorGrass);
+    
+    SpawnSwing(FVector(-300, 0, 0));
+    SpawnSlide(FVector(300, 0, 0));
+    SpawnBench(FVector(0, 400, 0));
+    
+    // Kids playing
+    SpawnCharacter(FVector(-250, 50, 0), SimsColors::SkinLight, SimsColors::HairBlonde, SimsColors::FabricBlue, TEXT("Ava"), 0.9f);
+    SpawnCharacter(FVector(250, 50, 0), SimsColors::SkinTan, SimsColors::HairBrown, SimsColors::FabricYellow, TEXT("Leo"), 0.9f);
+    
+    SetupCamera(FVector(0, -1200, 500), FRotator(-18, 0, 0));
 }
 
-// ==================== PARK ====================
 void AEmersynGameMode::BuildPark()
 {
-    SetupCamera(FVector(0, -900, 450), FRotator(-20, 0, 0));
-
-    SpawnSkyBackground(FLinearColor(0.5f, 0.75f, 1.0f));
-
-    SpawnBox(FVector(0, 0, -10), FVector(80, 80, 0.2f), FLinearColor(0.4f, 0.68f, 0.3f));
-
-    SpawnBox(FVector(200, 300, 2), FVector(2.0f, 1.5f, 0.05f), FLinearColor(0.3f, 0.6f, 0.85f));
-
-    SpawnCylinder(FVector(-400, 300, 80), FVector(0.3f, 0.3f, 1.6f), FLinearColor(0.5f, 0.35f, 0.2f));
-    SpawnSphere(FVector(-400, 300, 220), 1.5f, FLinearColor(0.15f, 0.6f, 0.12f));
-    SpawnCylinder(FVector(400, -200, 60), FVector(0.25f, 0.25f, 1.2f), FLinearColor(0.45f, 0.3f, 0.18f));
-    SpawnSphere(FVector(400, -200, 160), 1.0f, FLinearColor(0.2f, 0.65f, 0.15f));
-
-    SpawnBox(FVector(-200, -100, 25), FVector(1.0f, 0.3f, 0.05f), FLinearColor(0.55f, 0.38f, 0.22f));
-    SpawnBox(FVector(-200, -115, 40), FVector(1.0f, 0.05f, 0.3f), FLinearColor(0.55f, 0.38f, 0.22f));
-
-    SpawnBox(FVector(0, 0, 1), FVector(1.0f, 10.0f, 0.02f), FLinearColor(0.75f, 0.7f, 0.6f));
-
-    SpawnCharacter(FVector(0, -200, 0), FLinearColor(0.95f, 0.82f, 0.72f), FLinearColor(0.85f, 0.55f, 0.2f), FLinearColor(0.4f, 0.75f, 0.95f), TEXT("Emersyn"));
-    SpawnCharacter(FVector(150, -150, 0), FLinearColor(0.85f, 0.7f, 0.55f), FLinearColor(0.3f, 0.2f, 0.1f), FLinearColor(0.95f, 0.5f, 0.2f), TEXT("Leo"));
-    SpawnPet(FVector(-100, -250, 0), FLinearColor(0.7f, 0.5f, 0.3f), FLinearColor(0.4f, 0.25f, 0.15f), TEXT("Dog"));
-
-    SpawnDirectionalLight(FRotator(-40, 35, 0), 5.0f, FLinearColor(1.0f, 0.95f, 0.85f));
-    SpawnLight(FVector(0, 0, 600), 12000.0f, FLinearColor(1.0f, 0.97f, 0.9f));
+    SpawnSkyBackground(SimsColors::SkyTop, SimsColors::SkyBot);
+    SpawnBox(FVector(0,0,-10), FVector(2000,2000,5), SimsColors::FloorGrass);
+    
+    // Trees (scattered)
+    SpawnTree(FVector(-500, -500, 0), 1.5f);
+    SpawnTree(FVector(500, -500, 0), 1.2f);
+    SpawnTree(FVector(-500, 500, 0), 1.3f);
+    SpawnTree(FVector(500, 500, 0), 1.4f);
+    SpawnTree(FVector(0, -700, 0), 1.1f);
+    
+    SpawnBench(FVector(-200, 0, 0));
+    SpawnBench(FVector(200, 0, 0));
+    SpawnFountain(FVector(0, 400, 0));
+    SpawnLamp(FVector(-400, 400, 0), SimsColors::FabricWhite);
+    
+    SetupCamera(FVector(0, -1500, 600), FRotator(-18, 0, 0));
 }
 
-// ==================== MALL ====================
 void AEmersynGameMode::BuildMall()
 {
-    SetupCamera(FVector(0, -700, 400), FRotator(-20, 0, 0));
-
-    SpawnSkyBackground(FLinearColor(0.85f, 0.82f, 0.78f));
-
-    SpawnBox(FVector(0, 0, -10), FVector(50, 50, 0.2f), FLinearColor(0.9f, 0.88f, 0.85f));
-    SpawnBox(FVector(0, 600, 300), FVector(50, 0.1f, 12), FLinearColor(0.92f, 0.9f, 0.88f));
-    SpawnBox(FVector(-600, 0, 300), FVector(0.1f, 50, 12), FLinearColor(0.88f, 0.85f, 0.82f));
-    SpawnBox(FVector(600, 0, 300), FVector(0.1f, 50, 12), FLinearColor(0.88f, 0.85f, 0.82f));
-
-    SpawnBox(FVector(-400, 500, 100), FVector(1.5f, 0.1f, 2.0f), FLinearColor(0.95f, 0.5f, 0.6f));
-    SpawnBox(FVector(-100, 500, 100), FVector(1.5f, 0.1f, 2.0f), FLinearColor(0.5f, 0.8f, 0.95f));
-    SpawnBox(FVector(200, 500, 100), FVector(1.5f, 0.1f, 2.0f), FLinearColor(0.6f, 0.9f, 0.5f));
-
-    SpawnCylinder(FVector(0, 200, 30), FVector(1.0f, 1.0f, 0.3f), FLinearColor(0.8f, 0.82f, 0.85f));
-    SpawnCylinder(FVector(0, 200, 60), FVector(0.3f, 0.3f, 0.5f), FLinearColor(0.82f, 0.84f, 0.88f));
-    SpawnSphere(FVector(0, 200, 90), 0.15f, FLinearColor(0.5f, 0.7f, 0.95f));
-
-    SpawnCharacter(FVector(-150, -100, 0), FLinearColor(0.95f, 0.82f, 0.72f), FLinearColor(0.85f, 0.55f, 0.2f), FLinearColor(0.95f, 0.4f, 0.7f), TEXT("Emersyn"));
-    SpawnCharacter(FVector(100, -50, 0), FLinearColor(0.92f, 0.78f, 0.65f), FLinearColor(0.15f, 0.1f, 0.08f), FLinearColor(0.85f, 0.5f, 0.85f), TEXT("Ava"));
-    SpawnCharacter(FVector(0, -150, 0), FLinearColor(0.9f, 0.75f, 0.6f), FLinearColor(0.7f, 0.3f, 0.15f), FLinearColor(0.3f, 0.85f, 0.5f), TEXT("Mia"));
-
-    SpawnDirectionalLight(FRotator(-40, 30, 0), 3.0f, FLinearColor(1.0f, 0.97f, 0.92f));
-    SpawnLight(FVector(0, 200, 500), 10000.0f, FLinearColor(1.0f, 0.98f, 0.95f));
+    SpawnSkyBackground(SimsColors::SkyTop, SimsColors::SkyBot);
+    SpawnRoomShell(FVector(900,800,400), SimsColors::FloorTile, SimsColors::WallCream, SimsColors::WallCream);
+    
+    SpawnShopShelf(FVector(-400, -300, 0), SimsColors::WoodLight);
+    SpawnShopShelf(FVector(0, -300, 0), SimsColors::WoodLight);
+    SpawnShopShelf(FVector(400, -300, 0), SimsColors::WoodLight);
+    SpawnBench(FVector(0, 200, 0));
+    SpawnPlant(FVector(-500, 400, 0), 1.2f);
+    SpawnLamp(FVector(500, 400, 0), SimsColors::FabricWhite);
+    
+    SetupCamera(FVector(0, -1300, 550), FRotator(-20, 0, 0));
 }
 
-// ==================== ARCADE ====================
 void AEmersynGameMode::BuildArcade()
 {
-    SetupCamera(FVector(0, -600, 350), FRotator(-20, 0, 0));
-
-    SpawnSkyBackground(FLinearColor(0.1f, 0.05f, 0.2f));
-
-    SpawnBox(FVector(0, 0, -10), FVector(30, 30, 0.2f), FLinearColor(0.15f, 0.1f, 0.25f));
-    SpawnBox(FVector(0, 400, 200), FVector(30, 0.1f, 8), FLinearColor(0.12f, 0.08f, 0.2f));
-
-    FLinearColor CabinetColors[] = {
-        FLinearColor(0.95f, 0.2f, 0.3f), FLinearColor(0.2f, 0.3f, 0.95f),
-        FLinearColor(0.15f, 0.9f, 0.3f), FLinearColor(0.95f, 0.8f, 0.1f),
-        FLinearColor(0.9f, 0.3f, 0.9f), FLinearColor(0.1f, 0.85f, 0.9f)
-    };
-    for (int32 i = 0; i < 6; i++)
-    {
-        float X = (i < 3) ? -250.0f : 250.0f;
-        float Y = -200.0f + (i % 3) * 200.0f;
-        SpawnBox(FVector(X, Y, 70), FVector(0.4f, 0.3f, 1.3f), CabinetColors[i]);
-        SpawnBox(FVector(X + (i < 3 ? 22 : -22), Y, 100), FVector(0.02f, 0.2f, 0.3f), FLinearColor(0.1f, 0.15f, 0.2f));
-    }
-
-    SpawnBox(FVector(0, 300, 80), FVector(0.5f, 0.5f, 1.5f), FLinearColor(0.95f, 0.6f, 0.7f));
-    SpawnSphere(FVector(-10, 290, 60), 0.06f, FLinearColor(0.95f, 0.5f, 0.5f));
-    SpawnSphere(FVector(10, 310, 58), 0.05f, FLinearColor(0.5f, 0.7f, 0.95f));
-    SpawnSphere(FVector(5, 295, 62), 0.07f, FLinearColor(0.95f, 0.9f, 0.3f));
-
-    SpawnCharacter(FVector(0, -100, 0), FLinearColor(0.85f, 0.7f, 0.55f), FLinearColor(0.3f, 0.2f, 0.1f), FLinearColor(0.95f, 0.5f, 0.2f), TEXT("Leo"));
-    SpawnCharacter(FVector(-100, 50, 0), FLinearColor(0.95f, 0.82f, 0.72f), FLinearColor(0.85f, 0.55f, 0.2f), FLinearColor(0.6f, 0.3f, 0.9f), TEXT("Emersyn"), 0.95f);
-
-    SpawnLight(FVector(-200, -200, 280), 2000.0f, FLinearColor(0.95f, 0.1f, 0.5f));
-    SpawnLight(FVector(200, 200, 280), 2000.0f, FLinearColor(0.1f, 0.5f, 0.95f));
-    SpawnLight(FVector(0, 0, 300), 3000.0f, FLinearColor(0.7f, 0.3f, 0.9f));
+    SpawnSkyBackground(SimsColors::SkyTop, SimsColors::SkyBot);
+    SpawnRoomShell(FVector(700,700,300), SimsColors::FloorConcrete, SimsColors::WallLavender, SimsColors::WallCream);
+    
+    SpawnArcadeMachine(FVector(-300, -200, 0), SimsColors::FabricRed);
+    SpawnArcadeMachine(FVector(0, -200, 0), SimsColors::FabricBlue);
+    SpawnArcadeMachine(FVector(300, -200, 0), SimsColors::FabricGreen);
+    SpawnBench(FVector(0, 300, 0));
+    
+    // Kids at arcade
+    SpawnCharacter(FVector(-300, -50, 0), SimsColors::SkinLight, SimsColors::HairPink, SimsColors::FabricPink, TEXT("Emersyn"), 0.9f);
+    
+    SetupCamera(FVector(0, -1000, 450), FRotator(-20, 0, 0));
 }
 
-// ==================== AMUSEMENT PARK ====================
 void AEmersynGameMode::BuildAmusementPark()
 {
-    SetupCamera(FVector(0, -800, 450), FRotator(-20, 0, 0));
-
-    SpawnSkyBackground(FLinearColor(0.5f, 0.7f, 1.0f));
-
-    SpawnBox(FVector(0, 0, -10), FVector(80, 80, 0.2f), FLinearColor(0.65f, 0.6f, 0.52f));
-
-    SpawnCylinder(FVector(-500, 300, 50), FVector(0.3f, 0.3f, 1.0f), FLinearColor(0.7f, 0.2f, 0.25f));
-    float WheelRadius = 200.0f;
-    FVector WheelCenter(-500, 300, 280);
-    for (int32 i = 0; i < 12; i++)
-    {
-        float Angle = i * 30.0f * PI / 180.0f;
-        FVector Pos = WheelCenter + FVector(0, FMath::Cos(Angle) * WheelRadius, FMath::Sin(Angle) * WheelRadius);
-        SpawnBox(Pos, FVector(0.02f, 0.02f, 0.15f), FLinearColor(0.8f, 0.3f, 0.35f));
-        SpawnBox(Pos - FVector(0, 0, 15), FVector(0.1f, 0.08f, 0.08f), FLinearColor(0.95f, 0.85f, 0.3f + i * 0.03f));
-    }
-    SpawnSphere(WheelCenter, 0.2f, FLinearColor(0.85f, 0.25f, 0.3f));
-
-    SpawnCylinder(FVector(300, 200, 20), FVector(1.5f, 1.5f, 0.2f), FLinearColor(0.95f, 0.85f, 0.35f));
-    SpawnCylinder(FVector(300, 200, 100), FVector(0.15f, 0.15f, 1.0f), FLinearColor(0.85f, 0.6f, 0.25f));
-    SpawnSphere(FVector(350, 250, 50), 0.12f, FLinearColor(0.95f, 0.95f, 0.92f));
-    SpawnSphere(FVector(250, 150, 60), 0.12f, FLinearColor(0.85f, 0.6f, 0.4f));
-
-    SpawnBox(FVector(-200, 600, 50), FVector(0.8f, 0.5f, 1.0f), FLinearColor(0.95f, 0.55f, 0.2f));
-    SpawnBox(FVector(-200, 575, 110), FVector(0.9f, 0.6f, 0.04f), FLinearColor(0.95f, 0.3f, 0.3f));
-
-    SpawnSphere(FVector(100, 0, 200), 0.1f, FLinearColor(0.95f, 0.2f, 0.3f));
-    SpawnSphere(FVector(120, 10, 210), 0.1f, FLinearColor(0.3f, 0.7f, 0.95f));
-    SpawnSphere(FVector(80, -10, 195), 0.1f, FLinearColor(0.95f, 0.85f, 0.2f));
-
-    SpawnCharacter(FVector(-50, -100, 0), FLinearColor(0.95f, 0.82f, 0.72f), FLinearColor(0.85f, 0.55f, 0.2f), FLinearColor(0.95f, 0.4f, 0.6f), TEXT("Emersyn"));
-    SpawnCharacter(FVector(100, -50, 0), FLinearColor(0.92f, 0.78f, 0.65f), FLinearColor(0.15f, 0.1f, 0.08f), FLinearColor(0.85f, 0.5f, 0.85f), TEXT("Ava"));
-    SpawnPet(FVector(-150, -50, 0), FLinearColor(0.9f, 0.6f, 0.3f), FLinearColor(0.95f, 0.8f, 0.6f), TEXT("Cat"));
-
-    SpawnDirectionalLight(FRotator(-40, 30, 0), 4.0f, FLinearColor(1.0f, 0.92f, 0.82f));
-    SpawnLight(FVector(0, 0, 600), 10000.0f, FLinearColor(1.0f, 0.95f, 0.88f));
-    SpawnLight(FVector(-500, 300, 300), 3000.0f, FLinearColor(0.95f, 0.8f, 0.4f));
-    SpawnLight(FVector(300, 200, 150), 3000.0f, FLinearColor(0.95f, 0.5f, 0.6f));
+    SpawnSkyBackground(SimsColors::SkyTop, SimsColors::SkyBot);
+    SpawnBox(FVector(0,0,-10), FVector(2500,2500,5), SimsColors::FloorSand);
+    
+    SpawnFerrisWheel(FVector(-600, 0, 0));
+    SpawnCarousel(FVector(600, 0, 0));
+    SpawnBench(FVector(0, 600, 0));
+    SpawnLamp(FVector(-800, 600, 0), SimsColors::FabricYellow);
+    SpawnLamp(FVector(800, 600, 0), SimsColors::FabricYellow);
+    
+    SetupCamera(FVector(0, -2000, 700), FRotator(-18, 0, 0));
 }
