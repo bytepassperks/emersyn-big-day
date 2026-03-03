@@ -221,11 +221,11 @@ namespace EmersynBigDay.CameraSystem
         {
             currentYaw = 0f;
             currentPitch = DefaultPitch;
-            // Round 61: Balanced Sims-style framing
+            // Round 62: R60 zoom (floor visible) + smaller chars
             float resetAspect = (float)Screen.width / Screen.height;
-            if (resetAspect < 0.5f) { CurrentZoom = 22f; currentPitch = 60f; }
-            else if (resetAspect < 0.6f) { CurrentZoom = 20f; currentPitch = 55f; }
-            else { CurrentZoom = 18f; currentPitch = 50f; }
+            if (resetAspect < 0.5f) { CurrentZoom = 18f; currentPitch = 60f; }
+            else if (resetAspect < 0.6f) { CurrentZoom = 16f; currentPitch = 55f; }
+            else { CurrentZoom = 14f; currentPitch = 50f; }
             frameCount = 0; // Round 25: Reset to force exact position again
             springVelocity = Vector3.zero;
             isTransitioning = false;
