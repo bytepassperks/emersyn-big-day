@@ -455,12 +455,12 @@ namespace EmersynBigDay.Core
             mainCamera.clearFlags = CameraClearFlags.SolidColor;
             // Round 20 (Claude 4.5 Bedrock): Soft pink background to match room aesthetic
             mainCamera.backgroundColor = new Color(0.95f, 0.88f, 0.92f);
-            // Round 48 (Claude 4.5 Bedrock): Tighter FOV for cinematic framing, fill screen
+            // Round 49 (Claude 4.5 Bedrock): Balanced FOV - show all characters + room
             float aspect = (float)Screen.width / Screen.height;
             float adaptiveFOV;
-            if (aspect < 0.5f) adaptiveFOV = 55f;      // Very narrow phones - tighter to fill
-            else if (aspect < 0.6f) adaptiveFOV = 50f;  // Normal phones
-            else adaptiveFOV = 45f;                      // Tablets - cinematic
+            if (aspect < 0.5f) adaptiveFOV = 65f;      // Very narrow phones
+            else if (aspect < 0.6f) adaptiveFOV = 60f;  // Normal phones
+            else adaptiveFOV = 55f;                      // Tablets
             mainCamera.fieldOfView = adaptiveFOV;
             Debug.Log($"[SceneBuilder] Screen {Screen.width}x{Screen.height} aspect={aspect:F2} FOV={adaptiveFOV}");
             mainCamera.nearClipPlane = 0.1f;
@@ -480,12 +480,12 @@ namespace EmersynBigDay.Core
             if (mainCamera.GetComponent<CameraSystem.CameraController>() == null)
             {
                 var ctrl = mainCamera.gameObject.AddComponent<CameraSystem.CameraController>();
-                // Round 48 (Claude 4.5 Bedrock): Closer zoom + lower pitch for face-level framing
+                // Round 49 (Claude 4.5 Bedrock): Balanced zoom to show all characters
                 float camAspect = (float)Screen.width / Screen.height;
                 float adaptiveZoom, adaptivePitch;
-                if (camAspect < 0.5f) { adaptiveZoom = 10f; adaptivePitch = 8f; } // Very narrow phones
-                else if (camAspect < 0.6f) { adaptiveZoom = 11f; adaptivePitch = 8f; } // Normal phones
-                else { adaptiveZoom = 10f; adaptivePitch = 8f; } // Tablets
+                if (camAspect < 0.5f) { adaptiveZoom = 13f; adaptivePitch = 10f; } // Very narrow phones
+                else if (camAspect < 0.6f) { adaptiveZoom = 14f; adaptivePitch = 10f; } // Normal phones
+                else { adaptiveZoom = 13f; adaptivePitch = 10f; } // Tablets
                 ctrl.MinZoom = 8f;
                 ctrl.MaxZoom = 25f; // Round 28: Reduced from 50 to prevent fuzz test zooming too far out
                 ctrl.CurrentZoom = adaptiveZoom;
@@ -495,17 +495,17 @@ namespace EmersynBigDay.Core
                 ctrl.Offset = new Vector3(0f, 10f, -10f); // Round 28: Reduced offset to keep camera closer
                 Debug.Log($"[SceneBuilder] Camera adaptive R29: aspect={camAspect:F2} zoom={adaptiveZoom} pitch={adaptivePitch}");
             }
-            // Round 48: Closer camera for screen-filling framing
+            // Round 49: Balanced camera to show all characters and room
             float initAspect = (float)Screen.width / Screen.height;
             float initZoom, initPitch;
-            if (initAspect < 0.5f) { initZoom = 10f; initPitch = 8f; }
-            else if (initAspect < 0.6f) { initZoom = 11f; initPitch = 8f; }
-            else { initZoom = 10f; initPitch = 8f; }
+            if (initAspect < 0.5f) { initZoom = 13f; initPitch = 10f; }
+            else if (initAspect < 0.6f) { initZoom = 14f; initPitch = 10f; }
+            else { initZoom = 13f; initPitch = 10f; }
             float initPitchRad = initPitch * Mathf.Deg2Rad;
             Vector3 camDir = new Vector3(0f, Mathf.Sin(initPitchRad), -Mathf.Cos(initPitchRad));
             mainCamera.transform.position = camDir * initZoom;
-            mainCamera.transform.LookAt(new Vector3(0f, 1.2f, 0f)); // Round 48: Look at face level
-            Debug.Log($"[SceneBuilder] Initial camera R48: aspect={initAspect:F2} zoom={initZoom} pitch={initPitch} pos={mainCamera.transform.position}");
+            mainCamera.transform.LookAt(new Vector3(0f, 1.0f, 0f)); // Round 49: Look at chest level
+            Debug.Log($"[SceneBuilder] Initial camera R49: aspect={initAspect:F2} zoom={initZoom} pitch={initPitch} pos={mainCamera.transform.position}");
         }
 
         private void CreateManagers()
@@ -1720,13 +1720,46 @@ namespace EmersynBigDay.Core
                 AndroidLog($"[DirectGLB] R42: Replace EXCEPTION for {glbName}: {e.Message}");
             }
 
-            // Step 6: Add interaction components + R44 sparkle effects
+            // Step 6: Add interaction components + R44 sparkle effects + R49 color override
             try
             {
                 var col = glbRoot.AddComponent<BoxCollider>();
                 if (isPet) { col.center = new Vector3(0, 0.25f, 0); col.size = new Vector3(0.5f, 0.5f, 0.6f); }
                 else { col.center = new Vector3(0, 0.55f, 0); col.size = new Vector3(0.8f, 1.2f, 0.8f); }
                 glbRoot.AddComponent<CharacterBob>();
+                
+                // Round 49 (Claude 4.5 Bedrock): Force-apply CharBodyColors to GLB models
+                // GLB models have baked dark brown vertex colors that override our intended colors
+                Color targetColor = Color.white;
+                int charIdx = GetCharacterColorIndex(displayName, isPet);
+                if (!isPet && charIdx >= 0 && charIdx < CharBodyColors.Length)
+                    targetColor = CharBodyColors[charIdx];
+                else if (isPet && charIdx >= 0 && charIdx < PetColors.Length)
+                    targetColor = PetColors[charIdx];
+                
+                if (targetColor != Color.white)
+                {
+                    Renderer[] renderers = glbRoot.GetComponentsInChildren<Renderer>();
+                    foreach (Renderer rend in renderers)
+                    {
+                        if (rend is ParticleSystemRenderer) continue; // Skip sparkle particles
+                        foreach (Material mat in rend.materials)
+                        {
+                            // Tint the material toward our target color
+                            Color original = mat.color;
+                            // Blend: 60% target color + 40% original GLB color for natural look
+                            Color blended = Color.Lerp(original, targetColor, 0.6f);
+                            // Boost saturation for cartoon pop
+                            Color.RGBToHSV(blended, out float bh, out float bs, out float bv);
+                            bs = Mathf.Min(1f, bs * 1.3f);
+                            bv = Mathf.Min(1f, bv * 1.1f);
+                            mat.color = Color.HSVToRGB(bh, bs, bv);
+                            if (mat.HasProperty("_Color"))
+                                mat.SetColor("_Color", Color.HSVToRGB(bh, bs, bv));
+                        }
+                    }
+                    AndroidLog($"[DirectGLB] R49: Applied color tint to {displayName}: {targetColor}");
+                }
                 
                 // Round 44: Add cartoon sparkle particle effects
                 AddCartoonSparkles(glbRoot.transform, isPet);
@@ -1748,6 +1781,26 @@ namespace EmersynBigDay.Core
             }
 
             AndroidLog($"[DirectGLB] R44: SUCCESS: {displayName} loaded! {meshPartCount} parts, {totalVerts} verts, {totalTris} tris (with outlines + sparkles)");
+        }
+
+        /// <summary>
+        /// Round 49 (Claude 4.5 Bedrock): Get character/pet color index from display name.
+        /// Maps character names to their index in CharBodyColors/PetColors arrays.
+        /// </summary>
+        private int GetCharacterColorIndex(string displayName, bool isPet)
+        {
+            string lower = displayName.ToLower();
+            if (isPet)
+            {
+                for (int i = 0; i < PetNames.Length; i++)
+                    if (lower.Contains(PetNames[i].ToLower())) return i;
+            }
+            else
+            {
+                for (int i = 0; i < CharacterNames.Length; i++)
+                    if (lower.Contains(CharacterNames[i].ToLower())) return i;
+            }
+            return -1;
         }
 
         /// <summary>
@@ -1912,11 +1965,18 @@ namespace EmersynBigDay.Core
             rotOverLifetime.enabled = true;
             rotOverLifetime.z = new ParticleSystem.MinMaxCurve(-90f, 90f);
             
-            // Round 46: Procedural star sparkle texture instead of squares
+            // Round 49: Use Particles/Standard Unlit with alpha blend for proper star rendering
             var renderer = ps.GetComponent<ParticleSystemRenderer>();
-            Material sparkleMat = new Material(Shader.Find("Sprites/Default"));
-            sparkleMat.mainTexture = CreateSparkleTexture(32);
+            Shader particleShader = Shader.Find("Particles/Standard Unlit");
+            if (particleShader == null) particleShader = Shader.Find("Sprites/Default");
+            Material sparkleMat = new Material(particleShader);
+            sparkleMat.mainTexture = CreateSparkleTexture(64); // R49: Higher res texture
+            sparkleMat.SetFloat("_Mode", 1f); // Additive blending for glow
+            sparkleMat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+            sparkleMat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.One);
+            sparkleMat.renderQueue = 3100; // Transparent queue
             renderer.material = sparkleMat;
+            renderer.renderMode = ParticleSystemRenderMode.Billboard;
             renderer.sortingOrder = 10; // Render in front
         }
 
