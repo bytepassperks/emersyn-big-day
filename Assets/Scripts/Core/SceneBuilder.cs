@@ -1267,150 +1267,483 @@ namespace EmersynBigDay.Core
         }
 
         // === Character Model Loading ===
-        // Claude 4.5 Bedrock (full 30-round history analysis): Load pre-converted prefabs from Resources
-        // instead of runtime GLB parsing. Root cause of 30 rounds of failure: IL2CPP strips
-        // UnityEngine.Mesh serialization code that GLTFast relies on at runtime.
-        // Solution: GLB→Prefab conversion at editor time, load via Resources.Load at runtime.
-        // This is how Sims Mobile, Talking Tom, and all AAA Unity mobile games work.
+        // Round 36 (Claude 4.5 Bedrock): RUNTIME GLB binary parsing.
+        // After 35 rounds of trying editor-time prefab conversion (all failed in batch mode),
+        // Bedrock confirmed: parse GLB binary DIRECTLY at runtime on Android.
+        // No GLTFast, no prefabs, no AssetDatabase. Pure C# binary parsing + Mesh/Material creation.
+        // Shader.Find("Standard") works at runtime on Android (fails only in -nographics batch mode).
         private IEnumerator LoadGLBCharactersCoroutine()
         {
-            AndroidLog("[SceneBuilder] Starting character prefab loading (Claude 4.5 Bedrock: editor-time prefabs)...");
+            AndroidLog("[SceneBuilder] Round 36: Starting RUNTIME GLB binary parsing (no prefabs, no GLTFast)...");
             
-            // Load main characters from pre-converted prefabs in Resources/Characters
+            // Load main characters via direct GLB binary parsing
             for (int i = 0; i < GLBCharacterFiles.Length && i < CharacterNames.Length; i++)
             {
-                string prefabName = GLBCharacterFiles[i];
-                string charName = CharacterNames[i];
-                bool replaced = TryLoadCharacterPrefab(prefabName, charName, i == 0);
-                AndroidLog($"[SceneBuilder] Character {charName} prefab load: {(replaced ? "SUCCESS" : "FALLBACK to primitive")}");
-                yield return null; // Spread across frames
+                yield return StartCoroutine(RuntimeParseAndReplaceCharacter(
+                    GLBCharacterFiles[i], CharacterNames[i], i == 0, false));
+                yield return null;
             }
             
-            // Load pets from pre-converted prefabs
+            // Load pets via direct GLB binary parsing
             for (int i = 0; i < GLBPetFiles.Length && i < PetNames.Length; i++)
             {
-                string prefabName = GLBPetFiles[i];
-                string petName = PetNames[i];
-                bool replaced = TryLoadPetPrefab(prefabName, petName);
-                AndroidLog($"[SceneBuilder] Pet {petName} prefab load: {(replaced ? "SUCCESS" : "FALLBACK to primitive")}");
+                yield return StartCoroutine(RuntimeParseAndReplaceCharacter(
+                    GLBPetFiles[i], PetNames[i], false, true));
                 yield return null;
             }
             
             glbLoadingComplete = true;
-            AndroidLog("[SceneBuilder] Character prefab loading complete!");
+            AndroidLog("[SceneBuilder] Round 36: Runtime GLB parsing complete!");
         }
 
         /// <summary>
-        /// Claude 4.5 Bedrock: Load a pre-converted character prefab from Resources/Characters/.
-        /// Falls back to keeping the procedural primitive if prefab not found.
+        /// Round 36 (Claude 4.5 Bedrock): Runtime GLB binary parser.
+        /// Reads GLB from StreamingAssets via UnityWebRequest, parses binary mesh data,
+        /// creates Unity Mesh/Material objects at runtime. No editor APIs needed.
         /// </summary>
-        private bool TryLoadCharacterPrefab(string prefabName, string charName, bool isMain)
+        private IEnumerator RuntimeParseAndReplaceCharacter(string glbName, string displayName, bool isMain, bool isPet)
         {
-            try
+            // Step 1: Load GLB bytes from StreamingAssets (UnityWebRequest required on Android)
+            string uri = System.IO.Path.Combine(Application.streamingAssetsPath, "Characters", glbName + ".glb");
+            AndroidLog($"[GLBRuntime] Loading {glbName}.glb from {uri}");
+            
+            byte[] glbData = null;
+            using (var request = UnityWebRequest.Get(uri))
             {
-                // Load from Resources (built into app, no streaming/parsing needed)
-                GameObject prefab = Resources.Load<GameObject>($"Characters/{prefabName}");
-                if (prefab == null)
+                yield return request.SendWebRequest();
+                if (request.result != UnityWebRequest.Result.Success)
                 {
-                    AndroidLog($"[SceneBuilder] Prefab not found: Characters/{prefabName} - keeping primitive");
-                    return false;
+                    AndroidLog($"[GLBRuntime] FAILED to load {glbName}: {request.error}");
+                    yield break;
                 }
+                glbData = request.downloadHandler.data;
+                AndroidLog($"[GLBRuntime] Loaded {glbName}: {glbData.Length} bytes");
+            }
 
-                // Find the primitive placeholder
-                Transform existing = characterContainer != null ? characterContainer.Find(charName) : null;
-                if (existing == null)
+            // Step 2: Validate GLB header
+            if (glbData == null || glbData.Length < 20)
+            {
+                AndroidLog($"[GLBRuntime] {glbName}: data too small");
+                yield break;
+            }
+            uint magic = System.BitConverter.ToUInt32(glbData, 0);
+            if (magic != 0x46546C67) // "glTF"
+            {
+                AndroidLog($"[GLBRuntime] {glbName}: invalid magic {magic:X8}");
+                yield break;
+            }
+
+            // Step 3: Extract JSON chunk and binary chunk
+            uint jsonLen = System.BitConverter.ToUInt32(glbData, 12);
+            string json = System.Text.Encoding.UTF8.GetString(glbData, 20, (int)jsonLen);
+            int binOffset = 20 + (int)jsonLen;
+            while (binOffset % 4 != 0) binOffset++;
+            uint binLen = System.BitConverter.ToUInt32(glbData, binOffset);
+            byte[] binBuf = new byte[binLen];
+            System.Array.Copy(glbData, binOffset + 8, binBuf, 0, (int)binLen);
+
+            // Step 4: Parse JSON sections
+            var accessors = GLBParseAccessors(json);
+            var bufferViews = GLBParseBufferViews(json);
+            var materials = GLBParseMaterials(json);
+            var meshes = GLBParseMeshes(json);
+            AndroidLog($"[GLBRuntime] {glbName}: {meshes.Count} meshes, {materials.Count} mats, {accessors.Count} accessors");
+
+            // Step 5: Create materials at runtime (Shader.Find works on Android runtime)
+            Shader std = Shader.Find("Standard");
+            if (std == null)
+            {
+                AndroidLog($"[GLBRuntime] WARNING: Standard shader not found, using fallback");
+                std = Shader.Find("Unlit/Color");
+            }
+            Material[] matArray = new Material[materials.Count];
+            for (int m = 0; m < materials.Count; m++)
+            {
+                var md = materials[m];
+                Material mat = new Material(std);
+                mat.name = md.name ?? (glbName + "_mat_" + m);
+                mat.SetColor("_Color", md.color);
+                mat.SetFloat("_Metallic", md.metallic);
+                mat.SetFloat("_Glossiness", 1f - md.roughness);
+                if (md.color.a < 0.99f)
                 {
-                    AndroidLog($"[SceneBuilder] Primitive placeholder not found for {charName}");
-                    return false;
+                    mat.SetFloat("_Mode", 2f);
+                    mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+                    mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+                    mat.SetInt("_ZWrite", 0);
+                    mat.EnableKeyword("_ALPHABLEND_ON");
+                    mat.renderQueue = 3000;
                 }
+                matArray[m] = mat;
+                AndroidLog($"[GLBRuntime] {glbName}: Mat '{mat.name}' ({md.color.r:F2},{md.color.g:F2},{md.color.b:F2})");
+            }
 
+            // Step 6: Create meshes and build GameObject hierarchy
+            GameObject root = new GameObject(displayName + "_GLB");
+            int totalVerts = 0;
+            int totalTris = 0;
+            for (int mi = 0; mi < meshes.Count; mi++)
+            {
+                var msh = meshes[mi];
+                for (int pi = 0; pi < msh.prims.Count; pi++)
+                {
+                    var prim = msh.prims[pi];
+                    if (!prim.attrs.ContainsKey("POSITION")) continue;
+                    int posIdx = prim.attrs["POSITION"];
+                    if (posIdx < 0 || posIdx >= accessors.Count) continue;
+                    var acc = accessors[posIdx];
+                    if (acc.bv < 0 || acc.bv >= bufferViews.Count) continue;
+                    var bv = bufferViews[acc.bv];
+                    int stride = bv.stride > 0 ? bv.stride : 12;
+                    int off = bv.offset + acc.offset;
+
+                    // Read vertices (flip Z for glTF right-hand -> Unity left-hand)
+                    Vector3[] verts = new Vector3[acc.count];
+                    for (int v = 0; v < acc.count; v++)
+                    {
+                        int ix = off + v * stride;
+                        if (ix + 12 > binBuf.Length) break;
+                        verts[v] = new Vector3(
+                            System.BitConverter.ToSingle(binBuf, ix),
+                            System.BitConverter.ToSingle(binBuf, ix + 4),
+                            -System.BitConverter.ToSingle(binBuf, ix + 8));
+                    }
+
+                    Mesh mesh = new Mesh();
+                    mesh.name = glbName + "_mesh_" + mi + "_" + pi;
+                    if (verts.Length > 65535) mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
+                    mesh.vertices = verts;
+                    totalVerts += verts.Length;
+
+                    // Normals
+                    if (prim.attrs.ContainsKey("NORMAL"))
+                    {
+                        int nIdx = prim.attrs["NORMAL"];
+                        if (nIdx >= 0 && nIdx < accessors.Count)
+                        {
+                            var na = accessors[nIdx];
+                            if (na.bv >= 0 && na.bv < bufferViews.Count)
+                            {
+                                var nb = bufferViews[na.bv];
+                                int ns = nb.stride > 0 ? nb.stride : 12;
+                                int no2 = nb.offset + na.offset;
+                                Vector3[] norms = new Vector3[na.count];
+                                for (int v = 0; v < na.count; v++)
+                                {
+                                    int ix = no2 + v * ns;
+                                    if (ix + 12 > binBuf.Length) break;
+                                    norms[v] = new Vector3(
+                                        System.BitConverter.ToSingle(binBuf, ix),
+                                        System.BitConverter.ToSingle(binBuf, ix + 4),
+                                        -System.BitConverter.ToSingle(binBuf, ix + 8));
+                                }
+                                mesh.normals = norms;
+                            }
+                        }
+                    }
+
+                    // UVs
+                    if (prim.attrs.ContainsKey("TEXCOORD_0"))
+                    {
+                        int uIdx = prim.attrs["TEXCOORD_0"];
+                        if (uIdx >= 0 && uIdx < accessors.Count)
+                        {
+                            var ua = accessors[uIdx];
+                            if (ua.bv >= 0 && ua.bv < bufferViews.Count)
+                            {
+                                var ub = bufferViews[ua.bv];
+                                int us = ub.stride > 0 ? ub.stride : 8;
+                                int uo = ub.offset + ua.offset;
+                                Vector2[] uvs = new Vector2[ua.count];
+                                for (int v = 0; v < ua.count; v++)
+                                {
+                                    int ix = uo + v * us;
+                                    if (ix + 8 > binBuf.Length) break;
+                                    uvs[v] = new Vector2(
+                                        System.BitConverter.ToSingle(binBuf, ix),
+                                        1f - System.BitConverter.ToSingle(binBuf, ix + 4));
+                                }
+                                mesh.uv = uvs;
+                            }
+                        }
+                    }
+
+                    // Indices
+                    if (prim.idxAcc >= 0 && prim.idxAcc < accessors.Count)
+                    {
+                        var ia = accessors[prim.idxAcc];
+                        if (ia.bv >= 0 && ia.bv < bufferViews.Count)
+                        {
+                            var ib = bufferViews[ia.bv];
+                            int io2 = ib.offset + ia.offset;
+                            int[] tris = new int[ia.count];
+                            for (int t = 0; t < ia.count; t++)
+                            {
+                                if (ia.compType == 5123) // UNSIGNED_SHORT
+                                {
+                                    int ix = io2 + t * 2;
+                                    if (ix + 2 <= binBuf.Length) tris[t] = System.BitConverter.ToUInt16(binBuf, ix);
+                                }
+                                else if (ia.compType == 5125) // UNSIGNED_INT
+                                {
+                                    int ix = io2 + t * 4;
+                                    if (ix + 4 <= binBuf.Length) tris[t] = (int)System.BitConverter.ToUInt32(binBuf, ix);
+                                }
+                                else // UNSIGNED_BYTE
+                                {
+                                    int ix = io2 + t;
+                                    if (ix < binBuf.Length) tris[t] = binBuf[ix];
+                                }
+                            }
+                            // Reverse winding for left-handed coord system
+                            for (int t = 0; t < tris.Length - 2; t += 3)
+                            {
+                                int tmp = tris[t]; tris[t] = tris[t + 2]; tris[t + 2] = tmp;
+                            }
+                            mesh.triangles = tris;
+                            totalTris += tris.Length / 3;
+                        }
+                    }
+
+                    mesh.RecalculateBounds();
+                    if (mesh.normals == null || mesh.normals.Length == 0) mesh.RecalculateNormals();
+                    mesh.RecalculateTangents();
+
+                    // Create child GameObject with mesh
+                    string goName = msh.name ?? ("mesh_" + mi + "_" + pi);
+                    GameObject go = new GameObject(goName);
+                    go.transform.SetParent(root.transform);
+                    go.AddComponent<MeshFilter>().sharedMesh = mesh;
+                    MeshRenderer mr = go.AddComponent<MeshRenderer>();
+                    if (prim.matIdx >= 0 && prim.matIdx < matArray.Length)
+                        mr.sharedMaterial = matArray[prim.matIdx];
+                    else if (matArray.Length > 0)
+                        mr.sharedMaterial = matArray[0];
+                    else
+                        mr.sharedMaterial = new Material(std);
+                    mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
+                    mr.receiveShadows = true;
+                }
+                yield return null; // Spread across frames to avoid hitching
+            }
+
+            AndroidLog($"[GLBRuntime] {glbName}: Built {totalVerts} verts, {totalTris} tris");
+
+            // Step 7: Replace the primitive placeholder
+            Transform existing = characterContainer != null ? characterContainer.Find(displayName) : null;
+            if (existing == null)
+            {
+                AndroidLog($"[GLBRuntime] Placeholder '{displayName}' not found, placing at origin");
+                root.transform.SetParent(characterContainer);
+                root.name = displayName;
+            }
+            else
+            {
                 Vector3 savedPos = existing.position;
                 Quaternion savedRot = existing.rotation;
                 Vector3 savedScale = existing.localScale;
                 Transform savedParent = existing.parent;
 
-                // Instantiate the pre-converted prefab
-                GameObject character = Instantiate(prefab, savedParent);
-                character.name = charName;
-                character.transform.position = savedPos;
-                character.transform.rotation = savedRot;
-                character.transform.localScale = savedScale;
+                root.name = displayName;
+                root.transform.SetParent(savedParent, false);
+                root.transform.position = savedPos;
+                root.transform.rotation = savedRot;
+                root.transform.localScale = isPet ? Vector3.one * 0.5f : savedScale;
 
-                // Add interaction components
-                if (character.GetComponent<BoxCollider>() == null)
-                {
-                    var col = character.AddComponent<BoxCollider>();
-                    col.center = new Vector3(0, 1f, 0);
-                    col.size = new Vector3(1f, 2.2f, 0.8f);
-                }
-                if (character.GetComponent<CharacterBob>() == null)
-                    character.AddComponent<CharacterBob>();
-
-                // Update main character reference
-                if (isMain)
-                {
-                    emersynObj = character;
-                    if (CameraSystem.CameraController.Instance != null)
-                        CameraSystem.CameraController.Instance.Target = character.transform;
-                    if (Gameplay.CharacterCustomization.Instance != null)
-                        Gameplay.CharacterCustomization.Instance.ApplyToCharacter(character);
-                }
-
-                // Destroy primitive placeholder
                 Destroy(existing.gameObject);
-                AndroidLog($"[SceneBuilder] SUCCESS: Replaced {charName} with prefab from Resources!");
-                return true;
             }
-            catch (System.Exception e)
+
+            // Step 8: Add interaction components
+            if (root.GetComponent<BoxCollider>() == null)
             {
-                AndroidLog($"[SceneBuilder] EXCEPTION loading prefab for {charName}: {e.Message}");
-                return false;
+                var col = root.AddComponent<BoxCollider>();
+                if (isPet) { col.center = new Vector3(0, 0.4f, 0); col.size = new Vector3(0.6f, 0.8f, 0.8f); }
+                else { col.center = new Vector3(0, 1f, 0); col.size = new Vector3(1f, 2.2f, 0.8f); }
             }
+            if (root.GetComponent<CharacterBob>() == null)
+                root.AddComponent<CharacterBob>();
+
+            // Step 9: Update main character reference
+            if (isMain)
+            {
+                emersynObj = root;
+                if (CameraSystem.CameraController.Instance != null)
+                    CameraSystem.CameraController.Instance.Target = root.transform;
+                if (Gameplay.CharacterCustomization.Instance != null)
+                    Gameplay.CharacterCustomization.Instance.ApplyToCharacter(root);
+            }
+
+            AndroidLog($"[GLBRuntime] SUCCESS: {displayName} replaced with {totalVerts} verts, {totalTris} tris, {matArray.Length} mats!");
         }
 
-        /// <summary>
-        /// Claude 4.5 Bedrock: Load a pre-converted pet prefab from Resources/Characters/.
-        /// </summary>
-        private bool TryLoadPetPrefab(string prefabName, string petName)
+        // ===== GLB Runtime Parsing Helpers =====
+        private struct GLBAccessor { public int bv; public int offset; public int compType; public int count; }
+        private struct GLBBufferView { public int offset; public int length; public int stride; }
+        private struct GLBMaterial { public string name; public Color color; public float metallic; public float roughness; }
+        private struct GLBMesh { public string name; public List<GLBPrimitive> prims; }
+        private struct GLBPrimitive { public Dictionary<string, int> attrs; public int idxAcc; public int matIdx; }
+
+        private int GLBJsonGetInt(string j, string k, int def)
         {
-            try
+            int ki = j.IndexOf(k); if (ki < 0) return def;
+            int ci = j.IndexOf(':', ki + k.Length); if (ci < 0) return def;
+            int s = ci + 1;
+            while (s < j.Length && (j[s] == ' ' || j[s] == '\t' || j[s] == '\n' || j[s] == '\r')) s++;
+            int e = s;
+            while (e < j.Length && (char.IsDigit(j[e]) || j[e] == '-')) e++;
+            if (e > s) { int v; if (int.TryParse(j.Substring(s, e - s), out v)) return v; }
+            return def;
+        }
+        private float GLBJsonGetFloat(string j, string k, float def)
+        {
+            int ki = j.IndexOf(k); if (ki < 0) return def;
+            int ci = j.IndexOf(':', ki + k.Length); if (ci < 0) return def;
+            int s = ci + 1;
+            while (s < j.Length && (j[s] == ' ' || j[s] == '\t' || j[s] == '\n' || j[s] == '\r')) s++;
+            int e = s;
+            while (e < j.Length && (char.IsDigit(j[e]) || j[e] == '.' || j[e] == '-' || j[e] == 'e' || j[e] == 'E' || j[e] == '+')) e++;
+            if (e > s) { float v; if (float.TryParse(j.Substring(s, e - s), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out v)) return v; }
+            return def;
+        }
+        private string GLBJsonGetStr(string j, string k)
+        {
+            int ki = j.IndexOf(k); if (ki < 0) return null;
+            int ci = j.IndexOf(':', ki + k.Length); if (ci < 0) return null;
+            int q1 = j.IndexOf('"', ci + 1); if (q1 < 0) return null;
+            int q2 = j.IndexOf('"', q1 + 1); if (q2 < 0) return null;
+            return j.Substring(q1 + 1, q2 - q1 - 1);
+        }
+        private float GLBParseFloat(string s)
+        {
+            float v;
+            if (float.TryParse(s.Trim(), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out v)) return v;
+            return 0f;
+        }
+        private int GLBFindBracket(string j, int s)
+        {
+            int d = 0;
+            for (int i = s; i < j.Length; i++) { if (j[i] == '[') d++; if (j[i] == ']') d--; if (d == 0) return i; }
+            return j.Length;
+        }
+        private int GLBFindBrace(string j, int s)
+        {
+            int d = 0;
+            for (int i = s; i < j.Length; i++) { if (j[i] == '{') d++; if (j[i] == '}') d--; if (d == 0) return i; }
+            return -1;
+        }
+        private List<GLBAccessor> GLBParseAccessors(string json)
+        {
+            var r = new List<GLBAccessor>();
+            int ki = json.IndexOf("\"accessors\""); if (ki < 0) return r;
+            int arrS = json.IndexOf('[', ki); if (arrS < 0) return r;
+            int arrE = GLBFindBracket(json, arrS); int p = arrS + 1;
+            while (p < arrE)
             {
-                GameObject prefab = Resources.Load<GameObject>($"Characters/{prefabName}");
-                if (prefab == null)
-                {
-                    AndroidLog($"[SceneBuilder] Pet prefab not found: Characters/{prefabName} - keeping primitive");
-                    return false;
-                }
-
-                Transform existing = characterContainer != null ? characterContainer.Find(petName) : null;
-                if (existing == null) return false;
-
-                Vector3 savedPos = existing.position;
-                Transform savedParent = existing.parent;
-
-                GameObject pet = Instantiate(prefab, savedParent);
-                pet.name = petName;
-                pet.transform.position = savedPos;
-                pet.transform.localScale = Vector3.one * 0.5f;
-
-                if (pet.GetComponent<BoxCollider>() == null)
-                {
-                    var col = pet.AddComponent<BoxCollider>();
-                    col.center = new Vector3(0, 0.4f, 0);
-                    col.size = new Vector3(0.6f, 0.8f, 0.8f);
-                }
-                if (pet.GetComponent<CharacterBob>() == null)
-                    pet.AddComponent<CharacterBob>();
-
-                Destroy(existing.gameObject);
-                AndroidLog($"[SceneBuilder] SUCCESS: Replaced pet {petName} with prefab from Resources!");
-                return true;
+                int os = json.IndexOf('{', p); if (os < 0 || os >= arrE) break;
+                int oe = GLBFindBrace(json, os); if (oe < 0) break;
+                string o = json.Substring(os, oe - os + 1);
+                r.Add(new GLBAccessor { bv = GLBJsonGetInt(o, "\"bufferView\"", 0), offset = GLBJsonGetInt(o, "\"byteOffset\"", 0),
+                    compType = GLBJsonGetInt(o, "\"componentType\"", 5126), count = GLBJsonGetInt(o, "\"count\"", 0) });
+                p = oe + 1;
             }
-            catch (System.Exception e)
+            return r;
+        }
+        private List<GLBBufferView> GLBParseBufferViews(string json)
+        {
+            var r = new List<GLBBufferView>();
+            int ki = json.IndexOf("\"bufferViews\""); if (ki < 0) return r;
+            int arrS = json.IndexOf('[', ki); if (arrS < 0) return r;
+            int arrE = GLBFindBracket(json, arrS); int p = arrS + 1;
+            while (p < arrE)
             {
-                AndroidLog($"[SceneBuilder] EXCEPTION loading pet prefab for {petName}: {e.Message}");
-                return false;
+                int os = json.IndexOf('{', p); if (os < 0 || os >= arrE) break;
+                int oe = GLBFindBrace(json, os); if (oe < 0) break;
+                string o = json.Substring(os, oe - os + 1);
+                r.Add(new GLBBufferView { offset = GLBJsonGetInt(o, "\"byteOffset\"", 0), length = GLBJsonGetInt(o, "\"byteLength\"", 0),
+                    stride = GLBJsonGetInt(o, "\"byteStride\"", 0) });
+                p = oe + 1;
             }
+            return r;
+        }
+        private List<GLBMaterial> GLBParseMaterials(string json)
+        {
+            var r = new List<GLBMaterial>();
+            int ki = json.IndexOf("\"materials\""); if (ki < 0) return r;
+            int arrS = json.IndexOf('[', ki); if (arrS < 0) return r;
+            int arrE = GLBFindBracket(json, arrS); int p = arrS + 1;
+            while (p < arrE)
+            {
+                int os = json.IndexOf('{', p); if (os < 0 || os >= arrE) break;
+                int oe = GLBFindBrace(json, os); if (oe < 0) break;
+                string o = json.Substring(os, oe - os + 1);
+                var m = new GLBMaterial { name = GLBJsonGetStr(o, "\"name\""), color = Color.white, metallic = 0f, roughness = 1f };
+                int bcf = o.IndexOf("\"baseColorFactor\"");
+                if (bcf >= 0)
+                {
+                    int a1 = o.IndexOf('[', bcf); int a2 = o.IndexOf(']', a1);
+                    if (a1 >= 0 && a2 >= 0)
+                    {
+                        string[] pts = o.Substring(a1 + 1, a2 - a1 - 1).Split(',');
+                        if (pts.Length >= 3)
+                            m.color = new Color(GLBParseFloat(pts[0]), GLBParseFloat(pts[1]), GLBParseFloat(pts[2]),
+                                pts.Length >= 4 ? GLBParseFloat(pts[3]) : 1f);
+                    }
+                }
+                m.metallic = GLBJsonGetFloat(o, "\"metallicFactor\"", 0f);
+                m.roughness = GLBJsonGetFloat(o, "\"roughnessFactor\"", 1f);
+                r.Add(m);
+                p = oe + 1;
+            }
+            return r;
+        }
+        private List<GLBMesh> GLBParseMeshes(string json)
+        {
+            var r = new List<GLBMesh>();
+            int ki = json.IndexOf("\"meshes\""); if (ki < 0) return r;
+            int arrS = json.IndexOf('[', ki); if (arrS < 0) return r;
+            int arrE = GLBFindBracket(json, arrS); int p = arrS + 1;
+            while (p < arrE)
+            {
+                int os = json.IndexOf('{', p); if (os < 0 || os >= arrE) break;
+                int oe = GLBFindBrace(json, os); if (oe < 0) break;
+                string mj = json.Substring(os, oe - os + 1);
+                var m = new GLBMesh { name = GLBJsonGetStr(mj, "\"name\""), prims = new List<GLBPrimitive>() };
+                int pa = mj.IndexOf("\"primitives\"");
+                if (pa >= 0)
+                {
+                    int ps = mj.IndexOf('[', pa); if (ps >= 0)
+                    {
+                        int pe = GLBFindBracket(mj, ps); int pp2 = ps + 1;
+                        while (pp2 < pe)
+                        {
+                            int pos2 = mj.IndexOf('{', pp2); if (pos2 < 0 || pos2 >= pe) break;
+                            int poe = GLBFindBrace(mj, pos2); if (poe < 0) break;
+                            string pj = mj.Substring(pos2, poe - pos2 + 1);
+                            var pr = new GLBPrimitive { idxAcc = GLBJsonGetInt(pj, "\"indices\"", -1),
+                                matIdx = GLBJsonGetInt(pj, "\"material\"", -1), attrs = new Dictionary<string, int>() };
+                            int ats = pj.IndexOf("\"attributes\"");
+                            if (ats >= 0)
+                            {
+                                int ao = pj.IndexOf('{', ats); int ac = GLBFindBrace(pj, ao);
+                                if (ao >= 0 && ac >= 0)
+                                {
+                                    string aj = pj.Substring(ao, ac - ao + 1);
+                                    foreach (string n in new[] { "POSITION", "NORMAL", "TEXCOORD_0", "TANGENT" })
+                                    {
+                                        int val = GLBJsonGetInt(aj, "\"" + n + "\"", -1);
+                                        if (val >= 0) pr.attrs[n] = val;
+                                    }
+                                }
+                            }
+                            m.prims.Add(pr);
+                            pp2 = poe + 1;
+                        }
+                    }
+                }
+                r.Add(m);
+                p = oe + 1;
+            }
+            return r;
         }
 
         private IEnumerator LoadSingleGLBCharacter(string glbFileName, string charName, bool isMain)

@@ -87,18 +87,11 @@ public class BuildScript
     {
         var startTime = DateTime.Now;
 
-        // Phase 0: Claude 4.5 Bedrock (full 30-round history): Convert GLB→Prefabs at editor time
-        // This is the definitive fix for IL2CPP stripping mesh serialization code
-        Debug.Log("[BUILD] Phase 0: Converting GLB files to native Unity prefabs...");
-        try
-        {
-            GLBToPrefabConverter.ConvertAllSync();
-            Debug.Log("[BUILD] GLB→Prefab conversion complete");
-        }
-        catch (Exception ex)
-        {
-            Debug.LogWarning($"[BUILD] GLB→Prefab conversion warning: {ex.Message}");
-        }
+        // Phase 0: Round 36 - Skip editor-time GLB conversion entirely.
+        // GLB files are parsed at RUNTIME on Android via direct binary parser in SceneBuilder.
+        // This avoids all batch mode AssetDatabase/PrefabUtility issues that failed in rounds 31-35.
+        Debug.Log("[BUILD] Phase 0: GLB conversion skipped (Round 36: runtime parsing on Android)");
+        Debug.Log("[BUILD] GLB files in StreamingAssets/Characters/ will be parsed at runtime");
 
         // Phase 1: Apply Unity 6 headless workaround
         EnsureCompileScriptsOutputDirectory();
