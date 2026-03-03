@@ -469,9 +469,9 @@ namespace EmersynBigDay.Core
             mainCamera.farClipPlane = 500f; // Round 28: Increased from 100 to prevent room culling on any device
             // Claude Bedrock fix #1: FORCE Forward rendering - Deferred fails silently on Android GPUs
             mainCamera.renderingPath = RenderingPath.Forward;
-            // Claude Bedrock fix #1b: Disable HDR and MSAA on camera for mobile compatibility
+            // Round 39: Enable MSAA for cartoon smooth edges, keep HDR off for mobile
             mainCamera.allowHDR = false;
-            mainCamera.allowMSAA = false;
+            mainCamera.allowMSAA = true; // 4x MSAA set in QualitySettings
             // Claude Bedrock Priority 4: Force render ALL layers and disable occlusion culling on Android
             mainCamera.cullingMask = -1; // Render all layers
             mainCamera.depth = 0;
@@ -616,39 +616,40 @@ namespace EmersynBigDay.Core
 
         private void SetupLighting()
         {
-            // Round 37 (Claude 4.5 Bedrock): AAA cartoon lighting setup
-            // Bright, warm ambient for Sims 4 / Talking Tom cartoon look
-            RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
-            RenderSettings.ambientLight = new Color(0.75f, 0.72f, 0.80f); // Slightly purple ambient for cartoon warmth
-            RenderSettings.ambientIntensity = 1.2f;
+            // Round 39 (Claude 4.5 Bedrock): AAA cartoon lighting - trilight ambient + stronger key
+            RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Trilight;
+            RenderSettings.ambientSkyColor = new Color(0.6f, 0.75f, 1.0f);      // Light blue sky
+            RenderSettings.ambientEquatorColor = new Color(0.5f, 0.5f, 0.5f);   // Neutral mid
+            RenderSettings.ambientGroundColor = new Color(0.3f, 0.25f, 0.2f);   // Warm ground
+            RenderSettings.ambientIntensity = 1.0f;
 
-            // Main key light: warm, bright, soft shadows
+            // Main key light: warm, strong for cartoon pop
             var lo = new GameObject("MainDirectionalLight");
             var ml = lo.AddComponent<Light>();
             ml.type = LightType.Directional;
-            ml.color = new Color(1f, 0.95f, 0.88f); // Warm white
-            ml.intensity = 1.1f; // Brighter for cartoon pop
-            ml.shadows = LightShadows.Soft;
-            ml.shadowStrength = 0.25f; // Subtle shadows like Sims 4
-            lo.transform.rotation = Quaternion.Euler(50f, -30f, 0f);
+            ml.color = new Color(1.0f, 0.95f, 0.8f); // Warm white
+            ml.intensity = 1.3f; // Stronger for cartoon pop
+            ml.shadows = LightShadows.Hard; // Hard shadows for cartoon style
+            ml.shadowStrength = 0.35f;
+            lo.transform.rotation = Quaternion.Euler(45f, 45f, 0f);
             ml.cullingMask = ~0;
 
             // Fill light: cool blue from opposite side
             var fo = new GameObject("FillLight");
             var fl = fo.AddComponent<Light>();
             fl.type = LightType.Directional;
-            fl.color = new Color(0.65f, 0.75f, 1f); // Cool blue fill
-            fl.intensity = 0.5f;
+            fl.color = new Color(0.7f, 0.8f, 1.0f); // Cool blue fill
+            fl.intensity = 0.6f;
             fl.shadows = LightShadows.None;
-            fo.transform.rotation = Quaternion.Euler(30f, 150f, 0f);
+            fo.transform.rotation = Quaternion.Euler(30f, -120f, 0f);
             fl.cullingMask = ~0;
 
             // Rim/back light: warm highlight for character edges
             var ro = new GameObject("RimLight");
             var rl = ro.AddComponent<Light>();
             rl.type = LightType.Directional;
-            rl.color = new Color(1f, 0.85f, 0.7f); // Warm rim
-            rl.intensity = 0.4f;
+            rl.color = new Color(1.0f, 0.9f, 0.7f); // Warm rim
+            rl.intensity = 0.5f;
             rl.shadows = LightShadows.None;
             ro.transform.rotation = Quaternion.Euler(-15f, 180f, 0f);
             rl.cullingMask = ~0;
@@ -660,7 +661,16 @@ namespace EmersynBigDay.Core
                 if (existing != ml && existing != fl && existing != rl)
                     Destroy(existing.gameObject);
             }
-            Debug.Log($"[SceneBuilder] Lighting setup complete: {FindObjectsByType<Light>(FindObjectsSortMode.None).Length} lights active");
+
+            // Round 39: Quality settings for AAA cartoon
+            QualitySettings.shadows = ShadowQuality.HardOnly;
+            QualitySettings.shadowResolution = ShadowResolution.Medium;
+            QualitySettings.shadowDistance = 20f;
+            QualitySettings.antiAliasing = 4; // 4x MSAA
+            QualitySettings.anisotropicFiltering = AnisotropicFiltering.Enable;
+            QualitySettings.lodBias = 1.5f;
+
+            Debug.Log($"[SceneBuilder] R39 Lighting setup: trilight ambient, key=1.3, fill=0.6, rim=0.5, MSAA=4x");
         }
 
         // Claude Bedrock fix #3: RenderSettings now applied immediately in SetupLighting()
@@ -1350,9 +1360,8 @@ namespace EmersynBigDay.Core
             var meshes = GLBParseMeshes(json);
             AndroidLog($"[GLBRuntime] {glbName}: {meshes.Count} meshes, {materials.Count} mats, {accessors.Count} accessors");
 
-            // Step 5: Create materials at runtime (Shader.Find works on Android runtime)
-            // Round 37: AAA cartoon material setup (Claude 4.5 Bedrock)
-            // Use Standard shader with tuned smoothness for cartoon cel-shaded look
+            // Step 5: Create materials at runtime
+            // Round 39 (Claude 4.5 Bedrock): AAA cartoon materials with HSV saturation boost + emission glow
             Shader std = Shader.Find("Standard");
             if (std == null)
             {
@@ -1364,17 +1373,45 @@ namespace EmersynBigDay.Core
             {
                 var md = materials[m];
                 Material mat = new Material(std);
-                mat.name = md.name ?? (glbName + "_mat_" + m);
-                // Round 37: Boost color saturation for cartoon look (gamma correction)
-                Color boosted = new Color(
-                    Mathf.Pow(md.color.r, 0.85f),
-                    Mathf.Pow(md.color.g, 0.85f),
-                    Mathf.Pow(md.color.b, 0.85f),
-                    md.color.a);
-                mat.SetColor("_Color", boosted);
-                // Round 37: Cartoon materials - low metallic, medium-high smoothness for soft specular
+                string matName = md.name ?? (glbName + "_mat_" + m);
+                mat.name = matName;
+
+                // Round 39: HSV-based color enhancement for cartoon vibrancy
+                Color.RGBToHSV(md.color, out float h, out float s, out float v);
+                s = Mathf.Clamp01(s * 1.4f); // Increase saturation 40%
+                v = Mathf.Clamp01(v * 1.1f); // Slightly brighter
+                Color enhanced = Color.HSVToRGB(h, s, v);
+                // Apply gamma correction for cartoon pop
+                enhanced.r = Mathf.Pow(enhanced.r, 0.75f);
+                enhanced.g = Mathf.Pow(enhanced.g, 0.75f);
+                enhanced.b = Mathf.Pow(enhanced.b, 0.75f);
+                enhanced.a = md.color.a;
+                mat.SetColor("_Color", enhanced);
+
+                // Round 39: Per-material glossiness for realistic cartoon look
                 mat.SetFloat("_Metallic", 0.0f);
-                mat.SetFloat("_Glossiness", 0.65f); // Smooth cartoon look
+                string nameLower = matName.ToLower();
+                if (nameLower.Contains("hair"))
+                    mat.SetFloat("_Glossiness", 0.8f); // Shiny hair
+                else if (nameLower.Contains("eye"))
+                    mat.SetFloat("_Glossiness", 0.9f); // Very shiny eyes
+                else if (nameLower.Contains("body") || nameLower.Contains("skin"))
+                    mat.SetFloat("_Glossiness", 0.3f); // Soft matte skin
+                else if (nameLower.Contains("shoe"))
+                    mat.SetFloat("_Glossiness", 0.7f); // Shiny shoes
+                else
+                    mat.SetFloat("_Glossiness", 0.5f); // Medium for outfits
+
+                // Round 39: Subtle emission for cartoon glow effect
+                mat.EnableKeyword("_EMISSION");
+                mat.globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive;
+                if (nameLower.Contains("body") || nameLower.Contains("skin"))
+                    mat.SetColor("_EmissionColor", Color.white * 0.05f); // Subtle skin glow
+                else if (nameLower.Contains("eye"))
+                    mat.SetColor("_EmissionColor", enhanced * 0.15f); // Eye sparkle
+                else
+                    mat.SetColor("_EmissionColor", enhanced * 0.08f); // General glow
+
                 if (md.color.a < 0.99f)
                 {
                     mat.SetFloat("_Mode", 2f);
@@ -1385,7 +1422,7 @@ namespace EmersynBigDay.Core
                     mat.renderQueue = 3000;
                 }
                 matArray[m] = mat;
-                AndroidLog($"[GLBRuntime] {glbName}: Mat '{mat.name}' ({boosted.r:F2},{boosted.g:F2},{boosted.b:F2})");
+                AndroidLog($"[GLBRuntime] {glbName}: Mat '{matName}' enhanced=({enhanced.r:F2},{enhanced.g:F2},{enhanced.b:F2}) gloss={mat.GetFloat("_Glossiness"):F1}");
             }
 
             // Step 6: Create meshes and build GameObject hierarchy
@@ -1540,10 +1577,9 @@ namespace EmersynBigDay.Core
             AndroidLog($"[GLBRuntime] {glbName}: Built {totalVerts} verts, {totalTris} tris");
 
             // Step 7: Replace the primitive placeholder
-            // Round 37 (Claude 4.5 Bedrock): GLB models are ~1.1 units tall in bind pose.
-            // Procedural characters were ~2 units tall * 1.3 scale = ~2.6 units.
-            // Scale GLB models by 2.5x for characters, 1.5x for pets to match room proportions.
-            float glbScale = isPet ? 1.5f : 2.5f;
+            // Round 39 (Claude 4.5 Bedrock): Scale 2.8x for characters (~3.1 units tall), 2.0x for pets
+            // Characters need to be clearly visible focal point in 12x10 room
+            float glbScale = isPet ? 2.0f : 2.8f;
             Transform existing = characterContainer != null ? characterContainer.Find(displayName) : null;
             if (existing == null)
             {
