@@ -35,10 +35,10 @@ namespace EmersynBigDay.CameraSystem
         public float OrbitSpeed = 120f;
         public float MinPitch = 10f;
         public float MaxPitch = 80f;
-        // Round 49 (Claude 4.5 Bedrock): Balanced pitch to show all characters
-        public float DefaultPitch = 10f;
+        // Round 53 (Claude 4.5 Bedrock): Higher pitch for overview of characters + room
+        public float DefaultPitch = 15f;
         private float currentYaw = 0f;
-        private float currentPitch = 10f;
+        private float currentPitch = 15f;
 
         [Header("Screen Shake")]
         public float ShakeDecay = 5f;
@@ -99,8 +99,8 @@ namespace EmersynBigDay.CameraSystem
             Vector3 desiredPosition = CalculateDesiredPosition();
             transform.position = desiredPosition;
             springVelocity = Vector3.zero;
-            // Round 46 (Claude 4.5 Bedrock): Look at character waist level (y=0.7) to see faces
-            Vector3 lookTarget = Target.position + Vector3.up * 0.7f;
+            // Round 53 (Claude 4.5 Bedrock): Look at head level (y=1.5) for better framing
+            Vector3 lookTarget = Target.position + Vector3.up * 1.5f;
             transform.LookAt(lookTarget);
             initialPositionSet = true;
         }
@@ -114,8 +114,8 @@ namespace EmersynBigDay.CameraSystem
             springVelocity += springForce * Time.deltaTime;
             transform.position += springVelocity * Time.deltaTime;
 
-            // Round 46 (Claude 4.5 Bedrock): Look at character waist (y=0.7) to see faces
-            Vector3 lookTarget = Target.position + Vector3.up * 0.7f;
+            // Round 53 (Claude 4.5 Bedrock): Look at head level (y=1.5) for overview framing
+            Vector3 lookTarget = Target.position + Vector3.up * 1.5f;
             Quaternion targetRotation = Quaternion.LookRotation(lookTarget - transform.position);
             transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, RotationSpeed * Time.deltaTime);
         }
@@ -221,11 +221,11 @@ namespace EmersynBigDay.CameraSystem
         {
             currentYaw = 0f;
             currentPitch = DefaultPitch;
-            // Round 49: Balanced zoom to show all characters
+            // Round 53: Pull camera back to show full characters + room
             float resetAspect = (float)Screen.width / Screen.height;
-            if (resetAspect < 0.5f) CurrentZoom = 13f;
-            else if (resetAspect < 0.6f) CurrentZoom = 14f;
-            else CurrentZoom = 13f; // Round 49: Show all characters
+            if (resetAspect < 0.5f) CurrentZoom = 20f;
+            else if (resetAspect < 0.6f) CurrentZoom = 19f;
+            else CurrentZoom = 18f; // Round 53: Show all characters + room
             frameCount = 0; // Round 25: Reset to force exact position again
             springVelocity = Vector3.zero;
             isTransitioning = false;

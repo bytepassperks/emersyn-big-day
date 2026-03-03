@@ -483,11 +483,12 @@ namespace EmersynBigDay.Core
                 // Round 49 (Claude 4.5 Bedrock): Balanced zoom to show all characters
                 float camAspect = (float)Screen.width / Screen.height;
                 float adaptiveZoom, adaptivePitch;
-                if (camAspect < 0.5f) { adaptiveZoom = 13f; adaptivePitch = 10f; } // Very narrow phones
-                else if (camAspect < 0.6f) { adaptiveZoom = 14f; adaptivePitch = 10f; } // Normal phones
-                else { adaptiveZoom = 13f; adaptivePitch = 10f; } // Tablets
-                ctrl.MinZoom = adaptiveZoom; // Round 51 (Bedrock): Lock MinZoom = DefaultZoom so camera can only zoom OUT, never IN
-                ctrl.MaxZoom = 20f; // Round 51: Tighter max zoom range
+                // Round 53 (Bedrock): Pull camera back to 18-20f to show full characters + room
+                if (camAspect < 0.5f) { adaptiveZoom = 20f; adaptivePitch = 15f; } // Very narrow phones
+                else if (camAspect < 0.6f) { adaptiveZoom = 19f; adaptivePitch = 15f; } // Normal phones
+                else { adaptiveZoom = 18f; adaptivePitch = 15f; } // Tablets
+                ctrl.MinZoom = adaptiveZoom; // Round 53 (Bedrock): Lock MinZoom = DefaultZoom
+                ctrl.MaxZoom = 25f; // Round 53: Allow some zoom out range
                 ctrl.CurrentZoom = adaptiveZoom;
                 ctrl.DefaultPitch = adaptivePitch;
                 ctrl.SpringStiffness = 200f;
@@ -498,13 +499,14 @@ namespace EmersynBigDay.Core
             // Round 49: Balanced camera to show all characters and room
             float initAspect = (float)Screen.width / Screen.height;
             float initZoom, initPitch;
-            if (initAspect < 0.5f) { initZoom = 13f; initPitch = 10f; }
-            else if (initAspect < 0.6f) { initZoom = 14f; initPitch = 10f; }
-            else { initZoom = 13f; initPitch = 10f; }
+            // Round 53: Match camera controller zoom values
+            if (initAspect < 0.5f) { initZoom = 20f; initPitch = 15f; }
+            else if (initAspect < 0.6f) { initZoom = 19f; initPitch = 15f; }
+            else { initZoom = 18f; initPitch = 15f; }
             float initPitchRad = initPitch * Mathf.Deg2Rad;
             Vector3 camDir = new Vector3(0f, Mathf.Sin(initPitchRad), -Mathf.Cos(initPitchRad));
             mainCamera.transform.position = camDir * initZoom;
-            mainCamera.transform.LookAt(new Vector3(0f, 1.0f, 0f)); // Round 49: Look at chest level
+            mainCamera.transform.LookAt(new Vector3(0f, 1.5f, 0f)); // Round 53: Look at head level
             Debug.Log($"[SceneBuilder] Initial camera R49: aspect={initAspect:F2} zoom={initZoom} pitch={initPitch} pos={mainCamera.transform.position}");
         }
 
@@ -871,9 +873,10 @@ namespace EmersynBigDay.Core
             
             // Round 48: Adaptive radius based on screen aspect ratio
             float screenAspect = (float)Screen.width / Screen.height;
-            float baseRadius = 6.0f;
-            float charRadius = baseRadius * (1.8f / Mathf.Max(screenAspect, 0.4f)); // Wider on narrow phones
-            charRadius = Mathf.Clamp(charRadius, 5f, 12f);
+            // Round 53: Tighter character grouping so all fit in wider camera view
+            float baseRadius = 3.5f;
+            float charRadius = baseRadius * (1.8f / Mathf.Max(screenAspect, 0.4f));
+            charRadius = Mathf.Clamp(charRadius, 3f, 7f);
             float startAngle = 150f;
             float angleStep = 28f;
             for (int i = 1; i < CharacterNames.Length; i++)
@@ -886,7 +889,8 @@ namespace EmersynBigDay.Core
             }
             
             // Pets in front-row arc, adaptive spread
-            float petRadius = charRadius * 0.5f;
+            // Round 53: Tighter pet grouping
+            float petRadius = charRadius * 0.4f;
             for (int i = 0; i < PetNames.Length; i++)
             {
                 float angle = (160f + i * 40f) * Mathf.Deg2Rad;
