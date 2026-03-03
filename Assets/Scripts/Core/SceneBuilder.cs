@@ -506,7 +506,7 @@ namespace EmersynBigDay.Core
             float initPitchRad = initPitch * Mathf.Deg2Rad;
             Vector3 camDir = new Vector3(0f, Mathf.Sin(initPitchRad), -Mathf.Cos(initPitchRad));
             mainCamera.transform.position = camDir * initZoom;
-            mainCamera.transform.LookAt(new Vector3(0f, 0f, 0f)); // Round 57: Look at ground level for dollhouse view
+            mainCamera.transform.LookAt(new Vector3(0f, -0.8f, 0f)); // Round 63: LookAt offset pushes chars higher in frame
             Debug.Log($"[SceneBuilder] Initial camera R49: aspect={initAspect:F2} zoom={initZoom} pitch={initPitch} pos={mainCamera.transform.position}");
         }
 
@@ -868,33 +868,26 @@ namespace EmersynBigDay.Core
             characterContainer = new GameObject("Characters").transform;
             // Round 48 (Claude 4.5 Bedrock): Adaptive spacing, screen-filling layout
             // Emersyn center-front (hero position)
-            // Round 62: Much smaller characters to fit R60 close zoom without overflow
-            emersynObj = MakeCharacter("Emersyn", new Vector3(0f, 0f, 0f), CharBodyColors[0], 0.22f, true);
+            // Round 63 (Bedrock): Smaller chars + shallow arc for Sims framing
+            emersynObj = MakeCharacter("Emersyn", new Vector3(0f, 0f, 0f), CharBodyColors[0], 0.15f, true);
             emersynObj.transform.SetParent(characterContainer);
             if (CameraSystem.CameraController.Instance != null)
                 CameraSystem.CameraController.Instance.Target = emersynObj.transform;
             
-            // Round 48: Adaptive radius based on screen aspect ratio
-            float screenAspect = (float)Screen.width / Screen.height;
-            // Round 57: Tighter character spread to fit within closer camera view
-            float baseRadius = 2.5f;
-            float charRadius = baseRadius * (1.8f / Mathf.Max(screenAspect, 0.4f));
-            charRadius = Mathf.Clamp(charRadius, 2.5f, 5f);
-            float startAngle = 150f;
-            float angleStep = 28f;
+            // Round 63 (Bedrock): Shallow arc so supporting chars don't appear huge in bottom
+            float charRadius = 3.5f;
             for (int i = 1; i < CharacterNames.Length; i++)
             {
-                float angle = (startAngle + (i - 1) * angleStep) * Mathf.Deg2Rad;
-                float x = Mathf.Sin(angle) * charRadius;
-                float z = Mathf.Cos(angle) * charRadius;
-                // Round 62: Much smaller supporting characters
-                var f = MakeCharacter(CharacterNames[i], new Vector3(x, 0, z), CharBodyColors[i], 0.18f, false);
+                float angle = (i - 3) * 0.6f; // Spread across ~150 degrees, shallow
+                float x = charRadius * Mathf.Sin(angle);
+                float z = 0.2f * Mathf.Cos(angle); // SHALLOW depth - not deep arc behind Emersyn
+                var f = MakeCharacter(CharacterNames[i], new Vector3(x, 0, z), CharBodyColors[i], 0.12f, false);
                 f.transform.SetParent(characterContainer);
             }
             
             // Pets in front-row arc, adaptive spread
-            // Round 57: Pet grouping tighter
-            float petRadius = charRadius * 0.3f;
+            // Round 63: Pet grouping tighter
+            float petRadius = 1.2f;
             for (int i = 0; i < PetNames.Length; i++)
             {
                 float angle = (160f + i * 40f) * Mathf.Deg2Rad;
@@ -911,8 +904,8 @@ namespace EmersynBigDay.Core
                     root.transform.position = pos;
                     // Round 47 (Claude 4.5 Bedrock): Rotate 180° so characters FACE the camera (camera is at -Z)
                     root.transform.rotation = Quaternion.Euler(0f, 180f, 0f);
-                    // Round 62: Aggressive global scale-down for balanced framing
-                    root.transform.localScale = Vector3.one * scale * 0.4f;
+                    // Round 63 (Bedrock): Global scale for Sims-style framing
+                    root.transform.localScale = Vector3.one * scale * 0.35f;
             // Emersyn's actual skin color: brown skin (age 6)
             Color skin = isMain ? new Color(0.55f, 0.38f, 0.28f) : new Color(1f, 0.88f, 0.78f);
 

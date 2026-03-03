@@ -99,8 +99,8 @@ namespace EmersynBigDay.CameraSystem
             Vector3 desiredPosition = CalculateDesiredPosition();
             transform.position = desiredPosition;
             springVelocity = Vector3.zero;
-            // Round 57: Look at ground level for dollhouse view
-            Vector3 lookTarget = Target.position;
+            // Round 63: LookAt offset pushes chars higher in frame
+            Vector3 lookTarget = Target.position + new Vector3(0f, -0.8f, 0f);
             transform.LookAt(lookTarget);
             initialPositionSet = true;
         }
@@ -114,8 +114,8 @@ namespace EmersynBigDay.CameraSystem
             springVelocity += springForce * Time.deltaTime;
             transform.position += springVelocity * Time.deltaTime;
 
-            // Round 57: Look at ground level for dollhouse view
-            Vector3 lookTarget = Target.position;
+            // Round 63: LookAt offset pushes chars higher in frame
+            Vector3 lookTarget = Target.position + new Vector3(0f, -0.8f, 0f);
             Quaternion targetRotation = Quaternion.LookRotation(lookTarget - transform.position);
             transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, RotationSpeed * Time.deltaTime);
         }
