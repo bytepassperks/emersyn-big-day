@@ -1,5 +1,29 @@
 <linker>
+  <!-- Preserve game assemblies -->
   <assembly fullname="EmersynsBigDay" preserve="all"/>
   <assembly fullname="EmersynsBigDay.MiniGames" preserve="all"/>
   <assembly fullname="EmersynsBigDay.AI" preserve="all"/>
+
+  <!-- Preserve GLTFast assemblies - CRITICAL for IL2CPP -->
+  <assembly fullname="glTFast" preserve="all"/>
+  <assembly fullname="glTFast.Runtime" preserve="all"/>
+
+  <!-- Preserve Unity core assemblies needed by GLTFast -->
+  <assembly fullname="UnityEngine.CoreModule" preserve="all"/>
+  <assembly fullname="UnityEngine.PhysicsModule" preserve="all"/>
+  <assembly fullname="UnityEngine.UI" preserve="all"/>
+  <assembly fullname="UnityEngine.UIModule" preserve="all"/>
+  <assembly fullname="UnityEngine.TextRenderingModule" preserve="all"/>
+  <assembly fullname="UnityEngine.IMGUIModule" preserve="all"/>
+  <assembly fullname="UnityEngine.AnimationModule" preserve="all"/>
+  <assembly fullname="UnityEngine.AudioModule" preserve="all"/>
+  <assembly fullname="UnityEngine.ParticleSystemModule" preserve="all"/>
+  <assembly fullname="UnityEngine.ImageConversionModule" preserve="all"/>
+  <assembly fullname="UnityEngine.UnityWebRequestModule" preserve="all"/>
+  <assembly fullname="UnityEngine.UnityWebRequestTextureModule" preserve="all"/>
+  <assembly fullname="UnityEngine.JSONSerializeModule" preserve="all"/>
+
+  <!-- Preserve JSON serialization for glTF parsing -->
+  <assembly fullname="Newtonsoft.Json" preserve="all"/>
+  <assembly fullname="Unity.Mathematics" preserve="all"/>
 </linker>

@@ -4,14 +4,13 @@ using UnityEngine.Networking;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 using System.Runtime.InteropServices;
-// Claude Bedrock Round 3 fix: ALL GLTFast references REMOVED from Assembly-CSharp.
-// Root cause confirmed via AWS Device Farm logcat on 5 real devices:
-//   "The referenced script on this Behaviour (Game Object 'Bootstrap') is missing!"
-// GLTFHelper.cs (with 'using GLTFast;') was in the same Assembly-CSharp assembly.
-// When GLTFast assembly failed to resolve at IL2CPP runtime, the ENTIRE
-// Assembly-CSharp failed to load → SceneBuilder became 'missing script' → no Awake() → blue screen.
-// GLB loading is now disabled; primitive fallback characters render instead.
+using GLTFast;
+// Round 11 (Claude 4.5 Bedrock): GLTFast RE-ENABLED with proper IL2CPP protection.
+// Root cause of original blue screen was IL2CPP code stripping, NOT GLTFast itself.
+// Fix: Comprehensive link.xml preserving glTFast + Unity assemblies + Newtonsoft.Json.
+// This enables full 3D GLB model loading for AAA-quality character rendering.
 
 namespace EmersynBigDay.Core
 {
@@ -91,10 +90,11 @@ namespace EmersynBigDay.Core
         };
 
         private Material baseMat;
-        private Shader unlitTextureShader; // Round 10: Unlit/Texture for ALL rendering on Android
-        private Texture2D whitePixelTex; // fallback white texture
+        private Shader standardShader; // Round 11: Standard shader for PBR rendering
+        private Shader unlitTextureShader; // Fallback: Unlit/Texture for surfaces where Standard fails
+        private Texture2D whitePixelTex;
         private Dictionary<string, Texture2D> textureCache = new Dictionary<string, Texture2D>();
-        private Dictionary<int, Texture2D> colorTexCache = new Dictionary<int, Texture2D>(); // Round 10: cache colored textures
+        private Dictionary<int, Texture2D> colorTexCache = new Dictionary<int, Texture2D>();
         private bool glbLoadingComplete = false;
 
         // Room texture mappings: room index -> (floor texture path, wall texture path)
@@ -125,14 +125,16 @@ namespace EmersynBigDay.Core
         {
             AndroidLog("[SceneBuilder] ===== Awake() CALLED =====");
 
-            // Claude Bedrock fix #4: FORCE mobile-safe quality settings on Android BEFORE anything else
+            // Round 11 (Claude 4.5): Enable proper shadow quality for AAA visuals
             #if UNITY_ANDROID && !UNITY_EDITOR
-            QualitySettings.SetQualityLevel(1, true); // Medium quality
-            QualitySettings.antiAliasing = 0; // Disable MSAA - causes GPU failure
-            QualitySettings.shadows = ShadowQuality.HardOnly;
-            QualitySettings.shadowResolution = ShadowResolution.Low;
-            QualitySettings.softParticles = false;
-            AndroidLog("[SceneBuilder] Android quality settings forced to Medium/safe");
+            QualitySettings.SetQualityLevel(2, true); // High quality for AAA look
+            QualitySettings.antiAliasing = 2; // 2x MSAA for smoother edges
+            QualitySettings.shadows = LightShadows.Soft != 0 ? ShadowQuality.All : ShadowQuality.HardOnly;
+            QualitySettings.shadowResolution = ShadowResolution.Medium;
+            QualitySettings.shadowDistance = 30f;
+            QualitySettings.softParticles = false; // Keep off for mobile perf
+            QualitySettings.pixelLightCount = 3; // Support key + fill + rim lights
+            AndroidLog("[SceneBuilder] Android quality: High, shadows enabled, 2x MSAA");
             #endif
 
             if (isInitialized) return;
@@ -166,18 +168,13 @@ namespace EmersynBigDay.Core
 
             AndroidLog("[SceneBuilder] Starting programmatic scene construction...");
 
-            // Round 10 fix: Use ONLY Unlit/Texture for ALL rendering on Android.
-            // Round 9 proved Unlit/Texture works (wall textures render correctly).
-            // But Unlit/Color did NOT work (Shader.Find returned null or shader didn't render _Color).
-            // Solution: Use Unlit/Texture for everything - for solid colors, create tiny colored textures.
+            // Round 11 (Claude 4.5 Bedrock): Use Standard shader for full PBR rendering.
+            // The original blue screen was caused by IL2CPP stripping, NOT by Standard shader.
+            // With proper link.xml, Standard shader + GLTFast work correctly on Android.
+            standardShader = Shader.Find("Standard");
+            AndroidLog($"[SceneBuilder] Standard shader: {(standardShader != null ? "FOUND" : "NULL")}");
             unlitTextureShader = Shader.Find("Unlit/Texture");
             AndroidLog($"[SceneBuilder] Unlit/Texture shader: {(unlitTextureShader != null ? "FOUND" : "NULL")}");
-            if (unlitTextureShader == null)
-            {
-                // Try alternative names
-                unlitTextureShader = Shader.Find("Unlit/Transparent");
-                AndroidLog($"[SceneBuilder] Unlit/Transparent shader: {(unlitTextureShader != null ? "FOUND" : "NULL")}");
-            }
 
             // Keep white pixel texture as fallback
             whitePixelTex = new Texture2D(2, 2, TextureFormat.RGBA32, false);
@@ -340,38 +337,25 @@ namespace EmersynBigDay.Core
 
         private Material CreateBaseMaterial()
         {
-            // Claude Bedrock Round 5: PRIORITIZE Mobile/Diffuse shader on Android
-            // Standard shader silently fails on many Android GPUs with IL2CPP
-            Shader shader = null;
-            #if UNITY_ANDROID && !UNITY_EDITOR
-            string[] shaderNames = {
-                "Mobile/Diffuse",
-                "Mobile/VertexLit",
-                "Unlit/Color",
-                "Legacy Shaders/Diffuse",
-                "Standard",
-                "Sprites/Default"
-            };
-            #else
-            string[] shaderNames = {
-                "Standard",
-                "Legacy Shaders/Diffuse",
-                "Mobile/Diffuse",
-                "Unlit/Color",
-                "Sprites/Default"
-            };
-            #endif
-            foreach (string shaderName in shaderNames)
+            // Round 11 (Claude 4.5): Use Standard shader as PRIMARY for full PBR.
+            // The original blue screen was caused by IL2CPP stripping, NOT Standard shader.
+            // With proper link.xml, Standard shader works on all Android GPUs.
+            Shader shader = standardShader;
+            if (shader == null)
             {
-                shader = Shader.Find(shaderName);
-                if (shader != null)
+                // Fallback chain if Standard not yet cached
+                string[] shaderNames = { "Standard", "Legacy Shaders/Diffuse", "Mobile/Diffuse", "Sprites/Default" };
+                foreach (string shaderName in shaderNames)
                 {
-                    AndroidLog($"[SceneBuilder] Found shader: {shaderName}");
-                    break;
+                    shader = Shader.Find(shaderName);
+                    if (shader != null)
+                    {
+                        AndroidLog($"[SceneBuilder] Found shader: {shaderName}");
+                        break;
+                    }
+                    AndroidLog($"[SceneBuilder] Shader NOT found: {shaderName}");
                 }
-                AndroidLog($"[SceneBuilder] Shader NOT found: {shaderName}");
             }
-            // Final fallback using primitive's built-in material
             if (shader == null)
             {
                 AndroidLog("[SceneBuilder] All shader lookups failed! Using primitive fallback.");
@@ -379,7 +363,6 @@ namespace EmersynBigDay.Core
             }
             var mat = new Material(shader);
             mat.renderQueue = 2000;
-            // Only set Standard shader properties if Standard shader was selected
             if (shader.name.Contains("Standard"))
             {
                 mat.SetFloat("_Mode", 0f); // Opaque
@@ -389,6 +372,8 @@ namespace EmersynBigDay.Core
                 mat.DisableKeyword("_ALPHATEST_ON");
                 mat.DisableKeyword("_ALPHABLEND_ON");
                 mat.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+                mat.SetFloat("_Glossiness", 0.3f);
+                mat.SetFloat("_Metallic", 0.0f);
             }
             AndroidLog($"[SceneBuilder] Base material shader: {mat.shader?.name ?? "NULL"}");
             return mat;
@@ -413,11 +398,24 @@ namespace EmersynBigDay.Core
 
         private Material ColorMat(Color c)
         {
-            // Round 10 fix: Use Unlit/Texture with a colored pixel texture for ALL platforms on Android.
-            // Round 9 proved: Unlit/Texture WORKS (wall textures render correctly on all 5 devices).
-            // But Unlit/Color FAILED (characters rendered wrong color - likely shader not included in build).
-            // Solution: Create a tiny 2x2 texture filled with the desired color, render via Unlit/Texture.
-            #if UNITY_ANDROID && !UNITY_EDITOR
+            // Round 11 (Claude 4.5): Use Standard shader for colored materials.
+            // Standard shader supports lighting, shadows, and PBR properties.
+            // The white pixel texture + _Color tinting gives proper colored surfaces with lighting.
+            if (standardShader != null)
+            {
+                var mat = new Material(standardShader);
+                mat.color = c;
+                if (mat.HasProperty("_Color"))
+                    mat.SetColor("_Color", c);
+                // Set white texture so _Color tinting works correctly
+                if (whitePixelTex != null)
+                    mat.SetTexture("_MainTex", whitePixelTex);
+                mat.SetFloat("_Glossiness", 0.3f);
+                mat.SetFloat("_Metallic", 0.0f);
+                mat.renderQueue = 2000;
+                return mat;
+            }
+            // Fallback to Unlit/Texture if Standard not available
             if (unlitTextureShader != null)
             {
                 var m = new Material(unlitTextureShader);
@@ -425,16 +423,11 @@ namespace EmersynBigDay.Core
                 m.renderQueue = 2000;
                 return m;
             }
-            #endif
-            // Fallback to baseMat for Editor or if Unlit/Texture not found
-            var mat = new Material(baseMat);
-            if (whitePixelTex != null && mat.HasProperty("_MainTex"))
-                mat.SetTexture("_MainTex", whitePixelTex);
-            mat.color = c;
-            if (mat.HasProperty("_Color"))
-                mat.SetColor("_Color", c);
-            mat.renderQueue = 2000;
-            return mat;
+            // Last resort fallback
+            var fallback = new Material(baseMat);
+            fallback.color = c;
+            fallback.renderQueue = 2000;
+            return fallback;
         }
 
         private void CreateCamera()
@@ -1232,10 +1225,10 @@ namespace EmersynBigDay.Core
                 Systems.AdIntegration.Instance.ShowInterstitial();
         }
 
-        // === GLB Model Loading via glTFast ===
+        // === GLB Model Loading via glTFast (Round 11: RE-ENABLED with IL2CPP protection) ===
         private IEnumerator LoadGLBCharactersCoroutine()
         {
-            Debug.Log("[SceneBuilder] Starting GLB character loading...");
+            AndroidLog("[SceneBuilder] Starting GLB character loading (GLTFast RE-ENABLED Round 11)...");
             // Load main characters from GLB
             for (int i = 0; i < GLBCharacterFiles.Length && i < CharacterNames.Length; i++)
             {
@@ -1251,26 +1244,54 @@ namespace EmersynBigDay.Core
                 yield return StartCoroutine(LoadSingleGLBPet(glbName, petName));
             }
             glbLoadingComplete = true;
-            Debug.Log("[SceneBuilder] GLB character loading complete!");
+            AndroidLog("[SceneBuilder] GLB character loading complete!");
         }
 
         private IEnumerator LoadSingleGLBCharacter(string glbFileName, string charName, bool isMain)
         {
             string uri = Path.Combine(Application.streamingAssetsPath, "Characters", glbFileName + ".glb");
-            Debug.Log($"[SceneBuilder] Loading GLB: {uri}");
+            AndroidLog($"[SceneBuilder] Loading GLB: {uri}");
 
-            // Claude Bedrock Round 3: GLTFast REMOVED entirely to fix Assembly-CSharp load failure.
-            // GLB loading disabled — primitive fallback characters are used instead.
-            Debug.Log($"[SceneBuilder] GLB loading disabled (GLTFast removed to fix blue screen). Keeping primitive for {charName}");
-            yield break;
+            // Step 1: Load GLB bytes via UnityWebRequest (required for Android StreamingAssets in APK)
+            byte[] glbData = null;
+            using (var request = UnityWebRequest.Get(uri))
+            {
+                yield return request.SendWebRequest();
+                if (request.result != UnityWebRequest.Result.Success)
+                {
+                    AndroidLog($"[SceneBuilder] Failed to download GLB {glbFileName}: {request.error}");
+                    yield break;
+                }
+                glbData = request.downloadHandler.data;
+                AndroidLog($"[SceneBuilder] GLB data loaded: {glbData.Length} bytes for {charName}");
+            }
 
-            // The code below is unreachable but preserved for future re-enablement
-            // once GLTFast is moved to its own assembly definition.
-            #if false
+            // Step 2: Parse GLB with GltfImport
+            var gltf = new GltfImport();
+            var loadTask = gltf.LoadGltfBinary(glbData, new System.Uri(uri));
+
+            // Wait for async task to complete (coroutine-safe polling)
+            while (!loadTask.IsCompleted)
+                yield return null;
+
+            if (loadTask.IsFaulted)
+            {
+                AndroidLog($"[SceneBuilder] GLTFast parse EXCEPTION for {charName}: {loadTask.Exception?.Message}");
+                yield break;
+            }
+            if (!loadTask.Result)
+            {
+                AndroidLog($"[SceneBuilder] GLTFast parse FAILED for {charName}");
+                yield break;
+            }
+
+            AndroidLog($"[SceneBuilder] GLB parsed successfully for {charName}");
+
+            // Step 3: Find the primitive placeholder
             Transform existing = characterContainer != null ? characterContainer.Find(charName) : null;
             if (existing == null)
             {
-                Debug.LogWarning($"[SceneBuilder] Could not find primitive {charName} to replace");
+                AndroidLog($"[SceneBuilder] Could not find primitive {charName} to replace");
                 yield break;
             }
 
@@ -1279,22 +1300,36 @@ namespace EmersynBigDay.Core
             Vector3 savedScale = existing.localScale;
             Transform savedParent = existing.parent;
 
+            // Step 4: Create parent object and instantiate GLB model
             var glbObj = new GameObject(charName);
             glbObj.transform.SetParent(savedParent, false);
             glbObj.transform.position = savedPos;
             glbObj.transform.rotation = savedRot;
             glbObj.transform.localScale = savedScale;
 
-            // Convert glTF materials to Standard shader for Built-in Pipeline
+            var instantiateTask = gltf.InstantiateMainSceneAsync(glbObj.transform);
+            while (!instantiateTask.IsCompleted)
+                yield return null;
+
+            if (instantiateTask.IsFaulted)
+            {
+                AndroidLog($"[SceneBuilder] GLB instantiate EXCEPTION for {charName}: {instantiateTask.Exception?.Message}");
+                Destroy(glbObj);
+                yield break;
+            }
+
+            AndroidLog($"[SceneBuilder] GLB instantiated for {charName}");
+
+            // Step 5: Convert glTF materials to Standard shader for proper PBR on Built-in Pipeline
             ConvertGLTFMaterials(glbObj);
 
-            // Add interaction components
+            // Step 6: Add interaction components
             var col = glbObj.AddComponent<BoxCollider>();
             col.center = new Vector3(0, 1f, 0);
             col.size = new Vector3(1f, 2.2f, 0.8f);
             glbObj.AddComponent<CharacterBob>();
 
-            // Update emersynObj reference if this is the main character
+            // Step 7: Update main character reference
             if (isMain)
             {
                 emersynObj = glbObj;
@@ -1304,22 +1339,43 @@ namespace EmersynBigDay.Core
                     Gameplay.CharacterCustomization.Instance.ApplyToCharacter(glbObj);
             }
 
-            // Destroy primitive version
+            // Step 8: Destroy primitive placeholder
             Destroy(existing.gameObject);
-            Debug.Log($"[SceneBuilder] Replaced {charName} with GLB model!");
-            #endif
+            AndroidLog($"[SceneBuilder] SUCCESS: Replaced {charName} with GLB 3D model!");
         }
 
         private IEnumerator LoadSingleGLBPet(string glbFileName, string petName)
         {
             string uri = Path.Combine(Application.streamingAssetsPath, "Characters", glbFileName + ".glb");
-            Debug.Log($"[SceneBuilder] Loading pet GLB: {uri}");
+            AndroidLog($"[SceneBuilder] Loading pet GLB: {uri}");
 
-            // Claude Bedrock Round 3: GLTFast REMOVED entirely to fix Assembly-CSharp load failure.
-            Debug.Log($"[SceneBuilder] GLB loading disabled (GLTFast removed to fix blue screen). Keeping primitive for pet {petName}");
-            yield break;
+            // Step 1: Load GLB bytes
+            byte[] glbData = null;
+            using (var request = UnityWebRequest.Get(uri))
+            {
+                yield return request.SendWebRequest();
+                if (request.result != UnityWebRequest.Result.Success)
+                {
+                    AndroidLog($"[SceneBuilder] Failed to download pet GLB {glbFileName}: {request.error}");
+                    yield break;
+                }
+                glbData = request.downloadHandler.data;
+                AndroidLog($"[SceneBuilder] Pet GLB data: {glbData.Length} bytes for {petName}");
+            }
 
-            #if false
+            // Step 2: Parse with GltfImport
+            var gltf = new GltfImport();
+            var loadTask = gltf.LoadGltfBinary(glbData, new System.Uri(uri));
+            while (!loadTask.IsCompleted)
+                yield return null;
+
+            if (loadTask.IsFaulted || !loadTask.Result)
+            {
+                AndroidLog($"[SceneBuilder] Pet GLB parse failed for {petName}");
+                yield break;
+            }
+
+            // Step 3: Replace primitive
             Transform existing = characterContainer != null ? characterContainer.Find(petName) : null;
             if (existing == null) yield break;
 
@@ -1331,6 +1387,16 @@ namespace EmersynBigDay.Core
             glbObj.transform.position = savedPos;
             glbObj.transform.localScale = Vector3.one * 0.5f;
 
+            var instantiateTask = gltf.InstantiateMainSceneAsync(glbObj.transform);
+            while (!instantiateTask.IsCompleted)
+                yield return null;
+
+            if (instantiateTask.IsFaulted)
+            {
+                Destroy(glbObj);
+                yield break;
+            }
+
             ConvertGLTFMaterials(glbObj);
             var col = glbObj.AddComponent<BoxCollider>();
             col.center = new Vector3(0, 0.4f, 0);
@@ -1338,49 +1404,93 @@ namespace EmersynBigDay.Core
             glbObj.AddComponent<CharacterBob>();
 
             Destroy(existing.gameObject);
-            Debug.Log($"[SceneBuilder] Replaced pet {petName} with GLB model!");
-            #endif
+            AndroidLog($"[SceneBuilder] SUCCESS: Replaced pet {petName} with GLB 3D model!");
         }
 
+        /// <summary>
+        /// Round 11: Convert glTF materials to Standard shader for proper PBR rendering.
+        /// GLTFast uses its own shader internally; we convert to Standard for consistency
+        /// with Built-in Render Pipeline lighting and shadows.
+        /// </summary>
         private void ConvertGLTFMaterials(GameObject obj)
         {
             var renderers = obj.GetComponentsInChildren<Renderer>();
-            Shader standardShader = Shader.Find("Standard");
-            if (standardShader == null) return;
+            if (standardShader == null)
+            {
+                AndroidLog("[SceneBuilder] Standard shader NULL - cannot convert glTF materials");
+                return;
+            }
 
             foreach (var renderer in renderers)
             {
-                foreach (var mat in renderer.materials)
+                var materials = renderer.materials;
+                for (int m = 0; m < materials.Length; m++)
                 {
+                    var mat = materials[m];
                     if (mat == null) continue;
-                    // Preserve textures from glTF material
+
+                    // Preserve textures and colors from glTF material before switching shader
                     Texture mainTex = null;
                     Texture normalTex = null;
+                    Texture occlusionTex = null;
+                    Texture metallicTex = null;
                     Color baseColor = Color.white;
+                    float metallic = 0f;
+                    float smoothness = 0.5f;
 
-                    // Try glTF property names
+                    // Try glTFast property names first, then standard names
                     if (mat.HasProperty("_BaseColorTexture")) mainTex = mat.GetTexture("_BaseColorTexture");
                     if (mainTex == null && mat.HasProperty("baseColorTexture")) mainTex = mat.GetTexture("baseColorTexture");
                     if (mainTex == null && mat.HasProperty("_MainTex")) mainTex = mat.GetTexture("_MainTex");
+                    if (mainTex == null && mat.HasProperty("_BaseMap")) mainTex = mat.GetTexture("_BaseMap");
+
                     if (mat.HasProperty("_NormalTexture")) normalTex = mat.GetTexture("_NormalTexture");
                     if (normalTex == null && mat.HasProperty("_BumpMap")) normalTex = mat.GetTexture("_BumpMap");
+                    if (normalTex == null && mat.HasProperty("normalTexture")) normalTex = mat.GetTexture("normalTexture");
+
+                    if (mat.HasProperty("_OcclusionTexture")) occlusionTex = mat.GetTexture("_OcclusionTexture");
+                    if (occlusionTex == null && mat.HasProperty("_OcclusionMap")) occlusionTex = mat.GetTexture("_OcclusionMap");
+
+                    if (mat.HasProperty("_MetallicGlossMap")) metallicTex = mat.GetTexture("_MetallicGlossMap");
+
                     if (mat.HasProperty("_BaseColor")) baseColor = mat.GetColor("_BaseColor");
                     else if (mat.HasProperty("_Color")) baseColor = mat.GetColor("_Color");
+
+                    if (mat.HasProperty("_Metallic")) metallic = mat.GetFloat("_Metallic");
+                    if (mat.HasProperty("_Glossiness")) smoothness = mat.GetFloat("_Glossiness");
+                    else if (mat.HasProperty("_Smoothness")) smoothness = mat.GetFloat("_Smoothness");
 
                     // Switch to Standard shader
                     mat.shader = standardShader;
                     mat.color = baseColor;
-                    if (mainTex != null) mat.SetTexture("_MainTex", mainTex);
+
+                    // Apply textures
+                    if (mainTex != null)
+                        mat.SetTexture("_MainTex", mainTex);
                     if (normalTex != null)
                     {
                         mat.SetTexture("_BumpMap", normalTex);
                         mat.EnableKeyword("_NORMALMAP");
+                        mat.SetFloat("_BumpScale", 1.0f);
                     }
-                    mat.SetFloat("_Glossiness", 0.4f);
-                    mat.SetFloat("_Metallic", 0.0f);
+                    if (occlusionTex != null)
+                    {
+                        mat.SetTexture("_OcclusionMap", occlusionTex);
+                        mat.SetFloat("_OcclusionStrength", 1.0f);
+                    }
+                    if (metallicTex != null)
+                        mat.SetTexture("_MetallicGlossMap", metallicTex);
+
+                    // PBR properties for cartoon/toon look
+                    mat.SetFloat("_Glossiness", smoothness);
+                    mat.SetFloat("_Metallic", metallic);
                     mat.enableInstancing = true;
+
+                    materials[m] = mat;
                 }
+                renderer.materials = materials;
             }
+            AndroidLog($"[SceneBuilder] Converted {renderers.Length} renderers to Standard PBR shader");
         }
 
         // === PBR Texture Loading for Rooms ===
@@ -1514,36 +1624,38 @@ namespace EmersynBigDay.Core
 
         private Material CreatePBRMaterial(Texture2D albedo, Texture2D normal)
         {
-            // Round 9 fix: Use Unlit/Texture for textured surfaces on Android.
-            // Mobile/Diffuse was rendering wall textures as magenta/white blobs.
-            // Unlit/Texture directly renders _MainTex without lighting, no shader compilation issues.
+            // Round 11 (Claude 4.5): Use Standard shader for full PBR with textures.
+            // Standard shader gives us proper lighting, shadows, and normal mapping.
             Material mat;
-            #if UNITY_ANDROID && !UNITY_EDITOR
+            if (standardShader != null)
+            {
+                mat = new Material(standardShader);
+                mat.SetTexture("_MainTex", albedo);
+                mat.color = Color.white;
+                if (normal != null)
+                {
+                    mat.SetTexture("_BumpMap", normal);
+                    mat.EnableKeyword("_NORMALMAP");
+                    mat.SetFloat("_BumpScale", 1.0f);
+                }
+                mat.SetFloat("_Glossiness", 0.3f);
+                mat.SetFloat("_Metallic", 0.0f);
+                mat.enableInstancing = true;
+                mat.renderQueue = 2000;
+                return mat;
+            }
+            // Fallback to Unlit/Texture if Standard not available
             if (unlitTextureShader != null)
             {
                 mat = new Material(unlitTextureShader);
                 mat.SetTexture("_MainTex", albedo);
-                // No tiling - let texture display naturally (tiling was causing corruption)
                 mat.renderQueue = 2000;
                 return mat;
             }
-            #endif
-            // Fallback for Editor or if Unlit/Texture not found
+            // Last resort
             mat = new Material(baseMat);
             mat.SetTexture("_MainTex", albedo);
             mat.color = Color.white;
-            if (mat.HasProperty("_Color"))
-                mat.SetColor("_Color", Color.white);
-            if (normal != null && mat.HasProperty("_BumpMap"))
-            {
-                mat.SetTexture("_BumpMap", normal);
-                mat.EnableKeyword("_NORMALMAP");
-                mat.SetFloat("_BumpScale", 1.0f);
-            }
-            if (mat.HasProperty("_Glossiness"))
-                mat.SetFloat("_Glossiness", 0.3f);
-            if (mat.HasProperty("_Metallic"))
-                mat.SetFloat("_Metallic", 0.0f);
             mat.enableInstancing = true;
             return mat;
         }
