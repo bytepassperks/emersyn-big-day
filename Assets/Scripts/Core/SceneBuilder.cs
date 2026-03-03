@@ -224,6 +224,9 @@ namespace EmersynBigDay.Core
             StartCoroutine(SafeCoroutine(LoadGLBCharactersCoroutine()));
             StartCoroutine(SafeCoroutine(LoadAndApplyRoomTextures(currentRoomIndex)));
 
+            // Round 19: Validate and fix any magenta artifacts after all loading completes
+            StartCoroutine(SafeCoroutine(ValidateAndFixTextures()));
+
             // Claude Bedrock Priority 3: Delayed diagnostic for Android rendering debug
             StartCoroutine(DiagnoseRendering());
         }
@@ -448,8 +451,8 @@ namespace EmersynBigDay.Core
             }
             mainCamera.clearFlags = CameraClearFlags.SolidColor;
             mainCamera.backgroundColor = new Color(0.55f, 0.80f, 0.95f);
-            // Fix #2/#4: FOV 50 for portrait 1080x1920
-            mainCamera.fieldOfView = 50f;
+            // Round 19 (Claude 4.5 Bedrock): Wider FOV for Sims 4 style room view
+            mainCamera.fieldOfView = 45f;
             mainCamera.nearClipPlane = 0.1f;
             mainCamera.farClipPlane = 100f;
             // Claude Bedrock fix #1: FORCE Forward rendering - Deferred fails silently on Android GPUs
@@ -467,12 +470,13 @@ namespace EmersynBigDay.Core
             if (mainCamera.GetComponent<CameraSystem.CameraController>() == null)
             {
                 var ctrl = mainCamera.gameObject.AddComponent<CameraSystem.CameraController>();
-                ctrl.Offset = new Vector3(0f, 3f, -5f);
-                ctrl.CurrentZoom = 6f;
+                // Round 19 (Claude 4.5 Bedrock): Pull camera back for Sims 4 style isometric view
+                ctrl.Offset = new Vector3(0f, 6f, -8f);
+                ctrl.CurrentZoom = 10f;
             }
-            // Fix #2: Camera position for portrait — pull back and up to see room
-            mainCamera.transform.position = new Vector3(0f, 5f, -8f);
-            mainCamera.transform.LookAt(new Vector3(0f, 1.5f, 0f));
+            // Round 19: Camera position for Sims 4 style — elevated, pulled back to see full room + character
+            mainCamera.transform.position = new Vector3(0f, 8f, -10f);
+            mainCamera.transform.LookAt(new Vector3(0f, 1.5f, 2f));
         }
 
         private void CreateManagers()
@@ -1334,6 +1338,10 @@ namespace EmersynBigDay.Core
             // Verify and log the final material colors for debugging.
             VerifyMaterialColors(glbObj, charName);
 
+            // Round 19 (Claude 4.5 Bedrock): Apply character textures from StreamingAssets/Modal
+            // These are Modal GPU-upscaled textures that add detail to the GLB solid-color materials
+            yield return StartCoroutine(ApplyCharacterTextures(glbObj, glbFileName));
+
             // Step 6: Add interaction components
             var col = glbObj.AddComponent<BoxCollider>();
             col.center = new Vector3(0, 1f, 0);
@@ -1672,6 +1680,127 @@ namespace EmersynBigDay.Core
             AndroidLog($"[SceneBuilder] Round 16 VERIFY: {objectName} has {totalRenderers} renderers, {totalMaterials} materials");
         }
 
+        // === Round 19: Character Texture Loading from StreamingAssets/Textures/Modal ===
+        // These are Modal GPU-upscaled textures that add detail to GLB solid-color materials
+        private IEnumerator ApplyCharacterTextures(GameObject charObj, string charName)
+        {
+            string lowerName = charName.ToLower();
+            AndroidLog($"[SceneBuilder] Round 19: Applying character textures for {charName}");
+
+            // Define texture mappings for each character
+            // Available textures in Modal/: emersyn_skin_albedo, emersyn_outfit_albedo, emersyn_hair_albedo,
+            // ava_skin_albedo, mia_skin_albedo, leo_skin_albedo (+ normal + roughness for each)
+            string[] textureSuffixes = { "skin_albedo", "outfit_albedo", "hair_albedo" };
+            var loadedTextures = new Dictionary<string, Texture2D>();
+
+            foreach (string suffix in textureSuffixes)
+            {
+                string texPath = $"Textures/Modal/{lowerName}_{suffix}.png";
+                Texture2D tex = null;
+                yield return StartCoroutine(LoadTextureFromStreamingAssets(texPath, t => tex = t));
+                if (tex != null)
+                {
+                    loadedTextures[suffix] = tex;
+                    AndroidLog($"[SceneBuilder] Round 19: Loaded texture {lowerName}_{suffix}");
+                }
+            }
+
+            if (loadedTextures.Count == 0)
+            {
+                AndroidLog($"[SceneBuilder] Round 19: No textures found for {charName}, keeping solid colors");
+                yield break;
+            }
+
+            // Apply textures to renderers on the GLB model
+            var renderers = charObj.GetComponentsInChildren<Renderer>();
+            int applied = 0;
+            foreach (var renderer in renderers)
+            {
+                var mats = renderer.materials; // Get instance materials
+                for (int m = 0; m < mats.Length; m++)
+                {
+                    var mat = mats[m];
+                    if (mat == null) continue;
+
+                    string matName = mat.name.ToLower().Replace(" (instance)", "");
+                    Color currentColor = mat.HasProperty("_Color") ? mat.GetColor("_Color") : Color.white;
+
+                    // Match texture to material based on material name or color heuristics
+                    string matchedSuffix = null;
+
+                    // Try name-based matching first
+                    if (matName.Contains("skin") || matName.Contains("body") || matName.Contains("face"))
+                        matchedSuffix = "skin_albedo";
+                    else if (matName.Contains("outfit") || matName.Contains("cloth") || matName.Contains("dress") || matName.Contains("shirt"))
+                        matchedSuffix = "outfit_albedo";
+                    else if (matName.Contains("hair"))
+                        matchedSuffix = "hair_albedo";
+                    else
+                    {
+                        // Color-based heuristic: skin tones are warm pinkish, outfits are saturated, hair is dark
+                        float hue, sat, val;
+                        Color.RGBToHSV(currentColor, out hue, out sat, out val);
+
+                        if (val < 0.4f) // Dark = likely hair
+                            matchedSuffix = "hair_albedo";
+                        else if (sat > 0.4f) // Saturated = likely outfit
+                            matchedSuffix = "outfit_albedo";
+                        else // Desaturated/warm = likely skin
+                            matchedSuffix = "skin_albedo";
+                    }
+
+                    if (matchedSuffix != null && loadedTextures.ContainsKey(matchedSuffix))
+                    {
+                        mat.SetTexture("_MainTex", loadedTextures[matchedSuffix]);
+                        // Tint the texture with the original baseColorFactor for correct coloring
+                        mat.SetColor("_Color", currentColor);
+                        applied++;
+                        AndroidLog($"[SceneBuilder] Round 19: Applied {matchedSuffix} texture to {renderer.name} mat[{m}]");
+                    }
+                }
+            }
+            AndroidLog($"[SceneBuilder] Round 19: Applied {applied} textures to {charName}");
+        }
+
+        // === Round 19: Texture Validator — fix magenta artifacts from missing textures ===
+        private IEnumerator ValidateAndFixTextures()
+        {
+            yield return new WaitForSeconds(3f); // Let everything load first
+
+            var allRenderers = FindObjectsByType<Renderer>(FindObjectsSortMode.None);
+            int fixed_count = 0;
+
+            foreach (var renderer in allRenderers)
+            {
+                var mats = renderer.materials;
+                for (int i = 0; i < mats.Length; i++)
+                {
+                    if (mats[i] == null) continue;
+
+                    // Check for magenta (shader error) color
+                    if (mats[i].HasProperty("_Color"))
+                    {
+                        Color c = mats[i].GetColor("_Color");
+                        // Magenta = (1, 0, 1) indicates shader/texture error
+                        if (c.r > 0.9f && c.g < 0.1f && c.b > 0.9f)
+                        {
+                            mats[i].SetColor("_Color", Color.white);
+                            fixed_count++;
+                        }
+                    }
+
+                    // Ensure _DETAIL_MULX2 is disabled to prevent magenta artifacts
+                    if (mats[i].IsKeywordEnabled("_DETAIL_MULX2"))
+                    {
+                        mats[i].DisableKeyword("_DETAIL_MULX2");
+                        mats[i].SetTexture("_DetailAlbedoMap", null);
+                        fixed_count++;
+                    }
+                }
+            }
+            AndroidLog($"[SceneBuilder] Round 19: Texture validator fixed {fixed_count} materials");
+        }
+
         // === PBR Texture Loading for Rooms ===
         private IEnumerator LoadAndApplyRoomTextures(int roomIndex)
         {
@@ -1695,8 +1824,8 @@ namespace EmersynBigDay.Core
 
                 if (floorAlbedo != null)
                 {
-                    // Round 18: Floor scale is (12, 0.5, 10) - tile based on XZ plane
-                    Vector2 floorTiling = new Vector2(12f / 2f, 10f / 2f);
+                    // Round 19: Floor tiling — slightly less dense for cleaner look
+                    Vector2 floorTiling = new Vector2(12f / 3f, 10f / 3f);
                     Material floorMat = CreatePBRMaterial(floorAlbedo, floorNormal, floorTiling);
                     ApplyMaterialToChild(roomContainer, "Floor", floorMat);
                 }
@@ -1713,20 +1842,18 @@ namespace EmersynBigDay.Core
 
                 if (wallAlbedo != null)
                 {
-                    // Round 18 (Claude 4.5 Bedrock): Calculate proper tiling per wall to fix UV stretching
-                    // BackWall: scale (12, 5, 0.3) -> visible face is 12 wide x 5 tall
-                    Vector2 backWallTiling = CalculateWallTiling(new Vector3(12, 5, 0.3f));
+                    // Round 19 (Claude 4.5 Bedrock): Reduce tiling factor for less busy pattern
+                    // Use 1 tile per 4 units instead of 2 units — pattern 2x larger, more elegant
+                    Vector2 backWallTiling = new Vector2(12f / 4f, 5f / 4f); // (3, 1.25)
                     Material backWallMat = CreatePBRMaterial(wallAlbedo, wallNormal, backWallTiling);
                     ApplyMaterialToChild(roomContainer, "BackWall", backWallMat);
 
-                    // LeftWall: scale (0.3, 5, 10) -> visible face is 10 wide x 5 tall
-                    Vector2 sideWallTiling = CalculateWallTiling(new Vector3(0.3f, 5, 10));
+                    Vector2 sideWallTiling = new Vector2(10f / 4f, 5f / 4f); // (2.5, 1.25)
                     Material sideWallMat = CreatePBRMaterial(wallAlbedo, wallNormal, sideWallTiling);
                     ApplyMaterialToChild(roomContainer, "LeftWall", sideWallMat);
                     ApplyMaterialToChild(roomContainer, "RightWall", sideWallMat);
 
-                    // Ceiling: scale (12, 0.3, 10) -> visible face is 12 wide x 10 deep
-                    Vector2 ceilingTiling = new Vector2(12f / 2f, 10f / 2f);
+                    Vector2 ceilingTiling = new Vector2(12f / 4f, 10f / 4f); // (3, 2.5)
                     Material ceilingMat = CreatePBRMaterial(wallAlbedo, wallNormal, ceilingTiling);
                     ApplyMaterialToChild(roomContainer, "Ceiling", ceilingMat);
                 }
