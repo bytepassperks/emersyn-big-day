@@ -1,5 +1,6 @@
 using UnityEditor;
 using UnityEditor.Build.Reporting;
+using UnityEditor.Compilation;
 using UnityEngine;
 using System;
 using System.IO;
@@ -14,7 +15,13 @@ public class BuildScript
     [MenuItem("Build/Build Android APK")]
     public static void BuildAndroid()
     {
-        Debug.Log("[BUILD] BuildAndroid called - building synchronously...");
+        Debug.Log("[BUILD] BuildAndroid called - forcing script recompilation first...");
+        
+        // Claude Bedrock Round 7: Force recompile ALL assemblies to avoid stale cache
+        CompilationPipeline.RequestScriptCompilation();
+        AssetDatabase.Refresh(ImportAssetOptions.ForceUpdate);
+        Debug.Log("[BUILD] Script recompilation requested and AssetDatabase refreshed");
+        
         ExecuteBuild();
     }
 
