@@ -315,6 +315,7 @@ namespace EmersynBigDay.Core
         }
 
         // Wrapper to catch exceptions in coroutines (which normally fail silently)
+        // Round 40: Use AndroidLog instead of Debug.LogError for Device Farm visibility
         private IEnumerator SafeCoroutine(IEnumerator coroutine)
         {
             while (true)
@@ -327,6 +328,7 @@ namespace EmersynBigDay.Core
                 }
                 catch (System.Exception e)
                 {
+                    AndroidLog($"[SceneBuilder] COROUTINE ERROR: {e.Message}\n{e.StackTrace}");
                     Debug.LogError($"[SceneBuilder] Coroutine error: {e.Message}\n{e.StackTrace}");
                     yield break;
                 }
@@ -1315,7 +1317,13 @@ namespace EmersynBigDay.Core
         private IEnumerator RuntimeParseAndReplaceCharacter(string glbName, string displayName, bool isMain, bool isPet)
         {
             // Step 1: Load GLB bytes from StreamingAssets (UnityWebRequest required on Android)
+            // Round 40 (Claude 4.5 Bedrock): Path.Combine corrupts jar:file:// URI on Android!
+            // Must use string concatenation instead of Path.Combine for Android StreamingAssets
+            #if UNITY_ANDROID && !UNITY_EDITOR
+            string uri = Application.streamingAssetsPath + "/Characters/" + glbName + ".glb";
+            #else
             string uri = System.IO.Path.Combine(Application.streamingAssetsPath, "Characters", glbName + ".glb");
+            #endif
             AndroidLog($"[GLBRuntime] Loading {glbName}.glb from {uri}");
             
             byte[] glbData = null;
@@ -1800,7 +1808,12 @@ namespace EmersynBigDay.Core
 
         private IEnumerator LoadSingleGLBCharacter(string glbFileName, string charName, bool isMain)
         {
+            // Round 40: Fix Path.Combine corrupting jar:file:// URI on Android
+            #if UNITY_ANDROID && !UNITY_EDITOR
+            string uri = Application.streamingAssetsPath + "/Characters/" + glbFileName + ".glb";
+            #else
             string uri = Path.Combine(Application.streamingAssetsPath, "Characters", glbFileName + ".glb");
+            #endif
             AndroidLog($"[SceneBuilder] Loading GLB: {uri}");
 
             // Step 1: Load GLB bytes via UnityWebRequest (required for Android StreamingAssets in APK)
@@ -1907,7 +1920,12 @@ namespace EmersynBigDay.Core
 
         private IEnumerator LoadSingleGLBPet(string glbFileName, string petName)
         {
+            // Round 40: Fix Path.Combine corrupting jar:file:// URI on Android
+            #if UNITY_ANDROID && !UNITY_EDITOR
+            string uri = Application.streamingAssetsPath + "/Characters/" + glbFileName + ".glb";
+            #else
             string uri = Path.Combine(Application.streamingAssetsPath, "Characters", glbFileName + ".glb");
+            #endif
             AndroidLog($"[SceneBuilder] Loading pet GLB: {uri}");
 
             // Step 1: Load GLB bytes
@@ -2504,7 +2522,12 @@ namespace EmersynBigDay.Core
             foreach (string surface in surfaces)
             {
                 string lightmapFile = $"{roomName}_{surface}_lightmap.png";
+                // Round 40: Fix Path.Combine corrupting jar:file:// URI on Android
+                #if UNITY_ANDROID && !UNITY_EDITOR
+                string lightmapPath = Application.streamingAssetsPath + "/Lightmaps/" + lightmapFile;
+                #else
                 string lightmapPath = Path.Combine(Application.streamingAssetsPath, "Lightmaps", lightmapFile);
+                #endif
 
                 using (var request = UnityWebRequestTexture.GetTexture(lightmapPath))
                 {
@@ -2562,7 +2585,12 @@ namespace EmersynBigDay.Core
                 yield break;
             }
 
+            // Round 40: Fix Path.Combine corrupting jar:file:// URI on Android
+            #if UNITY_ANDROID && !UNITY_EDITOR
+            string fullPath = Application.streamingAssetsPath + "/Textures/" + relativePath;
+            #else
             string fullPath = Path.Combine(Application.streamingAssetsPath, "Textures", relativePath);
+            #endif
             using (var request = UnityWebRequestTexture.GetTexture(fullPath))
             {
                 yield return request.SendWebRequest();
