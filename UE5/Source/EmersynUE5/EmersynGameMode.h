@@ -2,7 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
-#include "Materials/MaterialInstanceDynamic.h"
+#include "ProceduralMeshComponent.h"
 #include "EmersynGameMode.generated.h"
 
 UCLASS()
@@ -39,6 +39,10 @@ private:
     void BuildArcade();
     void BuildAmusementPark();
 
+    // v12: Sky background helper
+    void SpawnSkyBackground(FLinearColor SkyColor);
+
+    // v9: ProceduralMeshComponent with vertex colors (bypasses material system)
     AActor* SpawnBox(FVector Location, FVector Scale, FLinearColor Color);
     AActor* SpawnSphere(FVector Location, float Radius, FLinearColor Color);
     AActor* SpawnCylinder(FVector Location, FVector Scale, FLinearColor Color);
@@ -47,13 +51,10 @@ private:
     void SpawnCharacter(FVector Location, FLinearColor SkinColor, FLinearColor HairColor, FLinearColor OutfitColor, const FString& Name, float Scale = 1.0f);
     void SpawnPet(FVector Location, FLinearColor BodyColor, FLinearColor AccentColor, const FString& Name, float Scale = 0.6f);
     
-    // v8: Custom M_SolidColor material (VectorParameter "Color" -> BaseColor)
-    // Created via UE5 editor Python script, compiled with proper mobile shader
-    UMaterialInstanceDynamic* MakeMat(FLinearColor Color);
-    
-    // Cache: color key -> already-created material instance
-    UPROPERTY()
-    TMap<FString, UMaterialInstanceDynamic*> MaterialCache;
+    // v9: Procedural mesh generation helpers
+    void GenerateBoxMesh(UProceduralMeshComponent* PMC, FVector HalfExtent, FLinearColor Color);
+    void GenerateSphereMesh(UProceduralMeshComponent* PMC, float Radius, int32 Segments, FLinearColor Color);
+    void GenerateCylinderMesh(UProceduralMeshComponent* PMC, float Radius, float HalfHeight, int32 Segments, FLinearColor Color);
     
     void ClearRoom();
     void SetupCamera(FVector Location, FRotator Rotation);
@@ -63,6 +64,10 @@ private:
 
     UPROPERTY()
     TArray<AActor*> SpawnedActors;
+
+    // v10: Vertex color material for ProceduralMeshComponent
+    UPROPERTY()
+    UMaterialInterface* VertexColorMaterial;
 
     TArray<FString> RoomNames;
     TArray<FString> RoomDisplayNames;
