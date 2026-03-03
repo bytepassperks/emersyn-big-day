@@ -99,8 +99,8 @@ namespace EmersynBigDay.CameraSystem
             Vector3 desiredPosition = CalculateDesiredPosition();
             transform.position = desiredPosition;
             springVelocity = Vector3.zero;
-            // Round 54 (Claude 4.5 Bedrock): Lower lookAt (y=0.8) for characters in lower-middle frame
-            Vector3 lookTarget = Target.position + Vector3.up * 0.8f;
+            // Round 57: Look at ground level for dollhouse view
+            Vector3 lookTarget = Target.position;
             transform.LookAt(lookTarget);
             initialPositionSet = true;
         }
@@ -114,8 +114,8 @@ namespace EmersynBigDay.CameraSystem
             springVelocity += springForce * Time.deltaTime;
             transform.position += springVelocity * Time.deltaTime;
 
-            // Round 54 (Claude 4.5 Bedrock): Lower lookAt (y=0.8) for Sims-style framing
-            Vector3 lookTarget = Target.position + Vector3.up * 0.8f;
+            // Round 57: Look at ground level for dollhouse view
+            Vector3 lookTarget = Target.position;
             Quaternion targetRotation = Quaternion.LookRotation(lookTarget - transform.position);
             transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, RotationSpeed * Time.deltaTime);
         }
@@ -221,11 +221,11 @@ namespace EmersynBigDay.CameraSystem
         {
             currentYaw = 0f;
             currentPitch = DefaultPitch;
-            // Round 56: Steeper pitch with closer zoom for dollhouse view
+            // Round 57: Closer zoom with 45° pitch for dollhouse view
             float resetAspect = (float)Screen.width / Screen.height;
-            if (resetAspect < 0.5f) CurrentZoom = 30f;
-            else if (resetAspect < 0.6f) CurrentZoom = 28f;
-            else CurrentZoom = 25f; // Round 56: Show characters + room floor
+            if (resetAspect < 0.5f) CurrentZoom = 18f;
+            else if (resetAspect < 0.6f) CurrentZoom = 16f;
+            else CurrentZoom = 14f; // Round 57: Show characters + room floor
             frameCount = 0; // Round 25: Reset to force exact position again
             springVelocity = Vector3.zero;
             isTransitioning = false;

@@ -483,12 +483,12 @@ namespace EmersynBigDay.Core
                 // Round 49 (Claude 4.5 Bedrock): Balanced zoom to show all characters
                 float camAspect = (float)Screen.width / Screen.height;
                 float adaptiveZoom, adaptivePitch;
-                // Round 56 (Bedrock): Steeper pitch (45°) for true Sims dollhouse top-down view
-                if (camAspect < 0.5f) { adaptiveZoom = 30f; adaptivePitch = 45f; } // Very narrow phones
-                else if (camAspect < 0.6f) { adaptiveZoom = 28f; adaptivePitch = 45f; } // Normal phones
-                else { adaptiveZoom = 25f; adaptivePitch = 45f; } // Tablets
-                ctrl.MinZoom = adaptiveZoom; // Round 54 (Bedrock): Lock MinZoom = DefaultZoom
-                ctrl.MaxZoom = 50f; // Round 54: Allow some zoom out range
+                // Round 57: Closer zoom with 45° pitch so floor fills frame behind characters
+                if (camAspect < 0.5f) { adaptiveZoom = 18f; adaptivePitch = 45f; } // Very narrow phones
+                else if (camAspect < 0.6f) { adaptiveZoom = 16f; adaptivePitch = 45f; } // Normal phones
+                else { adaptiveZoom = 14f; adaptivePitch = 45f; } // Tablets
+                ctrl.MinZoom = adaptiveZoom; // Round 57: Lock MinZoom = DefaultZoom
+                ctrl.MaxZoom = 30f; // Round 57: Allow some zoom out range
                 ctrl.CurrentZoom = adaptiveZoom;
                 ctrl.DefaultPitch = adaptivePitch;
                 ctrl.SpringStiffness = 200f;
@@ -499,14 +499,14 @@ namespace EmersynBigDay.Core
             // Round 49: Balanced camera to show all characters and room
             float initAspect = (float)Screen.width / Screen.height;
             float initZoom, initPitch;
-            // Round 56: Match camera controller zoom values with steeper pitch
-            if (initAspect < 0.5f) { initZoom = 30f; initPitch = 45f; }
-            else if (initAspect < 0.6f) { initZoom = 28f; initPitch = 45f; }
-            else { initZoom = 25f; initPitch = 45f; }
+            // Round 57: Match camera controller zoom values
+            if (initAspect < 0.5f) { initZoom = 18f; initPitch = 45f; }
+            else if (initAspect < 0.6f) { initZoom = 16f; initPitch = 45f; }
+            else { initZoom = 14f; initPitch = 45f; }
             float initPitchRad = initPitch * Mathf.Deg2Rad;
             Vector3 camDir = new Vector3(0f, Mathf.Sin(initPitchRad), -Mathf.Cos(initPitchRad));
             mainCamera.transform.position = camDir * initZoom;
-            mainCamera.transform.LookAt(new Vector3(0f, 0.8f, 0f)); // Round 54: Lower lookAt for characters in lower-middle frame
+            mainCamera.transform.LookAt(new Vector3(0f, 0f, 0f)); // Round 57: Look at ground level for dollhouse view
             Debug.Log($"[SceneBuilder] Initial camera R49: aspect={initAspect:F2} zoom={initZoom} pitch={initPitch} pos={mainCamera.transform.position}");
         }
 
@@ -876,10 +876,10 @@ namespace EmersynBigDay.Core
             
             // Round 48: Adaptive radius based on screen aspect ratio
             float screenAspect = (float)Screen.width / Screen.height;
-            // Round 54 (Bedrock): Wider character spread for environmental framing at zoom 35-40f
-            float baseRadius = 4.0f;
+            // Round 57: Tighter character spread to fit within closer camera view
+            float baseRadius = 2.5f;
             float charRadius = baseRadius * (1.8f / Mathf.Max(screenAspect, 0.4f));
-            charRadius = Mathf.Clamp(charRadius, 4f, 10f);
+            charRadius = Mathf.Clamp(charRadius, 2.5f, 5f);
             float startAngle = 150f;
             float angleStep = 28f;
             for (int i = 1; i < CharacterNames.Length; i++)
@@ -893,8 +893,8 @@ namespace EmersynBigDay.Core
             }
             
             // Pets in front-row arc, adaptive spread
-            // Round 54: Pet grouping adjusted for wider layout
-            float petRadius = charRadius * 0.35f;
+            // Round 57: Pet grouping tighter
+            float petRadius = charRadius * 0.3f;
             for (int i = 0; i < PetNames.Length; i++)
             {
                 float angle = (160f + i * 40f) * Mathf.Deg2Rad;
