@@ -616,40 +616,41 @@ namespace EmersynBigDay.Core
 
         private void SetupLighting()
         {
-            // Claude Bedrock fix #3: Apply RenderSettings IMMEDIATELY (not deferred)
-            // Using Flat ambient mode for maximum compatibility on Android
+            // Round 37 (Claude 4.5 Bedrock): AAA cartoon lighting setup
+            // Bright, warm ambient for Sims 4 / Talking Tom cartoon look
             RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
-            RenderSettings.ambientLight = new Color(0.85f, 0.88f, 0.92f);
-            RenderSettings.ambientIntensity = 1.1f;
+            RenderSettings.ambientLight = new Color(0.75f, 0.72f, 0.80f); // Slightly purple ambient for cartoon warmth
+            RenderSettings.ambientIntensity = 1.2f;
 
-            // Claude Bedrock fix #3: Create new lights BEFORE destroying old ones
+            // Main key light: warm, bright, soft shadows
             var lo = new GameObject("MainDirectionalLight");
             var ml = lo.AddComponent<Light>();
             ml.type = LightType.Directional;
-            ml.color = new Color(1f, 0.96f, 0.88f);
-            // Round 20 (Claude 4.5 Bedrock): Softer lighting for AAA mobile look
-            ml.intensity = 0.8f;
+            ml.color = new Color(1f, 0.95f, 0.88f); // Warm white
+            ml.intensity = 1.1f; // Brighter for cartoon pop
             ml.shadows = LightShadows.Soft;
-            ml.shadowStrength = 0.3f; // Very subtle shadows like Sims 4
-            lo.transform.rotation = Quaternion.Euler(45f, -30f, 0f);
+            ml.shadowStrength = 0.25f; // Subtle shadows like Sims 4
+            lo.transform.rotation = Quaternion.Euler(50f, -30f, 0f);
             ml.cullingMask = ~0;
 
+            // Fill light: cool blue from opposite side
             var fo = new GameObject("FillLight");
             var fl = fo.AddComponent<Light>();
             fl.type = LightType.Directional;
-            fl.color = new Color(0.7f, 0.8f, 1f);
-            fl.intensity = 0.4f;
+            fl.color = new Color(0.65f, 0.75f, 1f); // Cool blue fill
+            fl.intensity = 0.5f;
             fl.shadows = LightShadows.None;
             fo.transform.rotation = Quaternion.Euler(30f, 150f, 0f);
             fl.cullingMask = ~0;
 
+            // Rim/back light: warm highlight for character edges
             var ro = new GameObject("RimLight");
             var rl = ro.AddComponent<Light>();
             rl.type = LightType.Directional;
-            rl.color = new Color(1f, 0.9f, 0.8f);
-            rl.intensity = 0.3f;
+            rl.color = new Color(1f, 0.85f, 0.7f); // Warm rim
+            rl.intensity = 0.4f;
             rl.shadows = LightShadows.None;
-            ro.transform.rotation = Quaternion.Euler(-20f, 180f, 0f);
+            ro.transform.rotation = Quaternion.Euler(-15f, 180f, 0f);
             rl.cullingMask = ~0;
 
             // NOW destroy old lights (keep new ones intact)
@@ -1350,6 +1351,8 @@ namespace EmersynBigDay.Core
             AndroidLog($"[GLBRuntime] {glbName}: {meshes.Count} meshes, {materials.Count} mats, {accessors.Count} accessors");
 
             // Step 5: Create materials at runtime (Shader.Find works on Android runtime)
+            // Round 37: AAA cartoon material setup (Claude 4.5 Bedrock)
+            // Use Standard shader with tuned smoothness for cartoon cel-shaded look
             Shader std = Shader.Find("Standard");
             if (std == null)
             {
@@ -1362,9 +1365,16 @@ namespace EmersynBigDay.Core
                 var md = materials[m];
                 Material mat = new Material(std);
                 mat.name = md.name ?? (glbName + "_mat_" + m);
-                mat.SetColor("_Color", md.color);
-                mat.SetFloat("_Metallic", md.metallic);
-                mat.SetFloat("_Glossiness", 1f - md.roughness);
+                // Round 37: Boost color saturation for cartoon look (gamma correction)
+                Color boosted = new Color(
+                    Mathf.Pow(md.color.r, 0.85f),
+                    Mathf.Pow(md.color.g, 0.85f),
+                    Mathf.Pow(md.color.b, 0.85f),
+                    md.color.a);
+                mat.SetColor("_Color", boosted);
+                // Round 37: Cartoon materials - low metallic, medium-high smoothness for soft specular
+                mat.SetFloat("_Metallic", 0.0f);
+                mat.SetFloat("_Glossiness", 0.65f); // Smooth cartoon look
                 if (md.color.a < 0.99f)
                 {
                     mat.SetFloat("_Mode", 2f);
@@ -1375,7 +1385,7 @@ namespace EmersynBigDay.Core
                     mat.renderQueue = 3000;
                 }
                 matArray[m] = mat;
-                AndroidLog($"[GLBRuntime] {glbName}: Mat '{mat.name}' ({md.color.r:F2},{md.color.g:F2},{md.color.b:F2})");
+                AndroidLog($"[GLBRuntime] {glbName}: Mat '{mat.name}' ({boosted.r:F2},{boosted.g:F2},{boosted.b:F2})");
             }
 
             // Step 6: Create meshes and build GameObject hierarchy
@@ -1530,35 +1540,41 @@ namespace EmersynBigDay.Core
             AndroidLog($"[GLBRuntime] {glbName}: Built {totalVerts} verts, {totalTris} tris");
 
             // Step 7: Replace the primitive placeholder
+            // Round 37 (Claude 4.5 Bedrock): GLB models are ~1.1 units tall in bind pose.
+            // Procedural characters were ~2 units tall * 1.3 scale = ~2.6 units.
+            // Scale GLB models by 2.5x for characters, 1.5x for pets to match room proportions.
+            float glbScale = isPet ? 1.5f : 2.5f;
             Transform existing = characterContainer != null ? characterContainer.Find(displayName) : null;
             if (existing == null)
             {
                 AndroidLog($"[GLBRuntime] Placeholder '{displayName}' not found, placing at origin");
                 root.transform.SetParent(characterContainer);
                 root.name = displayName;
+                root.transform.localScale = Vector3.one * glbScale;
             }
             else
             {
                 Vector3 savedPos = existing.position;
                 Quaternion savedRot = existing.rotation;
-                Vector3 savedScale = existing.localScale;
                 Transform savedParent = existing.parent;
 
                 root.name = displayName;
                 root.transform.SetParent(savedParent, false);
                 root.transform.position = savedPos;
                 root.transform.rotation = savedRot;
-                root.transform.localScale = isPet ? Vector3.one * 0.5f : savedScale;
+                root.transform.localScale = Vector3.one * glbScale;
 
                 Destroy(existing.gameObject);
             }
+            AndroidLog($"[GLBRuntime] {displayName} scale={glbScale}, bounds approx {totalVerts} verts");
 
             // Step 8: Add interaction components
+            // Round 37: Collider sizes adjusted for GLB model bounds (~1.1 tall, ~0.7 wide in local space)
             if (root.GetComponent<BoxCollider>() == null)
             {
                 var col = root.AddComponent<BoxCollider>();
-                if (isPet) { col.center = new Vector3(0, 0.4f, 0); col.size = new Vector3(0.6f, 0.8f, 0.8f); }
-                else { col.center = new Vector3(0, 1f, 0); col.size = new Vector3(1f, 2.2f, 0.8f); }
+                if (isPet) { col.center = new Vector3(0, 0.25f, 0); col.size = new Vector3(0.5f, 0.5f, 0.6f); }
+                else { col.center = new Vector3(0, 0.55f, 0); col.size = new Vector3(0.8f, 1.2f, 0.8f); }
             }
             if (root.GetComponent<CharacterBob>() == null)
                 root.AddComponent<CharacterBob>();
