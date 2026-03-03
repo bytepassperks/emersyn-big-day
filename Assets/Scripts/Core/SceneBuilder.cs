@@ -91,6 +91,8 @@ namespace EmersynBigDay.Core
         };
 
         private Material baseMat;
+        private Shader unlitColorShader;   // Round 9: Unlit/Color for solid-color geometry
+        private Shader unlitTextureShader; // Round 9: Unlit/Texture for textured surfaces
         private Texture2D whitePixelTex; // 1x1 white texture for Mobile/Diffuse color tinting
         private Dictionary<string, Texture2D> textureCache = new Dictionary<string, Texture2D>();
         private bool glbLoadingComplete = false;
@@ -164,14 +166,22 @@ namespace EmersynBigDay.Core
 
             AndroidLog("[SceneBuilder] Starting programmatic scene construction...");
 
-            // Round 8 fix: Create a 1x1 white texture for Mobile/Diffuse color tinting
-            // Mobile/Diffuse uses _Color as a TINT on _MainTex. Without _MainTex, everything renders white.
+            // Round 9 fix: Cache Unlit shaders for reliable Android rendering.
+            // Mobile/Diffuse was NOT rendering _Color correctly on real Android devices.
+            // Unlit/Color renders _Color directly without lighting dependency.
+            // Unlit/Texture renders _MainTex directly without lighting dependency.
+            unlitColorShader = Shader.Find("Unlit/Color");
+            unlitTextureShader = Shader.Find("Unlit/Texture");
+            AndroidLog($"[SceneBuilder] Unlit/Color shader: {(unlitColorShader != null ? "FOUND" : "NULL")}");
+            AndroidLog($"[SceneBuilder] Unlit/Texture shader: {(unlitTextureShader != null ? "FOUND" : "NULL")}");
+
+            // Keep white pixel texture as fallback
             whitePixelTex = new Texture2D(2, 2, TextureFormat.RGBA32, false);
             Color[] whitePixels = new Color[4];
             for (int i = 0; i < 4; i++) whitePixels[i] = Color.white;
             whitePixelTex.SetPixels(whitePixels);
             whitePixelTex.Apply();
-            AndroidLog("[SceneBuilder] White pixel texture created for color tinting");
+            AndroidLog("[SceneBuilder] White pixel texture created");
 
             // CRITICAL: Each phase is independently try-caught so a failure in one
             // (e.g. a manager system) does NOT prevent room geometry, characters, or UI from rendering.
@@ -382,25 +392,28 @@ namespace EmersynBigDay.Core
 
         private Material ColorMat(Color c)
         {
-            var m = new Material(baseMat);
-            // Round 8 fix: Mobile/Diffuse uses _Color as TINT on _MainTex.
-            // Without _MainTex set, the color tint produces white regardless of _Color value.
-            // Solution: Set a white 1x1 pixel texture as _MainTex so _Color tint works properly.
+            // Round 9 fix: Use Unlit/Color shader for solid-color geometry on Android.
+            // Mobile/Diffuse was NOT rendering _Color correctly on real devices (everything white).
+            // Unlit/Color directly renders the _Color property without any lighting dependency.
+            Material m;
+            #if UNITY_ANDROID && !UNITY_EDITOR
+            if (unlitColorShader != null)
+            {
+                m = new Material(unlitColorShader);
+                m.color = c;
+                if (m.HasProperty("_Color"))
+                    m.SetColor("_Color", c);
+                m.renderQueue = 2000;
+                return m;
+            }
+            #endif
+            // Fallback to baseMat for Editor or if Unlit/Color not found
+            m = new Material(baseMat);
             if (whitePixelTex != null && m.HasProperty("_MainTex"))
                 m.SetTexture("_MainTex", whitePixelTex);
             m.color = c;
             if (m.HasProperty("_Color"))
                 m.SetColor("_Color", c);
-            if (m.shader.name.Contains("Standard"))
-            {
-                m.SetFloat("_Mode", 0f); // Opaque
-                m.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.One);
-                m.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.Zero);
-                m.SetInt("_ZWrite", 1);
-                m.DisableKeyword("_ALPHATEST_ON");
-                m.DisableKeyword("_ALPHABLEND_ON");
-                m.DisableKeyword("_ALPHAPREMULTIPLY_ON");
-            }
             m.renderQueue = 2000;
             return m;
         }
@@ -1482,30 +1495,37 @@ namespace EmersynBigDay.Core
 
         private Material CreatePBRMaterial(Texture2D albedo, Texture2D normal)
         {
-            Material mat = new Material(baseMat);
-            // Round 8 fix: Only set properties that Mobile/Diffuse actually supports.
-            // Mobile/Diffuse only has _MainTex and _Color. Setting _BumpMap, _Glossiness,
-            // _Metallic corrupts the material on Android, causing magenta/white blob textures.
+            // Round 9 fix: Use Unlit/Texture for textured surfaces on Android.
+            // Mobile/Diffuse was rendering wall textures as magenta/white blobs.
+            // Unlit/Texture directly renders _MainTex without lighting, no shader compilation issues.
+            Material mat;
+            #if UNITY_ANDROID && !UNITY_EDITOR
+            if (unlitTextureShader != null)
+            {
+                mat = new Material(unlitTextureShader);
+                mat.SetTexture("_MainTex", albedo);
+                // No tiling - let texture display naturally (tiling was causing corruption)
+                mat.renderQueue = 2000;
+                return mat;
+            }
+            #endif
+            // Fallback for Editor or if Unlit/Texture not found
+            mat = new Material(baseMat);
             mat.SetTexture("_MainTex", albedo);
-            mat.color = Color.white; // Don't tint, let texture show through
+            mat.color = Color.white;
             if (mat.HasProperty("_Color"))
                 mat.SetColor("_Color", Color.white);
-            
-            // Only set normal map if shader supports it (Standard does, Mobile/Diffuse does NOT)
             if (normal != null && mat.HasProperty("_BumpMap"))
             {
                 mat.SetTexture("_BumpMap", normal);
                 mat.EnableKeyword("_NORMALMAP");
                 mat.SetFloat("_BumpScale", 1.0f);
             }
-            // Only set PBR properties if shader supports them
             if (mat.HasProperty("_Glossiness"))
                 mat.SetFloat("_Glossiness", 0.3f);
             if (mat.HasProperty("_Metallic"))
                 mat.SetFloat("_Metallic", 0.0f);
             mat.enableInstancing = true;
-            // Set texture tiling - use 2x2 for walls (3x3 was too aggressive)
-            mat.SetTextureScale("_MainTex", new Vector2(2f, 2f));
             return mat;
         }
 
