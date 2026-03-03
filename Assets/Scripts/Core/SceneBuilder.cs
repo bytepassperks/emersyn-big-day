@@ -486,8 +486,8 @@ namespace EmersynBigDay.Core
                 if (camAspect < 0.5f) { adaptiveZoom = 13f; adaptivePitch = 10f; } // Very narrow phones
                 else if (camAspect < 0.6f) { adaptiveZoom = 14f; adaptivePitch = 10f; } // Normal phones
                 else { adaptiveZoom = 13f; adaptivePitch = 10f; } // Tablets
-                ctrl.MinZoom = 12f; // Round 50 (Bedrock): Raised from 8f to prevent fuzz zoom inside character
-                ctrl.MaxZoom = 25f; // Round 28: Reduced from 50 to prevent fuzz test zooming too far out
+                ctrl.MinZoom = adaptiveZoom; // Round 51 (Bedrock): Lock MinZoom = DefaultZoom so camera can only zoom OUT, never IN
+                ctrl.MaxZoom = 20f; // Round 51: Tighter max zoom range
                 ctrl.CurrentZoom = adaptiveZoom;
                 ctrl.DefaultPitch = adaptivePitch;
                 ctrl.SpringStiffness = 200f;
