@@ -91,10 +91,10 @@ namespace EmersynBigDay.Core
         };
 
         private Material baseMat;
-        private Shader unlitColorShader;   // Round 9: Unlit/Color for solid-color geometry
-        private Shader unlitTextureShader; // Round 9: Unlit/Texture for textured surfaces
-        private Texture2D whitePixelTex; // 1x1 white texture for Mobile/Diffuse color tinting
+        private Shader unlitTextureShader; // Round 10: Unlit/Texture for ALL rendering on Android
+        private Texture2D whitePixelTex; // fallback white texture
         private Dictionary<string, Texture2D> textureCache = new Dictionary<string, Texture2D>();
+        private Dictionary<int, Texture2D> colorTexCache = new Dictionary<int, Texture2D>(); // Round 10: cache colored textures
         private bool glbLoadingComplete = false;
 
         // Room texture mappings: room index -> (floor texture path, wall texture path)
@@ -166,14 +166,18 @@ namespace EmersynBigDay.Core
 
             AndroidLog("[SceneBuilder] Starting programmatic scene construction...");
 
-            // Round 9 fix: Cache Unlit shaders for reliable Android rendering.
-            // Mobile/Diffuse was NOT rendering _Color correctly on real Android devices.
-            // Unlit/Color renders _Color directly without lighting dependency.
-            // Unlit/Texture renders _MainTex directly without lighting dependency.
-            unlitColorShader = Shader.Find("Unlit/Color");
+            // Round 10 fix: Use ONLY Unlit/Texture for ALL rendering on Android.
+            // Round 9 proved Unlit/Texture works (wall textures render correctly).
+            // But Unlit/Color did NOT work (Shader.Find returned null or shader didn't render _Color).
+            // Solution: Use Unlit/Texture for everything - for solid colors, create tiny colored textures.
             unlitTextureShader = Shader.Find("Unlit/Texture");
-            AndroidLog($"[SceneBuilder] Unlit/Color shader: {(unlitColorShader != null ? "FOUND" : "NULL")}");
             AndroidLog($"[SceneBuilder] Unlit/Texture shader: {(unlitTextureShader != null ? "FOUND" : "NULL")}");
+            if (unlitTextureShader == null)
+            {
+                // Try alternative names
+                unlitTextureShader = Shader.Find("Unlit/Transparent");
+                AndroidLog($"[SceneBuilder] Unlit/Transparent shader: {(unlitTextureShader != null ? "FOUND" : "NULL")}");
+            }
 
             // Keep white pixel texture as fallback
             whitePixelTex = new Texture2D(2, 2, TextureFormat.RGBA32, false);
@@ -390,32 +394,47 @@ namespace EmersynBigDay.Core
             return mat;
         }
 
+        // Round 10: Create or retrieve a cached 2x2 texture filled with the given color
+        private Texture2D GetColorTexture(Color c)
+        {
+            // Use color hash as key (avoids floating point comparison issues)
+            int key = ((int)(c.r * 255) << 24) | ((int)(c.g * 255) << 16) | ((int)(c.b * 255) << 8) | (int)(c.a * 255);
+            if (colorTexCache.TryGetValue(key, out Texture2D tex) && tex != null)
+                return tex;
+            tex = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+            tex.filterMode = FilterMode.Point;
+            var pixels = new Color[4];
+            for (int i = 0; i < 4; i++) pixels[i] = c;
+            tex.SetPixels(pixels);
+            tex.Apply();
+            colorTexCache[key] = tex;
+            return tex;
+        }
+
         private Material ColorMat(Color c)
         {
-            // Round 9 fix: Use Unlit/Color shader for solid-color geometry on Android.
-            // Mobile/Diffuse was NOT rendering _Color correctly on real devices (everything white).
-            // Unlit/Color directly renders the _Color property without any lighting dependency.
-            Material m;
+            // Round 10 fix: Use Unlit/Texture with a colored pixel texture for ALL platforms on Android.
+            // Round 9 proved: Unlit/Texture WORKS (wall textures render correctly on all 5 devices).
+            // But Unlit/Color FAILED (characters rendered wrong color - likely shader not included in build).
+            // Solution: Create a tiny 2x2 texture filled with the desired color, render via Unlit/Texture.
             #if UNITY_ANDROID && !UNITY_EDITOR
-            if (unlitColorShader != null)
+            if (unlitTextureShader != null)
             {
-                m = new Material(unlitColorShader);
-                m.color = c;
-                if (m.HasProperty("_Color"))
-                    m.SetColor("_Color", c);
+                var m = new Material(unlitTextureShader);
+                m.SetTexture("_MainTex", GetColorTexture(c));
                 m.renderQueue = 2000;
                 return m;
             }
             #endif
-            // Fallback to baseMat for Editor or if Unlit/Color not found
-            m = new Material(baseMat);
-            if (whitePixelTex != null && m.HasProperty("_MainTex"))
-                m.SetTexture("_MainTex", whitePixelTex);
-            m.color = c;
-            if (m.HasProperty("_Color"))
-                m.SetColor("_Color", c);
-            m.renderQueue = 2000;
-            return m;
+            // Fallback to baseMat for Editor or if Unlit/Texture not found
+            var mat = new Material(baseMat);
+            if (whitePixelTex != null && mat.HasProperty("_MainTex"))
+                mat.SetTexture("_MainTex", whitePixelTex);
+            mat.color = c;
+            if (mat.HasProperty("_Color"))
+                mat.SetColor("_Color", c);
+            mat.renderQueue = 2000;
+            return mat;
         }
 
         private void CreateCamera()
