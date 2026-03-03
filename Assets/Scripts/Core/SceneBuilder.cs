@@ -486,7 +486,7 @@ namespace EmersynBigDay.Core
                 if (camAspect < 0.5f) { adaptiveZoom = 13f; adaptivePitch = 10f; } // Very narrow phones
                 else if (camAspect < 0.6f) { adaptiveZoom = 14f; adaptivePitch = 10f; } // Normal phones
                 else { adaptiveZoom = 13f; adaptivePitch = 10f; } // Tablets
-                ctrl.MinZoom = 8f;
+                ctrl.MinZoom = 12f; // Round 50 (Bedrock): Raised from 8f to prevent fuzz zoom inside character
                 ctrl.MaxZoom = 25f; // Round 28: Reduced from 50 to prevent fuzz test zooming too far out
                 ctrl.CurrentZoom = adaptiveZoom;
                 ctrl.DefaultPitch = adaptivePitch;
@@ -620,13 +620,13 @@ namespace EmersynBigDay.Core
             RenderSettings.ambientSkyColor = new Color(0.80f, 0.90f, 1.0f);    // Round 48: Brighter soft blue sky
             RenderSettings.ambientEquatorColor = new Color(0.90f, 0.90f, 0.80f); // Round 48: Warm white equator
             RenderSettings.ambientGroundColor = new Color(0.60f, 0.70f, 0.80f); // Round 48: Cool ground bounce
-            RenderSettings.ambientIntensity = 1.3f; // Round 48: Brighter ambient for character visibility
+            RenderSettings.ambientIntensity = 0.5f; // Round 50 (Bedrock): Softer ambient for better shadow definition
 
             // Round 48 (Claude 4.5 Bedrock): Subtle fog for depth (Sims 4 style)
             RenderSettings.fog = true;
             RenderSettings.fogColor = new Color(0.90f, 0.87f, 0.93f); // Match pink background
             RenderSettings.fogMode = FogMode.ExponentialSquared;
-            RenderSettings.fogDensity = 0.008f; // Very subtle
+            RenderSettings.fogDensity = 0.005f; // Round 50: Even more subtle fog
 
             // Reflection settings for cartoon specular
             RenderSettings.defaultReflectionMode = UnityEngine.Rendering.DefaultReflectionMode.Skybox;
@@ -656,14 +656,14 @@ namespace EmersynBigDay.Core
             fo.transform.rotation = Quaternion.Euler(25f, 150f, 0f);
             fl.cullingMask = ~0;
 
-            // Rim/back light: bright warm highlight for character edges (Talking Tom style)
+            // Round 50 (Bedrock): Enhanced rim light for character edge definition (Sims 4 style)
             var ro = new GameObject("RimLight");
             var rl = ro.AddComponent<Light>();
             rl.type = LightType.Directional;
-            rl.color = new Color(1.0f, 0.92f, 0.75f); // Warm golden rim
-            rl.intensity = 0.7f; // Stronger rim for cartoon edge pop
+            rl.color = new Color(1.0f, 0.95f, 0.9f); // Warm white rim
+            rl.intensity = 0.8f; // Round 50: Stronger for edge pop
             rl.shadows = LightShadows.None;
-            ro.transform.rotation = Quaternion.Euler(-10f, 180f, 0f);
+            ro.transform.rotation = Quaternion.Euler(45f, 135f, 0f); // Round 50: Behind-side angle
             rl.cullingMask = ~0;
 
             // Top/hair light: subtle highlight from above for character definition
