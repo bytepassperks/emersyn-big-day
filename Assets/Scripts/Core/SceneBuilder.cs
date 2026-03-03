@@ -455,12 +455,12 @@ namespace EmersynBigDay.Core
             mainCamera.clearFlags = CameraClearFlags.SolidColor;
             // Round 20 (Claude 4.5 Bedrock): Soft pink background to match room aesthetic
             mainCamera.backgroundColor = new Color(0.95f, 0.88f, 0.92f);
-            // Round 49 (Claude 4.5 Bedrock): Balanced FOV - show all characters + room
+            // Round 54 (Claude 4.5 Bedrock): Lower FOV reduces perspective distortion for Sims-style framing
             float aspect = (float)Screen.width / Screen.height;
             float adaptiveFOV;
-            if (aspect < 0.5f) adaptiveFOV = 65f;      // Very narrow phones
-            else if (aspect < 0.6f) adaptiveFOV = 60f;  // Normal phones
-            else adaptiveFOV = 55f;                      // Tablets
+            if (aspect < 0.5f) adaptiveFOV = 50f;      // Very narrow phones
+            else if (aspect < 0.6f) adaptiveFOV = 48f;  // Normal phones
+            else adaptiveFOV = 45f;                      // Tablets
             mainCamera.fieldOfView = adaptiveFOV;
             Debug.Log($"[SceneBuilder] Screen {Screen.width}x{Screen.height} aspect={aspect:F2} FOV={adaptiveFOV}");
             mainCamera.nearClipPlane = 0.1f;
@@ -483,12 +483,12 @@ namespace EmersynBigDay.Core
                 // Round 49 (Claude 4.5 Bedrock): Balanced zoom to show all characters
                 float camAspect = (float)Screen.width / Screen.height;
                 float adaptiveZoom, adaptivePitch;
-                // Round 53 (Bedrock): Pull camera back to 18-20f to show full characters + room
-                if (camAspect < 0.5f) { adaptiveZoom = 20f; adaptivePitch = 15f; } // Very narrow phones
-                else if (camAspect < 0.6f) { adaptiveZoom = 19f; adaptivePitch = 15f; } // Normal phones
-                else { adaptiveZoom = 18f; adaptivePitch = 15f; } // Tablets
-                ctrl.MinZoom = adaptiveZoom; // Round 53 (Bedrock): Lock MinZoom = DefaultZoom
-                ctrl.MaxZoom = 25f; // Round 53: Allow some zoom out range
+                // Round 54 (Bedrock): Much further camera (35-40f) for Sims-style environmental framing
+                if (camAspect < 0.5f) { adaptiveZoom = 40f; adaptivePitch = 28f; } // Very narrow phones
+                else if (camAspect < 0.6f) { adaptiveZoom = 38f; adaptivePitch = 26f; } // Normal phones
+                else { adaptiveZoom = 35f; adaptivePitch = 25f; } // Tablets
+                ctrl.MinZoom = adaptiveZoom; // Round 54 (Bedrock): Lock MinZoom = DefaultZoom
+                ctrl.MaxZoom = 50f; // Round 54: Allow some zoom out range
                 ctrl.CurrentZoom = adaptiveZoom;
                 ctrl.DefaultPitch = adaptivePitch;
                 ctrl.SpringStiffness = 200f;
@@ -499,14 +499,14 @@ namespace EmersynBigDay.Core
             // Round 49: Balanced camera to show all characters and room
             float initAspect = (float)Screen.width / Screen.height;
             float initZoom, initPitch;
-            // Round 53: Match camera controller zoom values
-            if (initAspect < 0.5f) { initZoom = 20f; initPitch = 15f; }
-            else if (initAspect < 0.6f) { initZoom = 19f; initPitch = 15f; }
-            else { initZoom = 18f; initPitch = 15f; }
+            // Round 54: Match camera controller zoom values
+            if (initAspect < 0.5f) { initZoom = 40f; initPitch = 28f; }
+            else if (initAspect < 0.6f) { initZoom = 38f; initPitch = 26f; }
+            else { initZoom = 35f; initPitch = 25f; }
             float initPitchRad = initPitch * Mathf.Deg2Rad;
             Vector3 camDir = new Vector3(0f, Mathf.Sin(initPitchRad), -Mathf.Cos(initPitchRad));
             mainCamera.transform.position = camDir * initZoom;
-            mainCamera.transform.LookAt(new Vector3(0f, 1.5f, 0f)); // Round 53: Look at head level
+            mainCamera.transform.LookAt(new Vector3(0f, 0.8f, 0f)); // Round 54: Lower lookAt for characters in lower-middle frame
             Debug.Log($"[SceneBuilder] Initial camera R49: aspect={initAspect:F2} zoom={initZoom} pitch={initPitch} pos={mainCamera.transform.position}");
         }
 
@@ -866,17 +866,18 @@ namespace EmersynBigDay.Core
             characterContainer = new GameObject("Characters").transform;
             // Round 48 (Claude 4.5 Bedrock): Adaptive spacing, screen-filling layout
             // Emersyn center-front (hero position)
-            emersynObj = MakeCharacter("Emersyn", new Vector3(0f, 0f, 0f), CharBodyColors[0], 0.8f, true);
+            // Round 54 (Bedrock): Reduced character scale from 0.8f to 0.45f for Sims-style framing
+            emersynObj = MakeCharacter("Emersyn", new Vector3(0f, 0f, 0f), CharBodyColors[0], 0.45f, true);
             emersynObj.transform.SetParent(characterContainer);
             if (CameraSystem.CameraController.Instance != null)
                 CameraSystem.CameraController.Instance.Target = emersynObj.transform;
             
             // Round 48: Adaptive radius based on screen aspect ratio
             float screenAspect = (float)Screen.width / Screen.height;
-            // Round 53: Tighter character grouping so all fit in wider camera view
-            float baseRadius = 3.5f;
+            // Round 54 (Bedrock): Wider character spread for environmental framing at zoom 35-40f
+            float baseRadius = 4.0f;
             float charRadius = baseRadius * (1.8f / Mathf.Max(screenAspect, 0.4f));
-            charRadius = Mathf.Clamp(charRadius, 3f, 7f);
+            charRadius = Mathf.Clamp(charRadius, 4f, 10f);
             float startAngle = 150f;
             float angleStep = 28f;
             for (int i = 1; i < CharacterNames.Length; i++)
@@ -884,13 +885,14 @@ namespace EmersynBigDay.Core
                 float angle = (startAngle + (i - 1) * angleStep) * Mathf.Deg2Rad;
                 float x = Mathf.Sin(angle) * charRadius;
                 float z = Mathf.Cos(angle) * charRadius;
-                var f = MakeCharacter(CharacterNames[i], new Vector3(x, 0, z), CharBodyColors[i], 0.65f, false);
+                // Round 54 (Bedrock): Reduced other character scale from 0.65f to 0.35f
+                var f = MakeCharacter(CharacterNames[i], new Vector3(x, 0, z), CharBodyColors[i], 0.35f, false);
                 f.transform.SetParent(characterContainer);
             }
             
             // Pets in front-row arc, adaptive spread
-            // Round 53: Tighter pet grouping
-            float petRadius = charRadius * 0.4f;
+            // Round 54: Pet grouping adjusted for wider layout
+            float petRadius = charRadius * 0.35f;
             for (int i = 0; i < PetNames.Length; i++)
             {
                 float angle = (160f + i * 40f) * Mathf.Deg2Rad;
@@ -907,8 +909,8 @@ namespace EmersynBigDay.Core
                     root.transform.position = pos;
                     // Round 47 (Claude 4.5 Bedrock): Rotate 180° so characters FACE the camera (camera is at -Z)
                     root.transform.rotation = Quaternion.Euler(0f, 180f, 0f);
-                    // Round 47: Reduced scale from 1.3x to 0.9x so characters don't fill entire viewport
-                    root.transform.localScale = Vector3.one * scale * 0.9f;
+                    // Round 54 (Bedrock): Reduced global multiplier from 0.9f to 0.7f for Sims-style framing
+                    root.transform.localScale = Vector3.one * scale * 0.7f;
             // Emersyn's actual skin color: brown skin (age 6)
             Color skin = isMain ? new Color(0.55f, 0.38f, 0.28f) : new Color(1f, 0.88f, 0.78f);
 

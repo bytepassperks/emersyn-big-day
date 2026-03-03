@@ -35,10 +35,10 @@ namespace EmersynBigDay.CameraSystem
         public float OrbitSpeed = 120f;
         public float MinPitch = 10f;
         public float MaxPitch = 80f;
-        // Round 53 (Claude 4.5 Bedrock): Higher pitch for overview of characters + room
-        public float DefaultPitch = 15f;
+        // Round 54 (Claude 4.5 Bedrock): Steeper pitch for Sims-style environmental framing
+        public float DefaultPitch = 26f;
         private float currentYaw = 0f;
-        private float currentPitch = 15f;
+        private float currentPitch = 26f;
 
         [Header("Screen Shake")]
         public float ShakeDecay = 5f;
@@ -99,8 +99,8 @@ namespace EmersynBigDay.CameraSystem
             Vector3 desiredPosition = CalculateDesiredPosition();
             transform.position = desiredPosition;
             springVelocity = Vector3.zero;
-            // Round 53 (Claude 4.5 Bedrock): Look at head level (y=1.5) for better framing
-            Vector3 lookTarget = Target.position + Vector3.up * 1.5f;
+            // Round 54 (Claude 4.5 Bedrock): Lower lookAt (y=0.8) for characters in lower-middle frame
+            Vector3 lookTarget = Target.position + Vector3.up * 0.8f;
             transform.LookAt(lookTarget);
             initialPositionSet = true;
         }
@@ -114,8 +114,8 @@ namespace EmersynBigDay.CameraSystem
             springVelocity += springForce * Time.deltaTime;
             transform.position += springVelocity * Time.deltaTime;
 
-            // Round 53 (Claude 4.5 Bedrock): Look at head level (y=1.5) for overview framing
-            Vector3 lookTarget = Target.position + Vector3.up * 1.5f;
+            // Round 54 (Claude 4.5 Bedrock): Lower lookAt (y=0.8) for Sims-style framing
+            Vector3 lookTarget = Target.position + Vector3.up * 0.8f;
             Quaternion targetRotation = Quaternion.LookRotation(lookTarget - transform.position);
             transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, RotationSpeed * Time.deltaTime);
         }
@@ -221,11 +221,11 @@ namespace EmersynBigDay.CameraSystem
         {
             currentYaw = 0f;
             currentPitch = DefaultPitch;
-            // Round 53: Pull camera back to show full characters + room
+            // Round 54: Much further camera for Sims-style environmental framing
             float resetAspect = (float)Screen.width / Screen.height;
-            if (resetAspect < 0.5f) CurrentZoom = 20f;
-            else if (resetAspect < 0.6f) CurrentZoom = 19f;
-            else CurrentZoom = 18f; // Round 53: Show all characters + room
+            if (resetAspect < 0.5f) CurrentZoom = 40f;
+            else if (resetAspect < 0.6f) CurrentZoom = 38f;
+            else CurrentZoom = 35f; // Round 54: Show all characters + room context
             frameCount = 0; // Round 25: Reset to force exact position again
             springVelocity = Vector3.zero;
             isTransitioning = false;
