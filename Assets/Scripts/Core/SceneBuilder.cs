@@ -452,8 +452,8 @@ namespace EmersynBigDay.Core
             mainCamera.clearFlags = CameraClearFlags.SolidColor;
             // Round 20 (Claude 4.5 Bedrock): Soft pink background to match room aesthetic
             mainCamera.backgroundColor = new Color(0.95f, 0.88f, 0.92f);
-            // Round 21 (Claude 4.5 Bedrock): WIDER FOV for full room visibility — was 32 (too tight)
-            mainCamera.fieldOfView = 60f;
+            // Round 22 (Claude 4.5 Bedrock): FOV 50 for proper dollhouse framing
+            mainCamera.fieldOfView = 50f;
             mainCamera.nearClipPlane = 0.1f;
             mainCamera.farClipPlane = 100f;
             // Claude Bedrock fix #1: FORCE Forward rendering - Deferred fails silently on Android GPUs
@@ -471,20 +471,20 @@ namespace EmersynBigDay.Core
             if (mainCamera.GetComponent<CameraSystem.CameraController>() == null)
             {
                 var ctrl = mainCamera.gameObject.AddComponent<CameraSystem.CameraController>();
-                // Round 21 (Claude 4.5 Bedrock): Configure for Sims 4 "dollhouse" overhead view
-                ctrl.MinZoom = 8f;
-                ctrl.MaxZoom = 25f;
-                ctrl.CurrentZoom = 18f; // Far enough to see entire room
-                ctrl.DefaultPitch = 45f; // 45° overhead angle like Sims 4
-                ctrl.SpringStiffness = 100f;
-                ctrl.SpringDamping = 20f;
-                ctrl.Offset = new Vector3(0f, 18f, -15f);
+                // Round 22 (Claude 4.5 Bedrock): Zoom 35, Pitch 55° for true Sims 4 dollhouse overhead view
+                ctrl.MinZoom = 10f;
+                ctrl.MaxZoom = 50f;
+                ctrl.CurrentZoom = 35f; // Much further back to see entire room
+                ctrl.DefaultPitch = 55f; // Steeper overhead angle
+                ctrl.SpringStiffness = 120f;
+                ctrl.SpringDamping = 25f;
+                ctrl.Offset = new Vector3(0f, 25f, -20f);
             }
-            // Round 21 (Claude 4.5 Bedrock): Set initial camera position matching CameraController math
-            // With Zoom=18, Pitch=45°: direction=(0, 0.707, -0.707), pos = target + dir*18 = (0, 12.73, -12.73)
-            float pitchRad = 45f * Mathf.Deg2Rad;
+            // Round 22 (Claude 4.5 Bedrock): Set initial camera position for full room view
+            // With Zoom=35, Pitch=55°: direction=(0, 0.819, -0.574), pos = (0, 28.67, -20.07)
+            float pitchRad = 55f * Mathf.Deg2Rad;
             Vector3 camDir = new Vector3(0f, Mathf.Sin(pitchRad), -Mathf.Cos(pitchRad));
-            mainCamera.transform.position = camDir * 18f;
+            mainCamera.transform.position = camDir * 35f;
             mainCamera.transform.LookAt(new Vector3(0f, 1.5f, 0f));
         }
 
@@ -1909,8 +1909,9 @@ namespace EmersynBigDay.Core
 
                 if (floorAlbedo != null)
                 {
-                    // Round 20: Floor tiling — single elegant repeat for wood plank feel
-                    Vector2 floorTiling = new Vector2(1.5f, 1.5f);
+                    // Round 22 (Claude 4.5 Bedrock): Floor 12x10 units — tile texture for natural wood plank density
+                    // Values > 1 = more repeats = smaller pattern. 6x5 tiles for nice planking
+                    Vector2 floorTiling = new Vector2(6f, 5f);
                     Material floorMat = CreatePBRMaterial(floorAlbedo, floorNormal, floorTiling);
                     ApplyMaterialToChild(roomContainer, "Floor", floorMat);
                 }
@@ -1927,22 +1928,23 @@ namespace EmersynBigDay.Core
 
                 if (wallAlbedo != null)
                 {
-                    // Round 20 (Claude 4.5 Bedrock): DRAMATICALLY reduce tiling — single pattern across wall
-                    // Back wall is 12 units wide — use ~0.5-0.6 tiling for 1 large elegant pattern
-                    Vector2 backWallTiling = new Vector2(0.6f, 0.6f);
+                    // Round 22 (Claude 4.5 Bedrock): CRITICAL FIX — tiling < 1 ZOOMS IN (wrong!)
+                    // Back wall is 12 wide x 5 tall — use (6, 3) for 6 tiles wide, 3 tall = proper small pattern
+                    Vector2 backWallTiling = new Vector2(6f, 3f);
                     Material backWallMat = CreatePBRMaterial(wallAlbedo, wallNormal, backWallTiling);
                     // Round 20: Soften wall texture by reducing glossiness and adding slight tint
                     backWallMat.SetFloat("_Glossiness", 0.1f);
                     ApplyMaterialToChild(roomContainer, "BackWall", backWallMat);
 
-                    Vector2 sideWallTiling = new Vector2(0.5f, 0.6f);
+                    // Round 22: Side walls are 10 deep x 5 tall — (5, 3) tiles
+                    Vector2 sideWallTiling = new Vector2(5f, 3f);
                     Material sideWallMat = CreatePBRMaterial(wallAlbedo, wallNormal, sideWallTiling);
                     sideWallMat.SetFloat("_Glossiness", 0.1f);
                     ApplyMaterialToChild(roomContainer, "LeftWall", sideWallMat);
                     ApplyMaterialToChild(roomContainer, "RightWall", sideWallMat);
 
-                    // Round 20: Ceiling uses even less tiling — subtle pattern overhead
-                    Vector2 ceilingTiling = new Vector2(0.4f, 0.4f);
+                    // Round 22: Ceiling 12x10 — (4, 3) for subtle overhead pattern
+                    Vector2 ceilingTiling = new Vector2(4f, 3f);
                     Material ceilingMat = CreatePBRMaterial(wallAlbedo, wallNormal, ceilingTiling);
                     ceilingMat.SetFloat("_Glossiness", 0.05f);
                     ApplyMaterialToChild(roomContainer, "Ceiling", ceilingMat);
