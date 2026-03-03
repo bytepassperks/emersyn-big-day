@@ -35,10 +35,10 @@ namespace EmersynBigDay.CameraSystem
         public float OrbitSpeed = 120f;
         public float MinPitch = 10f;
         public float MaxPitch = 80f;
-        // Round 54 (Claude 4.5 Bedrock): Steeper pitch for Sims-style environmental framing
-        public float DefaultPitch = 26f;
+        // Round 56 (Claude 4.5 Bedrock): 45° pitch for true Sims dollhouse top-down view
+        public float DefaultPitch = 45f;
         private float currentYaw = 0f;
-        private float currentPitch = 26f;
+        private float currentPitch = 45f;
 
         [Header("Screen Shake")]
         public float ShakeDecay = 5f;
@@ -221,11 +221,11 @@ namespace EmersynBigDay.CameraSystem
         {
             currentYaw = 0f;
             currentPitch = DefaultPitch;
-            // Round 54: Much further camera for Sims-style environmental framing
+            // Round 56: Steeper pitch with closer zoom for dollhouse view
             float resetAspect = (float)Screen.width / Screen.height;
-            if (resetAspect < 0.5f) CurrentZoom = 40f;
-            else if (resetAspect < 0.6f) CurrentZoom = 38f;
-            else CurrentZoom = 35f; // Round 54: Show all characters + room context
+            if (resetAspect < 0.5f) CurrentZoom = 30f;
+            else if (resetAspect < 0.6f) CurrentZoom = 28f;
+            else CurrentZoom = 25f; // Round 56: Show characters + room floor
             frameCount = 0; // Round 25: Reset to force exact position again
             springVelocity = Vector3.zero;
             isTransitioning = false;
