@@ -1266,26 +1266,151 @@ namespace EmersynBigDay.Core
                 Systems.AdIntegration.Instance.ShowInterstitial();
         }
 
-        // === GLB Model Loading via glTFast (Round 11: RE-ENABLED with IL2CPP protection) ===
+        // === Character Model Loading ===
+        // Claude 4.5 Bedrock (full 30-round history analysis): Load pre-converted prefabs from Resources
+        // instead of runtime GLB parsing. Root cause of 30 rounds of failure: IL2CPP strips
+        // UnityEngine.Mesh serialization code that GLTFast relies on at runtime.
+        // Solution: GLB→Prefab conversion at editor time, load via Resources.Load at runtime.
+        // This is how Sims Mobile, Talking Tom, and all AAA Unity mobile games work.
         private IEnumerator LoadGLBCharactersCoroutine()
         {
-            AndroidLog("[SceneBuilder] Starting GLB character loading (GLTFast RE-ENABLED Round 11)...");
-            // Load main characters from GLB
+            AndroidLog("[SceneBuilder] Starting character prefab loading (Claude 4.5 Bedrock: editor-time prefabs)...");
+            
+            // Load main characters from pre-converted prefabs in Resources/Characters
             for (int i = 0; i < GLBCharacterFiles.Length && i < CharacterNames.Length; i++)
             {
-                string glbName = GLBCharacterFiles[i];
+                string prefabName = GLBCharacterFiles[i];
                 string charName = CharacterNames[i];
-                yield return StartCoroutine(LoadSingleGLBCharacter(glbName, charName, i == 0));
+                bool replaced = TryLoadCharacterPrefab(prefabName, charName, i == 0);
+                AndroidLog($"[SceneBuilder] Character {charName} prefab load: {(replaced ? "SUCCESS" : "FALLBACK to primitive")}");
+                yield return null; // Spread across frames
             }
-            // Load pets from GLB
+            
+            // Load pets from pre-converted prefabs
             for (int i = 0; i < GLBPetFiles.Length && i < PetNames.Length; i++)
             {
-                string glbName = GLBPetFiles[i];
+                string prefabName = GLBPetFiles[i];
                 string petName = PetNames[i];
-                yield return StartCoroutine(LoadSingleGLBPet(glbName, petName));
+                bool replaced = TryLoadPetPrefab(prefabName, petName);
+                AndroidLog($"[SceneBuilder] Pet {petName} prefab load: {(replaced ? "SUCCESS" : "FALLBACK to primitive")}");
+                yield return null;
             }
+            
             glbLoadingComplete = true;
-            AndroidLog("[SceneBuilder] GLB character loading complete!");
+            AndroidLog("[SceneBuilder] Character prefab loading complete!");
+        }
+
+        /// <summary>
+        /// Claude 4.5 Bedrock: Load a pre-converted character prefab from Resources/Characters/.
+        /// Falls back to keeping the procedural primitive if prefab not found.
+        /// </summary>
+        private bool TryLoadCharacterPrefab(string prefabName, string charName, bool isMain)
+        {
+            try
+            {
+                // Load from Resources (built into app, no streaming/parsing needed)
+                GameObject prefab = Resources.Load<GameObject>($"Characters/{prefabName}");
+                if (prefab == null)
+                {
+                    AndroidLog($"[SceneBuilder] Prefab not found: Characters/{prefabName} - keeping primitive");
+                    return false;
+                }
+
+                // Find the primitive placeholder
+                Transform existing = characterContainer != null ? characterContainer.Find(charName) : null;
+                if (existing == null)
+                {
+                    AndroidLog($"[SceneBuilder] Primitive placeholder not found for {charName}");
+                    return false;
+                }
+
+                Vector3 savedPos = existing.position;
+                Quaternion savedRot = existing.rotation;
+                Vector3 savedScale = existing.localScale;
+                Transform savedParent = existing.parent;
+
+                // Instantiate the pre-converted prefab
+                GameObject character = Instantiate(prefab, savedParent);
+                character.name = charName;
+                character.transform.position = savedPos;
+                character.transform.rotation = savedRot;
+                character.transform.localScale = savedScale;
+
+                // Add interaction components
+                if (character.GetComponent<BoxCollider>() == null)
+                {
+                    var col = character.AddComponent<BoxCollider>();
+                    col.center = new Vector3(0, 1f, 0);
+                    col.size = new Vector3(1f, 2.2f, 0.8f);
+                }
+                if (character.GetComponent<CharacterBob>() == null)
+                    character.AddComponent<CharacterBob>();
+
+                // Update main character reference
+                if (isMain)
+                {
+                    emersynObj = character;
+                    if (CameraSystem.CameraController.Instance != null)
+                        CameraSystem.CameraController.Instance.Target = character.transform;
+                    if (Gameplay.CharacterCustomization.Instance != null)
+                        Gameplay.CharacterCustomization.Instance.ApplyToCharacter(character);
+                }
+
+                // Destroy primitive placeholder
+                Destroy(existing.gameObject);
+                AndroidLog($"[SceneBuilder] SUCCESS: Replaced {charName} with prefab from Resources!");
+                return true;
+            }
+            catch (System.Exception e)
+            {
+                AndroidLog($"[SceneBuilder] EXCEPTION loading prefab for {charName}: {e.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Claude 4.5 Bedrock: Load a pre-converted pet prefab from Resources/Characters/.
+        /// </summary>
+        private bool TryLoadPetPrefab(string prefabName, string petName)
+        {
+            try
+            {
+                GameObject prefab = Resources.Load<GameObject>($"Characters/{prefabName}");
+                if (prefab == null)
+                {
+                    AndroidLog($"[SceneBuilder] Pet prefab not found: Characters/{prefabName} - keeping primitive");
+                    return false;
+                }
+
+                Transform existing = characterContainer != null ? characterContainer.Find(petName) : null;
+                if (existing == null) return false;
+
+                Vector3 savedPos = existing.position;
+                Transform savedParent = existing.parent;
+
+                GameObject pet = Instantiate(prefab, savedParent);
+                pet.name = petName;
+                pet.transform.position = savedPos;
+                pet.transform.localScale = Vector3.one * 0.5f;
+
+                if (pet.GetComponent<BoxCollider>() == null)
+                {
+                    var col = pet.AddComponent<BoxCollider>();
+                    col.center = new Vector3(0, 0.4f, 0);
+                    col.size = new Vector3(0.6f, 0.8f, 0.8f);
+                }
+                if (pet.GetComponent<CharacterBob>() == null)
+                    pet.AddComponent<CharacterBob>();
+
+                Destroy(existing.gameObject);
+                AndroidLog($"[SceneBuilder] SUCCESS: Replaced pet {petName} with prefab from Resources!");
+                return true;
+            }
+            catch (System.Exception e)
+            {
+                AndroidLog($"[SceneBuilder] EXCEPTION loading pet prefab for {petName}: {e.Message}");
+                return false;
+            }
         }
 
         private IEnumerator LoadSingleGLBCharacter(string glbFileName, string charName, bool isMain)

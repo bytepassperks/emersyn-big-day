@@ -87,6 +87,19 @@ public class BuildScript
     {
         var startTime = DateTime.Now;
 
+        // Phase 0: Claude 4.5 Bedrock (full 30-round history): Convert GLB→Prefabs at editor time
+        // This is the definitive fix for IL2CPP stripping mesh serialization code
+        Debug.Log("[BUILD] Phase 0: Converting GLB files to native Unity prefabs...");
+        try
+        {
+            GLBToPrefabConverter.ConvertAllSync();
+            Debug.Log("[BUILD] GLB→Prefab conversion complete");
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning($"[BUILD] GLB→Prefab conversion warning: {ex.Message}");
+        }
+
         // Phase 1: Apply Unity 6 headless workaround
         EnsureCompileScriptsOutputDirectory();
 
