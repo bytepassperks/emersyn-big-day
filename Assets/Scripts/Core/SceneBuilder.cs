@@ -7,6 +7,11 @@ using System.IO;
 using System.Threading.Tasks;
 using System.Runtime.InteropServices;
 using GLTFast;
+using GLTFast.Materials;
+// Round 16 (Claude 4.5 Bedrock): Custom IMaterialGenerator to intercept material creation.
+// Root cause: GLTFast uses glTF/PbrMetallicRoughness shader (NOT Standard), so post-hoc _Color
+// modification never worked. Fix: Inject custom material generator that creates Standard shader
+// materials with correct baseColorFactor colors DURING import, not after.
 // Round 11 (Claude 4.5 Bedrock): GLTFast RE-ENABLED with proper IL2CPP protection.
 // Root cause of original blue screen was IL2CPP code stripping, NOT GLTFast itself.
 // Fix: Comprehensive link.xml preserving glTFast + Unity assemblies + Newtonsoft.Json.
@@ -1266,8 +1271,13 @@ namespace EmersynBigDay.Core
                 AndroidLog($"[SceneBuilder] GLB data loaded: {glbData.Length} bytes for {charName}");
             }
 
-            // Step 2: Parse GLB with GltfImport
-            var gltf = new GltfImport();
+            // Step 2: Parse GLB to extract material colors, then load with custom material generator
+            // Round 16 (Claude 4.5 Bedrock): Use custom IMaterialGenerator to inject correct colors
+            // at material creation time, instead of trying to modify materials after GLTFast creates them.
+            var parsedColors = ParseMaterialColorsFromGLB(glbData);
+            AndroidLog($"[SceneBuilder] Round 16: Parsed {parsedColors.Count} material colors for {charName}");
+            var customMatGen = new StandardColorMaterialGenerator(parsedColors);
+            var gltf = new GltfImport(materialGenerator: customMatGen);
             var loadTask = gltf.LoadGltfBinary(glbData, new System.Uri(uri));
 
             // Wait for async task to complete (coroutine-safe polling)
@@ -1285,7 +1295,7 @@ namespace EmersynBigDay.Core
                 yield break;
             }
 
-            AndroidLog($"[SceneBuilder] GLB parsed successfully for {charName}");
+            AndroidLog($"[SceneBuilder] GLB parsed successfully for {charName} with custom material generator");
 
             // Step 3: Find the primitive placeholder
             Transform existing = characterContainer != null ? characterContainer.Find(charName) : null;
@@ -1318,12 +1328,11 @@ namespace EmersynBigDay.Core
                 yield break;
             }
 
-            AndroidLog($"[SceneBuilder] GLB instantiated for {charName}");
+            AndroidLog($"[SceneBuilder] GLB instantiated for {charName} with custom materials");
 
-            // Round 14 (Claude 4.5 Bedrock): Parse GLB binary to extract baseColorFactor
-            // BEFORE GLTFast converts materials to Standard(Instance) _Color=white.
-            // Then apply the parsed colors to the instantiated Standard materials.
-            ApplyParsedMaterialColors(glbObj, glbData);
+            // Round 16: Materials already have correct colors from custom generator.
+            // Verify and log the final material colors for debugging.
+            VerifyMaterialColors(glbObj, charName);
 
             // Step 6: Add interaction components
             var col = glbObj.AddComponent<BoxCollider>();
@@ -1365,8 +1374,11 @@ namespace EmersynBigDay.Core
                 AndroidLog($"[SceneBuilder] Pet GLB data: {glbData.Length} bytes for {petName}");
             }
 
-            // Step 2: Parse with GltfImport
-            var gltf = new GltfImport();
+            // Step 2: Parse with GltfImport using custom material generator (Round 16)
+            var parsedColors = ParseMaterialColorsFromGLB(glbData);
+            AndroidLog($"[SceneBuilder] Round 16: Parsed {parsedColors.Count} material colors for pet {petName}");
+            var customMatGen = new StandardColorMaterialGenerator(parsedColors);
+            var gltf = new GltfImport(materialGenerator: customMatGen);
             var loadTask = gltf.LoadGltfBinary(glbData, new System.Uri(uri));
             while (!loadTask.IsCompleted)
                 yield return null;
@@ -1399,8 +1411,8 @@ namespace EmersynBigDay.Core
                 yield break;
             }
 
-            // Round 14: Apply parsed material colors from GLB binary
-            ApplyParsedMaterialColors(glbObj, glbData);
+            // Round 16: Materials already have correct colors from custom generator
+            VerifyMaterialColors(glbObj, petName);
             var col = glbObj.AddComponent<BoxCollider>();
             col.center = new Vector3(0, 0.4f, 0);
             col.size = new Vector3(0.6f, 0.8f, 0.8f);
@@ -1631,6 +1643,33 @@ namespace EmersynBigDay.Core
                 }
             }
             AndroidLog($"[SceneBuilder] Round 15: Applied {totalApplied} colors by name matching across {totalRenderers} renderers");
+        }
+
+        /// <summary>
+        /// Round 16: Verify and log material colors on instantiated GLB objects for debugging.
+        /// </summary>
+        private void VerifyMaterialColors(GameObject obj, string objectName)
+        {
+            var renderers = obj.GetComponentsInChildren<Renderer>();
+            int totalRenderers = renderers.Length;
+            int totalMaterials = 0;
+            foreach (var renderer in renderers)
+            {
+                var mats = renderer.sharedMaterials;
+                for (int m = 0; m < mats.Length; m++)
+                {
+                    var mat = mats[m];
+                    if (mat == null) continue;
+                    totalMaterials++;
+                    Color color = Color.white;
+                    if (mat.HasProperty("_Color"))
+                    {
+                        color = mat.GetColor("_Color");
+                    }
+                    AndroidLog($"[SceneBuilder] VERIFY {objectName}: renderer='{renderer.name}' mat[{m}]='{mat.name}' shader='{mat.shader.name}' color=({color.r:F2},{color.g:F2},{color.b:F2},{color.a:F2})");
+                }
+            }
+            AndroidLog($"[SceneBuilder] Round 16 VERIFY: {objectName} has {totalRenderers} renderers, {totalMaterials} materials");
         }
 
         // === PBR Texture Loading for Rooms ===
@@ -1953,6 +1992,173 @@ namespace EmersynBigDay.Core
             if (t.font == null) t.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             t.alignment = TextAnchor.MiddleCenter;
             return obj;
+        }
+    }
+
+    /// <summary>
+    /// Round 16 (Claude 4.5 Bedrock): Custom IMaterialGenerator that creates Standard shader materials
+    /// with correct baseColorFactor colors DURING GLTFast import.
+    /// 
+    /// ROOT CAUSE: GLTFast's default BuiltInMaterialGenerator uses glTF/PbrMetallicRoughness shader
+    /// (NOT Unity's Standard shader). Post-hoc modification of _Color on these materials never worked
+    /// because the shader property names are different. This generator intercepts material creation
+    /// and creates Standard shader materials with the correct colors from the start.
+    /// </summary>
+    public class StandardColorMaterialGenerator : IMaterialGenerator
+    {
+        private readonly System.Collections.Generic.Dictionary<string, Color> m_MaterialColors;
+        private Shader m_StandardShader;
+        private Texture2D m_WhiteTex;
+        private GLTFast.Logging.ICodeLogger m_Logger;
+
+        public StandardColorMaterialGenerator(System.Collections.Generic.Dictionary<string, Color> materialColors)
+        {
+            m_MaterialColors = materialColors ?? new System.Collections.Generic.Dictionary<string, Color>();
+        }
+
+        public void SetLogger(GLTFast.Logging.ICodeLogger logger)
+        {
+            m_Logger = logger;
+        }
+
+        private Shader GetStandardShader()
+        {
+            if (m_StandardShader == null)
+            {
+                m_StandardShader = Shader.Find("Standard");
+                if (m_StandardShader == null)
+                {
+                    // Fallback: try other common shaders
+                    m_StandardShader = Shader.Find("Mobile/Diffuse");
+                }
+                if (m_StandardShader == null)
+                {
+                    m_StandardShader = Shader.Find("Unlit/Color");
+                }
+            }
+            return m_StandardShader;
+        }
+
+        private Texture2D GetWhiteTexture()
+        {
+            if (m_WhiteTex == null)
+            {
+                m_WhiteTex = new Texture2D(4, 4);
+                var pixels = new Color[16];
+                for (int i = 0; i < 16; i++) pixels[i] = Color.white;
+                m_WhiteTex.SetPixels(pixels);
+                m_WhiteTex.Apply();
+            }
+            return m_WhiteTex;
+        }
+
+        public UnityEngine.Material GetDefaultMaterial(bool pointsSupport = false)
+        {
+            var shader = GetStandardShader();
+            if (shader == null) return null;
+            var mat = new UnityEngine.Material(shader);
+            mat.name = "glTF-Default-Material";
+            mat.SetColor("_Color", Color.white);
+            mat.SetTexture("_MainTex", GetWhiteTexture());
+            return mat;
+        }
+
+        public UnityEngine.Material GenerateMaterial(
+            GLTFast.Schema.MaterialBase gltfMaterial,
+            IGltfReadable gltf,
+            bool pointsSupport = false)
+        {
+            var shader = GetStandardShader();
+            if (shader == null)
+            {
+                Debug.LogError("[StandardColorMaterialGenerator] Standard shader not found!");
+                return null;
+            }
+
+            var material = new UnityEngine.Material(shader);
+            string matName = gltfMaterial.name ?? "unnamed";
+            material.name = matName;
+
+            // Determine the base color from GLTFast's parsed material data
+            Color baseColor = Color.white;
+            bool colorFound = false;
+
+            // First priority: use our pre-parsed GLB binary colors (most reliable)
+            if (m_MaterialColors.ContainsKey(matName))
+            {
+                baseColor = m_MaterialColors[matName];
+                colorFound = true;
+                Debug.Log($"[StandardColorMaterialGenerator] Material '{matName}': using pre-parsed color ({baseColor.r:F2},{baseColor.g:F2},{baseColor.b:F2},{baseColor.a:F2})");
+            }
+
+            // Second priority: read from GLTFast's parsed PbrMetallicRoughness
+            if (!colorFound && gltfMaterial.PbrMetallicRoughness != null)
+            {
+                baseColor = gltfMaterial.PbrMetallicRoughness.BaseColor;
+                // GLTFast stores colors in linear space, convert to gamma for Standard shader
+                baseColor = baseColor.gamma;
+                colorFound = true;
+                Debug.Log($"[StandardColorMaterialGenerator] Material '{matName}': using PBR baseColor ({baseColor.r:F2},{baseColor.g:F2},{baseColor.b:F2},{baseColor.a:F2})");
+            }
+
+            if (!colorFound)
+            {
+                Debug.Log($"[StandardColorMaterialGenerator] Material '{matName}': no color found, using white");
+            }
+
+            // Apply the color to Standard shader's _Color property
+            material.SetColor("_Color", baseColor);
+
+            // Set white texture so _Color tinting works correctly
+            material.SetTexture("_MainTex", GetWhiteTexture());
+
+            // Configure Standard shader for opaque rendering (most common for character models)
+            material.SetFloat("_Mode", 0f); // Opaque
+            material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.One);
+            material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.Zero);
+            material.SetInt("_ZWrite", 1);
+            material.DisableKeyword("_ALPHATEST_ON");
+            material.DisableKeyword("_ALPHABLEND_ON");
+            material.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+            material.renderQueue = -1; // Use shader default
+
+            // Set PBR properties for better visual quality
+            material.SetFloat("_Metallic", 0f);
+            material.SetFloat("_Glossiness", 0.5f);
+
+            // Handle double-sided
+            if (gltfMaterial.doubleSided)
+            {
+                material.SetFloat("_Cull", 0f); // Off
+            }
+
+            // Handle alpha modes
+            if (gltfMaterial.GetAlphaMode() == GLTFast.Schema.MaterialBase.AlphaMode.Mask)
+            {
+                material.SetFloat("_Mode", 1f); // Cutout
+                material.SetFloat("_Cutoff", gltfMaterial.alphaCutoff);
+                material.EnableKeyword("_ALPHATEST_ON");
+                material.renderQueue = (int)UnityEngine.Rendering.RenderQueue.AlphaTest;
+            }
+            else if (gltfMaterial.GetAlphaMode() == GLTFast.Schema.MaterialBase.AlphaMode.Blend)
+            {
+                material.SetFloat("_Mode", 3f); // Transparent
+                material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+                material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+                material.SetInt("_ZWrite", 0);
+                material.EnableKeyword("_ALPHABLEND_ON");
+                material.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
+            }
+
+            // Handle emissive
+            if (gltfMaterial.Emissive != Color.black)
+            {
+                material.SetColor("_EmissionColor", gltfMaterial.Emissive.gamma);
+                material.EnableKeyword("_EMISSION");
+            }
+
+            Debug.Log($"[StandardColorMaterialGenerator] CREATED material '{matName}' with color=({baseColor.r:F2},{baseColor.g:F2},{baseColor.b:F2},{baseColor.a:F2}) shader={shader.name}");
+            return material;
         }
     }
 
