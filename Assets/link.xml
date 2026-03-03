@@ -4,11 +4,7 @@
   <assembly fullname="EmersynsBigDay.MiniGames" preserve="all"/>
   <assembly fullname="EmersynsBigDay.AI" preserve="all"/>
 
-  <!-- Round 41: GLTFast assemblies - CRITICAL for runtime GLB loading -->
-  <assembly fullname="glTFast" preserve="all"/>
-  <assembly fullname="glTFast.Runtime" preserve="all"/>
-  <assembly fullname="GLTFast" preserve="all"/>
-  <assembly fullname="GLTFast.Runtime" preserve="all"/>
+  <!-- Round 42: GLTFast REMOVED - using pure C# GLB parser instead -->
 
   <!-- Preserve Unity core assemblies - CRITICAL for runtime Mesh/Material creation -->
   <assembly fullname="UnityEngine.CoreModule" preserve="all"/>

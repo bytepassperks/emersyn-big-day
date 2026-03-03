@@ -4,18 +4,12 @@ using UnityEngine.Networking;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using System.Threading.Tasks;
 using System.Runtime.InteropServices;
-using GLTFast;
-using GLTFast.Materials;
-// Round 16 (Claude 4.5 Bedrock): Custom IMaterialGenerator to intercept material creation.
-// Root cause: GLTFast uses glTF/PbrMetallicRoughness shader (NOT Standard), so post-hoc _Color
-// modification never worked. Fix: Inject custom material generator that creates Standard shader
-// materials with correct baseColorFactor colors DURING import, not after.
-// Round 11 (Claude 4.5 Bedrock): GLTFast RE-ENABLED with proper IL2CPP protection.
-// Root cause of original blue screen was IL2CPP code stripping, NOT GLTFast itself.
-// Fix: Comprehensive link.xml preserving glTFast + Unity assemblies + Newtonsoft.Json.
-// This enables full 3D GLB model loading for AAA-quality character rendering.
+// Round 42 (Claude 4.5 Bedrock): REMOVED GLTFast entirely.
+// After 41 rounds, Bedrock diagnosed: GLTFast is being stripped by IL2CPP despite link.xml.
+// Fix: Pure C# GLB binary parser that builds Unity Mesh objects directly.
+// No external dependencies = nothing for IL2CPP to strip.
+// Uses existing GLBParseAccessors/GLBParseBufferViews/GLBParseMaterials/GLBParseMeshes helpers.
 
 namespace EmersynBigDay.Core
 {
@@ -1281,54 +1275,53 @@ namespace EmersynBigDay.Core
         }
 
         // === Character Model Loading ===
-        // Round 41 (Claude 4.5 Bedrock): Use GLTFast for proper GLB loading.
-        // After 40 rounds, Bedrock diagnosed: custom binary parser + AndroidJavaClass logging both
-        // silently fail on Android. GLTFast handles mesh creation, coordinate conversion, and
-        // materials correctly. Debug.Log is the reliable logging method.
+        // Round 42 (Claude 4.5 Bedrock): Pure C# GLB parser - NO GLTFast dependency.
+        // After 41 rounds, Bedrock diagnosed: GLTFast is stripped by IL2CPP despite link.xml.
+        // This parser uses only System and UnityEngine types that IL2CPP cannot strip.
+        // It reads GLB binary format directly: header -> JSON chunk -> BIN chunk,
+        // then builds Unity Mesh objects from accessor/bufferView/mesh data.
         private IEnumerator LoadGLBCharactersCoroutine()
         {
-            AndroidLog("[SceneBuilder] R41: Starting GLTFast-based GLB loading...");
+            AndroidLog("[SceneBuilder] R42: Starting PURE C# GLB loading (no GLTFast)...");
             
-            // Load main characters via GLTFast
             for (int i = 0; i < GLBCharacterFiles.Length && i < CharacterNames.Length; i++)
             {
-                AndroidLog($"[SceneBuilder] R41: Loading character {i}: {GLBCharacterFiles[i]} -> {CharacterNames[i]}");
-                yield return StartCoroutine(LoadAndReplaceWithGLTFast(
+                AndroidLog($"[SceneBuilder] R42: Loading character {i}: {GLBCharacterFiles[i]} -> {CharacterNames[i]}");
+                yield return StartCoroutine(LoadAndReplaceDirectGLB(
                     GLBCharacterFiles[i], CharacterNames[i], i == 0, false));
                 yield return null;
             }
             
-            // Load pets via GLTFast
             for (int i = 0; i < GLBPetFiles.Length && i < PetNames.Length; i++)
             {
-                AndroidLog($"[SceneBuilder] R41: Loading pet {i}: {GLBPetFiles[i]} -> {PetNames[i]}");
-                yield return StartCoroutine(LoadAndReplaceWithGLTFast(
+                AndroidLog($"[SceneBuilder] R42: Loading pet {i}: {GLBPetFiles[i]} -> {PetNames[i]}");
+                yield return StartCoroutine(LoadAndReplaceDirectGLB(
                     GLBPetFiles[i], PetNames[i], false, true));
                 yield return null;
             }
             
             glbLoadingComplete = true;
-            AndroidLog("[SceneBuilder] R41: All GLTFast GLB loading complete!");
+            AndroidLog("[SceneBuilder] R42: All pure C# GLB loading complete!");
         }
 
         /// <summary>
-        /// Round 41 (Claude 4.5 Bedrock): GLTFast-based GLB loader.
-        /// Loads GLB bytes via UnityWebRequest, parses with GLTFast, instantiates scene,
-        /// then replaces the procedural placeholder. GLTFast handles coordinate conversion,
-        /// mesh creation, and material setup correctly.
+        /// Round 42 (Claude 4.5 Bedrock): Pure C# GLB loader.
+        /// Reads GLB binary directly: header (12 bytes) -> JSON chunk -> BIN chunk.
+        /// Parses accessors, bufferViews, materials, meshes from JSON.
+        /// Builds Unity Mesh objects from binary vertex/index data.
+        /// No external dependencies = nothing for IL2CPP to strip.
         /// </summary>
-        private IEnumerator LoadAndReplaceWithGLTFast(string glbName, string displayName, bool isMain, bool isPet)
+        private IEnumerator LoadAndReplaceDirectGLB(string glbName, string displayName, bool isMain, bool isPet)
         {
-            AndroidLog($"[GLBRuntime] R41: START loading {glbName} -> {displayName}");
+            AndroidLog($"[DirectGLB] R42: START loading {glbName} -> {displayName}");
             
-            // Step 1: Load GLB bytes from StreamingAssets
-            // NOTE: yield cannot be inside try-catch (CS1626), so no try-catch around web request
+            // Step 1: Load GLB bytes from StreamingAssets via UnityWebRequest
             #if UNITY_ANDROID && !UNITY_EDITOR
             string uri = Application.streamingAssetsPath + "/Characters/" + glbName + ".glb";
             #else
             string uri = "file://" + Path.Combine(Application.streamingAssetsPath, "Characters", glbName + ".glb");
             #endif
-            AndroidLog($"[GLBRuntime] R41: Step 1 - Loading from URI: {uri}");
+            AndroidLog($"[DirectGLB] R42: Loading from URI: {uri}");
             
             var webRequest = UnityWebRequest.Get(uri);
             webRequest.timeout = 30;
@@ -1337,203 +1330,295 @@ namespace EmersynBigDay.Core
             byte[] glbData = null;
             if (webRequest.result != UnityWebRequest.Result.Success)
             {
-                AndroidLog($"[GLBRuntime] R41: FAILED to load {glbName}: {webRequest.error} code={webRequest.responseCode}");
+                AndroidLog($"[DirectGLB] R42: FAILED to load {glbName}: {webRequest.error} code={webRequest.responseCode}");
                 webRequest.Dispose();
                 yield break;
             }
             glbData = webRequest.downloadHandler.data;
-            AndroidLog($"[GLBRuntime] R41: Step 1 OK - Loaded {glbData.Length} bytes for {glbName}");
+            AndroidLog($"[DirectGLB] R42: Loaded {glbData.Length} bytes for {glbName}");
             webRequest.Dispose();
 
-            if (glbData == null || glbData.Length < 12)
+            if (glbData == null || glbData.Length < 20)
             {
-                AndroidLog($"[GLBRuntime] R41: {glbName} data is null or too small ({glbData?.Length ?? 0} bytes)");
+                AndroidLog($"[DirectGLB] R42: {glbName} data too small ({glbData?.Length ?? 0} bytes)");
                 yield break;
             }
 
-            // Step 2: Parse with GLTFast
-            // NOTE: LoadGltfBinary is async Task, poll IsCompleted outside try-catch
-            AndroidLog($"[GLBRuntime] R41: Step 2 - Creating GltfImport for {glbName}");
-            GltfImport gltf = null;
-            Task<bool> loadTask = null;
+            // Step 2: Parse GLB header and extract JSON + BIN chunks
+            string jsonChunk = null;
+            byte[] binChunk = null;
+            int parseResult = 0; // 0=not started, 1=success, -1=error
+            string parseError = null;
+
+            // Parse synchronously (no yield needed, all in-memory)
             try
             {
-                gltf = new GltfImport(materialGenerator: new StandardColorMaterialGenerator());
-                loadTask = gltf.LoadGltfBinary(glbData);
-            }
-            catch (System.Exception e)
-            {
-                AndroidLog($"[GLBRuntime] R41: Step 2 EXCEPTION creating GltfImport for {glbName}: {e.Message}\n{e.StackTrace}");
-                yield break;
-            }
+                // GLB Header: magic(4) + version(4) + length(4) = 12 bytes
+                uint magic = System.BitConverter.ToUInt32(glbData, 0);
+                uint version = System.BitConverter.ToUInt32(glbData, 4);
+                uint totalLength = System.BitConverter.ToUInt32(glbData, 8);
+                AndroidLog($"[DirectGLB] R42: Header magic=0x{magic:X8} version={version} length={totalLength}");
 
-            // Poll task completion outside try-catch (yield not allowed in try-catch)
-            while (loadTask != null && !loadTask.IsCompleted)
-            {
-                yield return null;
-            }
-
-            bool loadSuccess = false;
-            try
-            {
-                if (loadTask.IsFaulted)
+                if (magic != 0x46546C67) // "glTF" in little-endian
                 {
-                    AndroidLog($"[GLBRuntime] R41: Step 2 FAULTED for {glbName}: {loadTask.Exception?.Message}");
+                    parseError = $"Invalid GLB magic: 0x{magic:X8}";
+                    parseResult = -1;
                 }
                 else
                 {
-                    loadSuccess = loadTask.Result;
-                }
-                AndroidLog($"[GLBRuntime] R41: Step 2 result for {glbName}: {loadSuccess}");
-            }
-            catch (System.Exception e)
-            {
-                AndroidLog($"[GLBRuntime] R41: Step 2 EXCEPTION reading result for {glbName}: {e.Message}");
-            }
-
-            if (!loadSuccess || gltf == null)
-            {
-                AndroidLog($"[GLBRuntime] R41: GLTFast failed to parse {glbName}");
-                yield break;
-            }
-
-            // Step 3: Instantiate the GLTFast scene into a new root GameObject
-            AndroidLog($"[GLBRuntime] R41: Step 3 - Instantiating {glbName} scene");
-            GameObject glbRoot = new GameObject(displayName + "_GLB");
-            Task<bool> instantiateTask = null;
-            try
-            {
-                instantiateTask = gltf.InstantiateMainSceneAsync(glbRoot.transform);
-            }
-            catch (System.Exception e)
-            {
-                AndroidLog($"[GLBRuntime] R41: Step 3 EXCEPTION starting instantiate for {glbName}: {e.Message}\n{e.StackTrace}");
-                Destroy(glbRoot);
-                yield break;
-            }
-
-            // Poll task completion outside try-catch
-            while (instantiateTask != null && !instantiateTask.IsCompleted)
-            {
-                yield return null;
-            }
-
-            bool instantiateSuccess = false;
-            try
-            {
-                if (instantiateTask.IsFaulted)
-                {
-                    AndroidLog($"[GLBRuntime] R41: Step 3 FAULTED for {glbName}: {instantiateTask.Exception?.Message}");
-                }
-                else
-                {
-                    instantiateSuccess = instantiateTask.Result;
-                }
-                AndroidLog($"[GLBRuntime] R41: Step 3 instantiate result for {glbName}: {instantiateSuccess}");
-            }
-            catch (System.Exception e)
-            {
-                AndroidLog($"[GLBRuntime] R41: Step 3 EXCEPTION reading instantiate result for {glbName}: {e.Message}");
-            }
-
-            if (!instantiateSuccess)
-            {
-                AndroidLog($"[GLBRuntime] R41: InstantiateMainSceneAsync failed for {glbName}");
-                Destroy(glbRoot);
-                yield break;
-            }
-
-            // Step 4: Count renderers and log mesh info
-            int rendererCount = 0;
-            int totalVerts = 0;
-            try
-            {
-                var renderers = glbRoot.GetComponentsInChildren<Renderer>(true);
-                rendererCount = renderers.Length;
-                var meshFilters = glbRoot.GetComponentsInChildren<MeshFilter>(true);
-                foreach (var mf in meshFilters)
-                {
-                    if (mf.sharedMesh != null) totalVerts += mf.sharedMesh.vertexCount;
-                }
-                AndroidLog($"[GLBRuntime] R41: Step 4 - {glbName} has {rendererCount} renderers, {totalVerts} total verts");
-            }
-            catch (System.Exception e)
-            {
-                AndroidLog($"[GLBRuntime] R41: Step 4 EXCEPTION for {glbName}: {e.Message}");
-            }
-
-            // Step 5: Apply AAA cartoon material enhancements to GLTFast-created materials
-            try
-            {
-                AndroidLog($"[GLBRuntime] R41: Step 5 - Enhancing materials for {glbName}");
-                var renderers = glbRoot.GetComponentsInChildren<Renderer>(true);
-                foreach (var renderer in renderers)
-                {
-                    var mats = renderer.materials; // Get copy of materials array
-                    for (int m = 0; m < mats.Length; m++)
+                    int offset = 12;
+                    // Read JSON chunk
+                    uint jsonLen = System.BitConverter.ToUInt32(glbData, offset);
+                    uint jsonType = System.BitConverter.ToUInt32(glbData, offset + 4);
+                    AndroidLog($"[DirectGLB] R42: JSON chunk len={jsonLen} type=0x{jsonType:X8}");
+                    
+                    if (jsonType == 0x4E4F534A) // "JSON"
                     {
-                        if (mats[m] == null) continue;
-                        Material mat = mats[m];
+                        jsonChunk = System.Text.Encoding.UTF8.GetString(glbData, offset + 8, (int)jsonLen);
+                        offset += 8 + (int)jsonLen;
+                        // Pad to 4-byte boundary
+                        while (offset % 4 != 0 && offset < glbData.Length) offset++;
                         
-                        // HSV saturation boost for cartoon vibrancy
-                        if (mat.HasProperty("_Color"))
+                        // Read BIN chunk (if present)
+                        if (offset + 8 <= glbData.Length)
                         {
-                            Color origColor = mat.color;
-                            Color.RGBToHSV(origColor, out float h, out float s, out float v);
-                            s = Mathf.Clamp01(s * 1.4f);
-                            v = Mathf.Clamp01(v * 1.1f);
-                            Color enhanced = Color.HSVToRGB(h, s, v);
-                            enhanced.r = Mathf.Pow(enhanced.r, 0.75f);
-                            enhanced.g = Mathf.Pow(enhanced.g, 0.75f);
-                            enhanced.b = Mathf.Pow(enhanced.b, 0.75f);
-                            enhanced.a = origColor.a;
-                            mat.color = enhanced;
+                            uint binLen = System.BitConverter.ToUInt32(glbData, offset);
+                            uint binType = System.BitConverter.ToUInt32(glbData, offset + 4);
+                            AndroidLog($"[DirectGLB] R42: BIN chunk len={binLen} type=0x{binType:X8}");
                             
-                            string matName = mat.name.ToLower();
-                            // Per-material glossiness
-                            if (mat.HasProperty("_Glossiness"))
+                            if (binType == 0x004E4942) // "BIN\0"
                             {
-                                if (matName.Contains("hair")) mat.SetFloat("_Glossiness", 0.8f);
-                                else if (matName.Contains("eye")) mat.SetFloat("_Glossiness", 0.9f);
-                                else if (matName.Contains("body") || matName.Contains("skin")) mat.SetFloat("_Glossiness", 0.3f);
-                                else if (matName.Contains("shoe")) mat.SetFloat("_Glossiness", 0.7f);
-                                else mat.SetFloat("_Glossiness", 0.5f);
+                                binChunk = new byte[binLen];
+                                System.Array.Copy(glbData, offset + 8, binChunk, 0, (int)binLen);
+                                AndroidLog($"[DirectGLB] R42: BIN chunk extracted: {binLen} bytes");
                             }
-                            
-                            // Subtle emission glow
-                            if (mat.HasProperty("_EmissionColor"))
-                            {
-                                mat.EnableKeyword("_EMISSION");
-                                mat.globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive;
-                                if (matName.Contains("eye"))
-                                    mat.SetColor("_EmissionColor", enhanced * 0.15f);
-                                else
-                                    mat.SetColor("_EmissionColor", enhanced * 0.08f);
-                            }
-                            
-                            AndroidLog($"[GLBRuntime] R41: Mat '{mat.name}' color=({enhanced.r:F2},{enhanced.g:F2},{enhanced.b:F2})");
                         }
+                        parseResult = 1;
                     }
-                    renderer.materials = mats; // Apply modified materials back
-                    renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
-                    renderer.receiveShadows = true;
+                    else
+                    {
+                        parseError = $"Expected JSON chunk type, got 0x{jsonType:X8}";
+                        parseResult = -1;
+                    }
                 }
             }
             catch (System.Exception e)
             {
-                AndroidLog($"[GLBRuntime] R41: Step 5 EXCEPTION for {glbName}: {e.Message}");
+                parseError = e.Message;
+                parseResult = -1;
             }
 
-            // Step 6: Replace the procedural placeholder with GLTFast model
+            if (parseResult != 1 || jsonChunk == null)
+            {
+                AndroidLog($"[DirectGLB] R42: GLB parse FAILED for {glbName}: {parseError}");
+                yield break;
+            }
+
+            AndroidLog($"[DirectGLB] R42: JSON={jsonChunk.Length} chars, BIN={binChunk?.Length ?? 0} bytes");
+
+            // Step 3: Parse glTF JSON structure using existing helpers
+            List<GLBAccessor> accessors = null;
+            List<GLBBufferView> bufferViews = null;
+            List<GLBMaterial> materials = null;
+            List<GLBMesh> meshes = null;
+            
             try
             {
-                AndroidLog($"[GLBRuntime] R41: Step 6 - Replacing placeholder for {displayName}");
+                accessors = GLBParseAccessors(jsonChunk);
+                bufferViews = GLBParseBufferViews(jsonChunk);
+                materials = GLBParseMaterials(jsonChunk);
+                meshes = GLBParseMeshes(jsonChunk);
+                AndroidLog($"[DirectGLB] R42: Parsed {accessors.Count} accessors, {bufferViews.Count} bufferViews, {materials.Count} materials, {meshes.Count} meshes");
+            }
+            catch (System.Exception e)
+            {
+                AndroidLog($"[DirectGLB] R42: JSON parse EXCEPTION for {glbName}: {e.Message}");
+                yield break;
+            }
+
+            if (meshes.Count == 0)
+            {
+                AndroidLog($"[DirectGLB] R42: No meshes found in {glbName}");
+                yield break;
+            }
+
+            // Step 4: Build Unity Mesh objects from binary data
+            GameObject glbRoot = new GameObject(displayName + "_GLB");
+            int totalVerts = 0;
+            int totalTris = 0;
+            int meshPartCount = 0;
+
+            try
+            {
+                foreach (var glbMesh in meshes)
+                {
+                    foreach (var prim in glbMesh.prims)
+                    {
+                        // Get POSITION accessor
+                        int posAccIdx = -1;
+                        int normAccIdx = -1;
+                        if (prim.attrs.ContainsKey("POSITION")) posAccIdx = prim.attrs["POSITION"];
+                        if (prim.attrs.ContainsKey("NORMAL")) normAccIdx = prim.attrs["NORMAL"];
+                        
+                        if (posAccIdx < 0 || posAccIdx >= accessors.Count)
+                        {
+                            AndroidLog($"[DirectGLB] R42: Skipping primitive - no POSITION accessor");
+                            continue;
+                        }
+
+                        var posAcc = accessors[posAccIdx];
+                        if (posAcc.bv < 0 || posAcc.bv >= bufferViews.Count)
+                        {
+                            AndroidLog($"[DirectGLB] R42: Skipping primitive - invalid bufferView {posAcc.bv}");
+                            continue;
+                        }
+
+                        // Read vertex positions from BIN chunk
+                        var posBV = bufferViews[posAcc.bv];
+                        int posStride = posBV.stride > 0 ? posBV.stride : 12; // 3 floats = 12 bytes
+                        int posStart = posBV.offset + posAcc.offset;
+                        
+                        Vector3[] vertices = new Vector3[posAcc.count];
+                        for (int vi = 0; vi < posAcc.count; vi++)
+                        {
+                            int off = posStart + vi * posStride;
+                            if (off + 12 > binChunk.Length) break;
+                            float x = System.BitConverter.ToSingle(binChunk, off);
+                            float y = System.BitConverter.ToSingle(binChunk, off + 4);
+                            float z = System.BitConverter.ToSingle(binChunk, off + 8);
+                            // glTF is right-handed (Z-forward), Unity is left-handed (Z-back)
+                            // Convert: negate X to flip handedness
+                            vertices[vi] = new Vector3(-x, y, z);
+                        }
+
+                        // Read normals (if available)
+                        Vector3[] normals = null;
+                        if (normAccIdx >= 0 && normAccIdx < accessors.Count)
+                        {
+                            var normAcc = accessors[normAccIdx];
+                            if (normAcc.bv >= 0 && normAcc.bv < bufferViews.Count)
+                            {
+                                var normBV = bufferViews[normAcc.bv];
+                                int normStride = normBV.stride > 0 ? normBV.stride : 12;
+                                int normStart = normBV.offset + normAcc.offset;
+                                normals = new Vector3[normAcc.count];
+                                for (int ni = 0; ni < normAcc.count; ni++)
+                                {
+                                    int off = normStart + ni * normStride;
+                                    if (off + 12 > binChunk.Length) break;
+                                    float nx = System.BitConverter.ToSingle(binChunk, off);
+                                    float ny = System.BitConverter.ToSingle(binChunk, off + 4);
+                                    float nz = System.BitConverter.ToSingle(binChunk, off + 8);
+                                    normals[ni] = new Vector3(-nx, ny, nz);
+                                }
+                            }
+                        }
+
+                        // Read indices
+                        int[] triangles = null;
+                        if (prim.idxAcc >= 0 && prim.idxAcc < accessors.Count)
+                        {
+                            var idxAcc = accessors[prim.idxAcc];
+                            if (idxAcc.bv >= 0 && idxAcc.bv < bufferViews.Count)
+                            {
+                                var idxBV = bufferViews[idxAcc.bv];
+                                int idxStart = idxBV.offset + idxAcc.offset;
+                                triangles = new int[idxAcc.count];
+                                
+                                // componentType: 5123=UNSIGNED_SHORT(2 bytes), 5125=UNSIGNED_INT(4 bytes)
+                                int bytesPerIdx = idxAcc.compType == 5125 ? 4 : 2;
+                                for (int ii = 0; ii < idxAcc.count; ii++)
+                                {
+                                    int off = idxStart + ii * bytesPerIdx;
+                                    if (off + bytesPerIdx > binChunk.Length) break;
+                                    if (bytesPerIdx == 4)
+                                        triangles[ii] = (int)System.BitConverter.ToUInt32(binChunk, off);
+                                    else
+                                        triangles[ii] = (int)System.BitConverter.ToUInt16(binChunk, off);
+                                }
+                                
+                                // Reverse winding order for Unity (due to X-axis flip)
+                                for (int ti = 0; ti < triangles.Length - 2; ti += 3)
+                                {
+                                    int tmp = triangles[ti];
+                                    triangles[ti] = triangles[ti + 2];
+                                    triangles[ti + 2] = tmp;
+                                }
+                            }
+                        }
+
+                        if (vertices.Length == 0)
+                        {
+                            AndroidLog($"[DirectGLB] R42: Skipping empty primitive in {glbName}");
+                            continue;
+                        }
+
+                        // Create Unity Mesh
+                        Mesh mesh = new Mesh();
+                        mesh.name = $"{glbName}_{meshPartCount}";
+                        if (vertices.Length > 65535)
+                            mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
+                        mesh.vertices = vertices;
+                        if (normals != null && normals.Length == vertices.Length)
+                            mesh.normals = normals;
+                        if (triangles != null && triangles.Length > 0)
+                            mesh.triangles = triangles;
+                        if (normals == null || normals.Length != vertices.Length)
+                            mesh.RecalculateNormals();
+                        mesh.RecalculateBounds();
+
+                        // Create child GameObject with MeshFilter + MeshRenderer
+                        string partName = (glbMesh.name ?? "mesh") + "_" + meshPartCount;
+                        GameObject meshObj = new GameObject(partName);
+                        meshObj.transform.SetParent(glbRoot.transform, false);
+                        
+                        MeshFilter mf = meshObj.AddComponent<MeshFilter>();
+                        mf.mesh = mesh;
+                        
+                        MeshRenderer mr = meshObj.AddComponent<MeshRenderer>();
+                        
+                        // Create material with correct color from GLB
+                        Material mat = CreateGLBMaterial(prim.matIdx, materials);
+                        mr.material = mat;
+                        mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
+                        mr.receiveShadows = true;
+
+                        totalVerts += vertices.Length;
+                        totalTris += (triangles != null ? triangles.Length / 3 : 0);
+                        meshPartCount++;
+                        
+                        AndroidLog($"[DirectGLB] R42: Built mesh '{partName}': {vertices.Length} verts, {(triangles != null ? triangles.Length / 3 : 0)} tris, mat={mat.color}");
+                    }
+                }
+            }
+            catch (System.Exception e)
+            {
+                AndroidLog($"[DirectGLB] R42: Mesh build EXCEPTION for {glbName}: {e.Message}\n{e.StackTrace}");
+                if (meshPartCount == 0)
+                {
+                    Destroy(glbRoot);
+                    yield break;
+                }
+            }
+
+            AndroidLog($"[DirectGLB] R42: Built {meshPartCount} mesh parts, {totalVerts} verts, {totalTris} tris for {glbName}");
+
+            if (meshPartCount == 0)
+            {
+                AndroidLog($"[DirectGLB] R42: No mesh parts created for {glbName}");
+                Destroy(glbRoot);
+                yield break;
+            }
+
+            // Step 5: Replace the procedural placeholder
+            try
+            {
                 float glbScale = isPet ? 2.0f : 2.8f;
                 Transform existing = characterContainer != null ? characterContainer.Find(displayName) : null;
                 
                 if (existing != null)
                 {
-                    AndroidLog($"[GLBRuntime] R41: Found placeholder '{displayName}' at {existing.position}");
+                    AndroidLog($"[DirectGLB] R42: Replacing placeholder '{displayName}' at {existing.position}");
                     Vector3 savedPos = existing.position;
                     Quaternion savedRot = existing.rotation;
                     Transform savedParent = existing.parent;
@@ -1544,42 +1629,36 @@ namespace EmersynBigDay.Core
                     glbRoot.transform.rotation = savedRot;
                     glbRoot.transform.localScale = Vector3.one * glbScale;
 
-                    // CRITICAL: Actually destroy the procedural placeholder
-                    AndroidLog($"[GLBRuntime] R41: DESTROYING placeholder '{displayName}'");
+                    AndroidLog($"[DirectGLB] R42: DESTROYING placeholder '{displayName}'");
                     Destroy(existing.gameObject);
                 }
                 else
                 {
-                    AndroidLog($"[GLBRuntime] R41: No placeholder found for '{displayName}', placing in container");
+                    AndroidLog($"[DirectGLB] R42: No placeholder for '{displayName}', placing in container");
                     glbRoot.transform.SetParent(characterContainer);
                     glbRoot.name = displayName;
                     glbRoot.transform.localScale = Vector3.one * glbScale;
                 }
-                AndroidLog($"[GLBRuntime] R41: {displayName} scale={glbScale}");
             }
             catch (System.Exception e)
             {
-                AndroidLog($"[GLBRuntime] R41: Step 6 EXCEPTION for {glbName}: {e.Message}\n{e.StackTrace}");
+                AndroidLog($"[DirectGLB] R42: Replace EXCEPTION for {glbName}: {e.Message}");
             }
 
-            // Step 7: Add interaction components
+            // Step 6: Add interaction components
             try
             {
-                if (glbRoot.GetComponent<BoxCollider>() == null)
-                {
-                    var col = glbRoot.AddComponent<BoxCollider>();
-                    if (isPet) { col.center = new Vector3(0, 0.25f, 0); col.size = new Vector3(0.5f, 0.5f, 0.6f); }
-                    else { col.center = new Vector3(0, 0.55f, 0); col.size = new Vector3(0.8f, 1.2f, 0.8f); }
-                }
-                if (glbRoot.GetComponent<CharacterBob>() == null)
-                    glbRoot.AddComponent<CharacterBob>();
+                var col = glbRoot.AddComponent<BoxCollider>();
+                if (isPet) { col.center = new Vector3(0, 0.25f, 0); col.size = new Vector3(0.5f, 0.5f, 0.6f); }
+                else { col.center = new Vector3(0, 0.55f, 0); col.size = new Vector3(0.8f, 1.2f, 0.8f); }
+                glbRoot.AddComponent<CharacterBob>();
             }
             catch (System.Exception e)
             {
-                AndroidLog($"[GLBRuntime] R41: Step 7 EXCEPTION: {e.Message}");
+                AndroidLog($"[DirectGLB] R42: Components EXCEPTION: {e.Message}");
             }
 
-            // Step 8: Update main character reference
+            // Step 7: Update main character reference
             if (isMain)
             {
                 emersynObj = glbRoot;
@@ -1589,7 +1668,87 @@ namespace EmersynBigDay.Core
                     Gameplay.CharacterCustomization.Instance.ApplyToCharacter(glbRoot);
             }
 
-            AndroidLog($"[GLBRuntime] R41: SUCCESS: {displayName} loaded with GLTFast! {rendererCount} renderers, {totalVerts} verts");
+            AndroidLog($"[DirectGLB] R42: SUCCESS: {displayName} loaded! {meshPartCount} parts, {totalVerts} verts, {totalTris} tris");
+        }
+
+        /// <summary>
+        /// Round 42: Create a Standard shader material from parsed GLB material data.
+        /// Pure C# - no GLTFast dependency.
+        /// </summary>
+        private Material CreateGLBMaterial(int matIdx, List<GLBMaterial> materials)
+        {
+            Color baseColor = Color.white;
+            string matName = "default";
+            float metallic = 0f;
+            float smoothness = 0.5f;
+
+            if (matIdx >= 0 && matIdx < materials.Count)
+            {
+                baseColor = materials[matIdx].color;
+                matName = materials[matIdx].name ?? "unnamed";
+                metallic = materials[matIdx].metallic;
+                smoothness = 1f - materials[matIdx].roughness; // glTF roughness -> Unity smoothness
+            }
+
+            // HSV saturation boost for AAA cartoon vibrancy
+            Color.RGBToHSV(baseColor, out float h, out float s, out float v);
+            s = Mathf.Clamp01(s * 1.4f);
+            v = Mathf.Clamp01(v * 1.1f);
+            Color enhanced = Color.HSVToRGB(h, s, v);
+            // Gamma correction for Standard shader
+            enhanced.r = Mathf.Pow(enhanced.r, 0.75f);
+            enhanced.g = Mathf.Pow(enhanced.g, 0.75f);
+            enhanced.b = Mathf.Pow(enhanced.b, 0.75f);
+            enhanced.a = baseColor.a;
+
+            // Use Standard shader (cached in standardShader field)
+            Shader shader = standardShader;
+            if (shader == null) shader = Shader.Find("Standard");
+            if (shader == null) shader = Shader.Find("Mobile/Diffuse");
+            
+            Material mat = new Material(shader);
+            mat.name = matName;
+            mat.SetColor("_Color", enhanced);
+            
+            // White texture so _Color tinting works
+            if (whitePixelTex != null)
+                mat.SetTexture("_MainTex", whitePixelTex);
+
+            if (mat.HasProperty("_Metallic"))
+                mat.SetFloat("_Metallic", metallic);
+            if (mat.HasProperty("_Glossiness"))
+            {
+                // Per-material glossiness for cartoon look
+                string mn = matName.ToLower();
+                if (mn.Contains("hair")) smoothness = 0.8f;
+                else if (mn.Contains("eye")) smoothness = 0.9f;
+                else if (mn.Contains("body") || mn.Contains("skin")) smoothness = 0.3f;
+                else if (mn.Contains("shoe")) smoothness = 0.7f;
+                else smoothness = Mathf.Clamp(smoothness, 0.3f, 0.7f);
+                mat.SetFloat("_Glossiness", smoothness);
+            }
+
+            // Subtle emission glow for cartoon pop
+            if (mat.HasProperty("_EmissionColor"))
+            {
+                mat.EnableKeyword("_EMISSION");
+                mat.globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive;
+                string mn = matName.ToLower();
+                float emissionStrength = mn.Contains("eye") ? 0.15f : 0.08f;
+                mat.SetColor("_EmissionColor", enhanced * emissionStrength);
+            }
+
+            // Opaque rendering
+            mat.SetFloat("_Mode", 0f);
+            mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.One);
+            mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.Zero);
+            mat.SetInt("_ZWrite", 1);
+            mat.DisableKeyword("_ALPHATEST_ON");
+            mat.DisableKeyword("_ALPHABLEND_ON");
+            mat.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+            mat.renderQueue = -1;
+
+            return mat;
         }
 
         // ===== GLB Runtime Parsing Helpers =====
@@ -1762,189 +1921,8 @@ namespace EmersynBigDay.Core
             return r;
         }
 
-        private IEnumerator LoadSingleGLBCharacter(string glbFileName, string charName, bool isMain)
-        {
-            // Round 40: Fix Path.Combine corrupting jar:file:// URI on Android
-            #if UNITY_ANDROID && !UNITY_EDITOR
-            string uri = Application.streamingAssetsPath + "/Characters/" + glbFileName + ".glb";
-            #else
-            string uri = Path.Combine(Application.streamingAssetsPath, "Characters", glbFileName + ".glb");
-            #endif
-            AndroidLog($"[SceneBuilder] Loading GLB: {uri}");
-
-            // Step 1: Load GLB bytes via UnityWebRequest (required for Android StreamingAssets in APK)
-            byte[] glbData = null;
-            using (var request = UnityWebRequest.Get(uri))
-            {
-                yield return request.SendWebRequest();
-                if (request.result != UnityWebRequest.Result.Success)
-                {
-                    AndroidLog($"[SceneBuilder] Failed to download GLB {glbFileName}: {request.error}");
-                    yield break;
-                }
-                glbData = request.downloadHandler.data;
-                AndroidLog($"[SceneBuilder] GLB data loaded: {glbData.Length} bytes for {charName}");
-            }
-
-            // Step 2: Parse GLB to extract material colors, then load with custom material generator
-            // Round 16 (Claude 4.5 Bedrock): Use custom IMaterialGenerator to inject correct colors
-            // at material creation time, instead of trying to modify materials after GLTFast creates them.
-            var parsedColors = ParseMaterialColorsFromGLB(glbData);
-            AndroidLog($"[SceneBuilder] Round 16: Parsed {parsedColors.Count} material colors for {charName}");
-            var customMatGen = new StandardColorMaterialGenerator(parsedColors);
-            var gltf = new GltfImport(materialGenerator: customMatGen);
-            var loadTask = gltf.LoadGltfBinary(glbData, new System.Uri(uri));
-
-            // Wait for async task to complete (coroutine-safe polling)
-            while (!loadTask.IsCompleted)
-                yield return null;
-
-            if (loadTask.IsFaulted)
-            {
-                AndroidLog($"[SceneBuilder] GLTFast parse EXCEPTION for {charName}: {loadTask.Exception?.Message}");
-                yield break;
-            }
-            if (!loadTask.Result)
-            {
-                AndroidLog($"[SceneBuilder] GLTFast parse FAILED for {charName}");
-                yield break;
-            }
-
-            AndroidLog($"[SceneBuilder] GLB parsed successfully for {charName} with custom material generator");
-
-            // Step 3: Find the primitive placeholder
-            Transform existing = characterContainer != null ? characterContainer.Find(charName) : null;
-            if (existing == null)
-            {
-                AndroidLog($"[SceneBuilder] Could not find primitive {charName} to replace");
-                yield break;
-            }
-
-            Vector3 savedPos = existing.position;
-            Quaternion savedRot = existing.rotation;
-            Vector3 savedScale = existing.localScale;
-            Transform savedParent = existing.parent;
-
-            // Step 4: Create parent object and instantiate GLB model
-            var glbObj = new GameObject(charName);
-            glbObj.transform.SetParent(savedParent, false);
-            glbObj.transform.position = savedPos;
-            glbObj.transform.rotation = savedRot;
-            glbObj.transform.localScale = savedScale;
-
-            var instantiateTask = gltf.InstantiateMainSceneAsync(glbObj.transform);
-            while (!instantiateTask.IsCompleted)
-                yield return null;
-
-            if (instantiateTask.IsFaulted)
-            {
-                AndroidLog($"[SceneBuilder] GLB instantiate EXCEPTION for {charName}: {instantiateTask.Exception?.Message}");
-                Destroy(glbObj);
-                yield break;
-            }
-
-            AndroidLog($"[SceneBuilder] GLB instantiated for {charName} with custom materials");
-
-            // Round 16: Materials already have correct colors from custom generator.
-            // Verify and log the final material colors for debugging.
-            VerifyMaterialColors(glbObj, charName);
-
-            // Round 19 (Claude 4.5 Bedrock): Apply character textures from StreamingAssets/Modal
-            // These are Modal GPU-upscaled textures that add detail to the GLB solid-color materials
-            yield return StartCoroutine(ApplyCharacterTextures(glbObj, glbFileName));
-
-            // Step 6: Add interaction components
-            var col = glbObj.AddComponent<BoxCollider>();
-            col.center = new Vector3(0, 1f, 0);
-            col.size = new Vector3(1f, 2.2f, 0.8f);
-            glbObj.AddComponent<CharacterBob>();
-
-            // Step 7: Update main character reference
-            if (isMain)
-            {
-                emersynObj = glbObj;
-                if (CameraSystem.CameraController.Instance != null)
-                    CameraSystem.CameraController.Instance.Target = glbObj.transform;
-                if (Gameplay.CharacterCustomization.Instance != null)
-                    Gameplay.CharacterCustomization.Instance.ApplyToCharacter(glbObj);
-            }
-
-            // Step 8: Destroy primitive placeholder
-            Destroy(existing.gameObject);
-            AndroidLog($"[SceneBuilder] SUCCESS: Replaced {charName} with GLB 3D model!");
-        }
-
-        private IEnumerator LoadSingleGLBPet(string glbFileName, string petName)
-        {
-            // Round 40: Fix Path.Combine corrupting jar:file:// URI on Android
-            #if UNITY_ANDROID && !UNITY_EDITOR
-            string uri = Application.streamingAssetsPath + "/Characters/" + glbFileName + ".glb";
-            #else
-            string uri = Path.Combine(Application.streamingAssetsPath, "Characters", glbFileName + ".glb");
-            #endif
-            AndroidLog($"[SceneBuilder] Loading pet GLB: {uri}");
-
-            // Step 1: Load GLB bytes
-            byte[] glbData = null;
-            using (var request = UnityWebRequest.Get(uri))
-            {
-                yield return request.SendWebRequest();
-                if (request.result != UnityWebRequest.Result.Success)
-                {
-                    AndroidLog($"[SceneBuilder] Failed to download pet GLB {glbFileName}: {request.error}");
-                    yield break;
-                }
-                glbData = request.downloadHandler.data;
-                AndroidLog($"[SceneBuilder] Pet GLB data: {glbData.Length} bytes for {petName}");
-            }
-
-            // Step 2: Parse with GltfImport using custom material generator (Round 16)
-            var parsedColors = ParseMaterialColorsFromGLB(glbData);
-            AndroidLog($"[SceneBuilder] Round 16: Parsed {parsedColors.Count} material colors for pet {petName}");
-            var customMatGen = new StandardColorMaterialGenerator(parsedColors);
-            var gltf = new GltfImport(materialGenerator: customMatGen);
-            var loadTask = gltf.LoadGltfBinary(glbData, new System.Uri(uri));
-            while (!loadTask.IsCompleted)
-                yield return null;
-
-            if (loadTask.IsFaulted || !loadTask.Result)
-            {
-                AndroidLog($"[SceneBuilder] Pet GLB parse failed for {petName}");
-                yield break;
-            }
-
-            // Step 3: Replace primitive
-            Transform existing = characterContainer != null ? characterContainer.Find(petName) : null;
-            if (existing == null) yield break;
-
-            Vector3 savedPos = existing.position;
-            Transform savedParent = existing.parent;
-
-            var glbObj = new GameObject(petName);
-            glbObj.transform.SetParent(savedParent, false);
-            glbObj.transform.position = savedPos;
-            glbObj.transform.localScale = Vector3.one * 0.5f;
-
-            var instantiateTask = gltf.InstantiateMainSceneAsync(glbObj.transform);
-            while (!instantiateTask.IsCompleted)
-                yield return null;
-
-            if (instantiateTask.IsFaulted)
-            {
-                Destroy(glbObj);
-                yield break;
-            }
-
-            // Round 16: Materials already have correct colors from custom generator
-            VerifyMaterialColors(glbObj, petName);
-            var col = glbObj.AddComponent<BoxCollider>();
-            col.center = new Vector3(0, 0.4f, 0);
-            col.size = new Vector3(0.6f, 0.8f, 0.8f);
-            glbObj.AddComponent<CharacterBob>();
-
-            Destroy(existing.gameObject);
-            AndroidLog($"[SceneBuilder] SUCCESS: Replaced pet {petName} with GLB 3D model!");
-        }
+        // Round 42: LoadSingleGLBCharacter and LoadSingleGLBPet removed.
+        // Replaced by LoadAndReplaceDirectGLB which uses pure C# GLB parsing.
 
         /// <summary>
         /// Round 15 (Claude 4.5 Bedrock): Parse GLB binary JSON to extract material name → baseColorFactor mapping.
@@ -2805,178 +2783,8 @@ namespace EmersynBigDay.Core
         }
     }
 
-    /// <summary>
-    /// Round 16 (Claude 4.5 Bedrock): Custom IMaterialGenerator that creates Standard shader materials
-    /// with correct baseColorFactor colors DURING GLTFast import.
-    /// 
-    /// ROOT CAUSE: GLTFast's default BuiltInMaterialGenerator uses glTF/PbrMetallicRoughness shader
-    /// (NOT Unity's Standard shader). Post-hoc modification of _Color on these materials never worked
-    /// because the shader property names are different. This generator intercepts material creation
-    /// and creates Standard shader materials with the correct colors from the start.
-    /// </summary>
-    public class StandardColorMaterialGenerator : IMaterialGenerator
-    {
-        private readonly System.Collections.Generic.Dictionary<string, Color> m_MaterialColors;
-        private Shader m_StandardShader;
-        private Texture2D m_WhiteTex;
-        private GLTFast.Logging.ICodeLogger m_Logger;
-
-        // Round 41: Parameterless constructor for GLTFast direct usage (colors come from PBR data)
-        public StandardColorMaterialGenerator()
-        {
-            m_MaterialColors = new System.Collections.Generic.Dictionary<string, Color>();
-        }
-
-        public StandardColorMaterialGenerator(System.Collections.Generic.Dictionary<string, Color> materialColors)
-        {
-            m_MaterialColors = materialColors ?? new System.Collections.Generic.Dictionary<string, Color>();
-        }
-
-        public void SetLogger(GLTFast.Logging.ICodeLogger logger)
-        {
-            m_Logger = logger;
-        }
-
-        private Shader GetStandardShader()
-        {
-            if (m_StandardShader == null)
-            {
-                m_StandardShader = Shader.Find("Standard");
-                if (m_StandardShader == null)
-                {
-                    // Fallback: try other common shaders
-                    m_StandardShader = Shader.Find("Mobile/Diffuse");
-                }
-                if (m_StandardShader == null)
-                {
-                    m_StandardShader = Shader.Find("Unlit/Color");
-                }
-            }
-            return m_StandardShader;
-        }
-
-        private Texture2D GetWhiteTexture()
-        {
-            if (m_WhiteTex == null)
-            {
-                m_WhiteTex = new Texture2D(4, 4);
-                var pixels = new Color[16];
-                for (int i = 0; i < 16; i++) pixels[i] = Color.white;
-                m_WhiteTex.SetPixels(pixels);
-                m_WhiteTex.Apply();
-            }
-            return m_WhiteTex;
-        }
-
-        public UnityEngine.Material GetDefaultMaterial(bool pointsSupport = false)
-        {
-            var shader = GetStandardShader();
-            if (shader == null) return null;
-            var mat = new UnityEngine.Material(shader);
-            mat.name = "glTF-Default-Material";
-            mat.SetColor("_Color", Color.white);
-            mat.SetTexture("_MainTex", GetWhiteTexture());
-            return mat;
-        }
-
-        public UnityEngine.Material GenerateMaterial(
-            GLTFast.Schema.MaterialBase gltfMaterial,
-            IGltfReadable gltf,
-            bool pointsSupport = false)
-        {
-            var shader = GetStandardShader();
-            if (shader == null)
-            {
-                Debug.LogError("[StandardColorMaterialGenerator] Standard shader not found!");
-                return null;
-            }
-
-            var material = new UnityEngine.Material(shader);
-            string matName = gltfMaterial.name ?? "unnamed";
-            material.name = matName;
-
-            // Determine the base color from GLTFast's parsed material data
-            Color baseColor = Color.white;
-            bool colorFound = false;
-
-            // First priority: use our pre-parsed GLB binary colors (most reliable)
-            if (m_MaterialColors.ContainsKey(matName))
-            {
-                baseColor = m_MaterialColors[matName];
-                colorFound = true;
-                Debug.Log($"[StandardColorMaterialGenerator] Material '{matName}': using pre-parsed color ({baseColor.r:F2},{baseColor.g:F2},{baseColor.b:F2},{baseColor.a:F2})");
-            }
-
-            // Second priority: read from GLTFast's parsed PbrMetallicRoughness
-            if (!colorFound && gltfMaterial.PbrMetallicRoughness != null)
-            {
-                baseColor = gltfMaterial.PbrMetallicRoughness.BaseColor;
-                // GLTFast stores colors in linear space, convert to gamma for Standard shader
-                baseColor = baseColor.gamma;
-                colorFound = true;
-                Debug.Log($"[StandardColorMaterialGenerator] Material '{matName}': using PBR baseColor ({baseColor.r:F2},{baseColor.g:F2},{baseColor.b:F2},{baseColor.a:F2})");
-            }
-
-            if (!colorFound)
-            {
-                Debug.Log($"[StandardColorMaterialGenerator] Material '{matName}': no color found, using white");
-            }
-
-            // Apply the color to Standard shader's _Color property
-            material.SetColor("_Color", baseColor);
-
-            // Set white texture so _Color tinting works correctly
-            material.SetTexture("_MainTex", GetWhiteTexture());
-
-            // Configure Standard shader for opaque rendering (most common for character models)
-            material.SetFloat("_Mode", 0f); // Opaque
-            material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.One);
-            material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.Zero);
-            material.SetInt("_ZWrite", 1);
-            material.DisableKeyword("_ALPHATEST_ON");
-            material.DisableKeyword("_ALPHABLEND_ON");
-            material.DisableKeyword("_ALPHAPREMULTIPLY_ON");
-            material.renderQueue = -1; // Use shader default
-
-            // Set PBR properties for better visual quality
-            material.SetFloat("_Metallic", 0f);
-            material.SetFloat("_Glossiness", 0.5f);
-
-            // Handle double-sided
-            if (gltfMaterial.doubleSided)
-            {
-                material.SetFloat("_Cull", 0f); // Off
-            }
-
-            // Handle alpha modes
-            if (gltfMaterial.GetAlphaMode() == GLTFast.Schema.MaterialBase.AlphaMode.Mask)
-            {
-                material.SetFloat("_Mode", 1f); // Cutout
-                material.SetFloat("_Cutoff", gltfMaterial.alphaCutoff);
-                material.EnableKeyword("_ALPHATEST_ON");
-                material.renderQueue = (int)UnityEngine.Rendering.RenderQueue.AlphaTest;
-            }
-            else if (gltfMaterial.GetAlphaMode() == GLTFast.Schema.MaterialBase.AlphaMode.Blend)
-            {
-                material.SetFloat("_Mode", 3f); // Transparent
-                material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
-                material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
-                material.SetInt("_ZWrite", 0);
-                material.EnableKeyword("_ALPHABLEND_ON");
-                material.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
-            }
-
-            // Handle emissive
-            if (gltfMaterial.Emissive != Color.black)
-            {
-                material.SetColor("_EmissionColor", gltfMaterial.Emissive.gamma);
-                material.EnableKeyword("_EMISSION");
-            }
-
-            Debug.Log($"[StandardColorMaterialGenerator] CREATED material '{matName}' with color=({baseColor.r:F2},{baseColor.g:F2},{baseColor.b:F2},{baseColor.a:F2}) shader={shader.name}");
-            return material;
-        }
-    }
+    // Round 42: StandardColorMaterialGenerator removed (was GLTFast IMaterialGenerator dependency).
+    // Material creation now handled by CreateGLBMaterial() in SceneBuilder using pure C#.
 
     public class CharacterBob : MonoBehaviour
     {

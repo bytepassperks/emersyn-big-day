@@ -2,7 +2,6 @@
   "name": "EmersynsBigDay",
   "rootNamespace": "EmersynBigDay",
   "references": [
-    "glTFast",
     "Unity.Mathematics",
     "Newtonsoft.Json"
   ],
