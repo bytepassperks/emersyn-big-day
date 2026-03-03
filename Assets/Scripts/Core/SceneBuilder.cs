@@ -737,12 +737,13 @@ namespace EmersynBigDay.Core
             Color wallColor = RoomWallColors[index];
             bool isOutdoor = (index == 3 || index == 8);
 
-            MakeCube("Floor", new Vector3(0, -0.25f, 0), new Vector3(12, 0.5f, 10), floorColor, roomContainer);
+            // Round 55 (Bedrock): Scale room 3x to fill camera view at zoom 35-40f
+            MakeCube("Floor", new Vector3(0, -0.25f, 0), new Vector3(36, 0.5f, 30), floorColor, roomContainer);
             if (!isOutdoor)
             {
-                MakeCube("BackWall", new Vector3(0, 2.5f, 5), new Vector3(12, 5, 0.3f), wallColor, roomContainer);
-                MakeCube("LeftWall", new Vector3(-6, 2.5f, 0), new Vector3(0.3f, 5, 10), wallColor, roomContainer);
-                MakeCube("RightWall", new Vector3(6, 2.5f, 0), new Vector3(0.3f, 5, 10), wallColor, roomContainer);
+                MakeCube("BackWall", new Vector3(0, 7.5f, 15), new Vector3(36, 15, 0.3f), wallColor, roomContainer);
+                MakeCube("LeftWall", new Vector3(-18, 7.5f, 0), new Vector3(0.3f, 15, 30), wallColor, roomContainer);
+                MakeCube("RightWall", new Vector3(18, 7.5f, 0), new Vector3(0.3f, 15, 30), wallColor, roomContainer);
                 // Round 26: Remove ceiling for true Sims 4 dollhouse view (camera looks down into open room)
             }
             else
@@ -756,12 +757,13 @@ namespace EmersynBigDay.Core
             StartCoroutine(LoadAndApplyRoomTextures(index));
             var rlo = new GameObject("RoomLight");
             rlo.transform.SetParent(roomContainer);
-            rlo.transform.position = new Vector3(0, 4, 0);
+            // Round 55: Higher light position and wider range for 3x room
+            rlo.transform.position = new Vector3(0, 12, 0);
             var pl = rlo.AddComponent<Light>();
             pl.type = LightType.Point;
             pl.color = floorColor;
-            pl.intensity = 0.5f;
-            pl.range = 15f;
+            pl.intensity = 0.8f;
+            pl.range = 45f;
             if (roomNameText != null) roomNameText.text = roomName;
             RenderSettings.ambientLight = Color.Lerp(new Color(0.85f, 0.88f, 0.92f), floorColor, 0.3f);
         }
