@@ -2,8 +2,7 @@
   "name": "EmersynsBigDay.MiniGames",
   "rootNamespace": "EmersynsBigDay.MiniGames",
   "references": [
-    "EmersynsBigDay",
-    "Unity.TextMeshPro"
+    "EmersynsBigDay"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],
