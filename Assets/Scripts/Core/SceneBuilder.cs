@@ -455,15 +455,12 @@ namespace EmersynBigDay.Core
             mainCamera.clearFlags = CameraClearFlags.SolidColor;
             // Round 20 (Claude 4.5 Bedrock): Soft pink background to match room aesthetic
             mainCamera.backgroundColor = new Color(0.95f, 0.88f, 0.92f);
-            // Round 29: 3-tier adaptive FOV based on screen aspect ratio
-            // Very narrow phones (aspect < 0.5): FOV=80 (Pixel 9 Pro XL ~0.44)
-            // Normal phones (aspect 0.5-0.6): FOV=70
-            // Tablets (aspect >= 0.6): FOV=75 (wider to see full room on landscape-ish screens)
+            // Round 46 (Claude 4.5 Bedrock): Optimized FOV to fill more screen with game world
             float aspect = (float)Screen.width / Screen.height;
             float adaptiveFOV;
-            if (aspect < 0.5f) adaptiveFOV = 80f;
-            else if (aspect < 0.6f) adaptiveFOV = 70f;
-            else adaptiveFOV = 75f; // Round 29: Increased from 60 to show full room on tablets
+            if (aspect < 0.5f) adaptiveFOV = 85f;      // Very narrow phones - wider to see more
+            else if (aspect < 0.6f) adaptiveFOV = 75f;  // Normal phones
+            else adaptiveFOV = 68f;                      // Tablets - tighter for better framing
             mainCamera.fieldOfView = adaptiveFOV;
             Debug.Log($"[SceneBuilder] Screen {Screen.width}x{Screen.height} aspect={aspect:F2} FOV={adaptiveFOV}");
             mainCamera.nearClipPlane = 0.1f;
@@ -483,12 +480,12 @@ namespace EmersynBigDay.Core
             if (mainCamera.GetComponent<CameraSystem.CameraController>() == null)
             {
                 var ctrl = mainCamera.gameObject.AddComponent<CameraSystem.CameraController>();
-                // Round 29: 3-tier adaptive camera based on screen aspect ratio
+                // Round 46 (Claude 4.5 Bedrock): Lower pitch to see character FRONTS, closer zoom
                 float camAspect = (float)Screen.width / Screen.height;
                 float adaptiveZoom, adaptivePitch;
-                if (camAspect < 0.5f) { adaptiveZoom = 15f; adaptivePitch = 42f; } // Very narrow phones (Pixel 9 Pro XL)
-                else if (camAspect < 0.6f) { adaptiveZoom = 18f; adaptivePitch = 45f; } // Normal phones
-                else { adaptiveZoom = 16f; adaptivePitch = 43f; } // Round 29: Tablets - closer zoom, less steep pitch to see room
+                if (camAspect < 0.5f) { adaptiveZoom = 12f; adaptivePitch = 28f; } // Very narrow phones
+                else if (camAspect < 0.6f) { adaptiveZoom = 14f; adaptivePitch = 28f; } // Normal phones
+                else { adaptiveZoom = 13f; adaptivePitch = 28f; } // Tablets - closer
                 ctrl.MinZoom = 8f;
                 ctrl.MaxZoom = 25f; // Round 28: Reduced from 50 to prevent fuzz test zooming too far out
                 ctrl.CurrentZoom = adaptiveZoom;
@@ -498,17 +495,17 @@ namespace EmersynBigDay.Core
                 ctrl.Offset = new Vector3(0f, 10f, -10f); // Round 28: Reduced offset to keep camera closer
                 Debug.Log($"[SceneBuilder] Camera adaptive R29: aspect={camAspect:F2} zoom={adaptiveZoom} pitch={adaptivePitch}");
             }
-            // Round 29: 3-tier adaptive initial camera position
+            // Round 46: Lower camera angle to see character fronts
             float initAspect = (float)Screen.width / Screen.height;
             float initZoom, initPitch;
-            if (initAspect < 0.5f) { initZoom = 15f; initPitch = 42f; }
-            else if (initAspect < 0.6f) { initZoom = 18f; initPitch = 45f; }
-            else { initZoom = 16f; initPitch = 43f; } // Round 29: Tablets closer
+            if (initAspect < 0.5f) { initZoom = 12f; initPitch = 28f; }
+            else if (initAspect < 0.6f) { initZoom = 14f; initPitch = 28f; }
+            else { initZoom = 13f; initPitch = 28f; }
             float initPitchRad = initPitch * Mathf.Deg2Rad;
             Vector3 camDir = new Vector3(0f, Mathf.Sin(initPitchRad), -Mathf.Cos(initPitchRad));
             mainCamera.transform.position = camDir * initZoom;
-            mainCamera.transform.LookAt(new Vector3(0f, 1.0f, 0f)); // Look at floor level
-            Debug.Log($"[SceneBuilder] Initial camera R29: aspect={initAspect:F2} zoom={initZoom} pitch={initPitch} pos={mainCamera.transform.position}");
+            mainCamera.transform.LookAt(new Vector3(0f, 0.7f, 0f)); // Round 46: Look at waist level to see faces
+            Debug.Log($"[SceneBuilder] Initial camera R46: aspect={initAspect:F2} zoom={initZoom} pitch={initPitch} pos={mainCamera.transform.position}");
         }
 
         private void CreateManagers()
@@ -859,18 +856,34 @@ namespace EmersynBigDay.Core
         private void CreateCharacters()
         {
             characterContainer = new GameObject("Characters").transform;
-            emersynObj = MakeCharacter("Emersyn", Vector3.zero, CharBodyColors[0], 1f, true);
+            // Round 46 (Claude 4.5 Bedrock): Semicircle layout so characters don't overlap
+            // Emersyn center-front (hero position), others in arc behind
+            emersynObj = MakeCharacter("Emersyn", new Vector3(0f, 0f, -0.5f), CharBodyColors[0], 1f, true);
             emersynObj.transform.SetParent(characterContainer);
             if (CameraSystem.CameraController.Instance != null)
                 CameraSystem.CameraController.Instance.Target = emersynObj.transform;
+            
+            // Arrange other characters in semicircle behind Emersyn
+            float charRadius = 2.5f;
+            float startAngle = 145f;
+            float angleStep = 35f;
             for (int i = 1; i < CharacterNames.Length; i++)
             {
-                var f = MakeCharacter(CharacterNames[i], new Vector3(2f + (i - 1) * 2.5f, 0, Random.Range(-1f, 1f)), CharBodyColors[i], 0.85f, false);
+                float angle = (startAngle + (i - 1) * angleStep) * Mathf.Deg2Rad;
+                float x = Mathf.Sin(angle) * charRadius;
+                float z = Mathf.Cos(angle) * charRadius;
+                var f = MakeCharacter(CharacterNames[i], new Vector3(x, 0, z), CharBodyColors[i], 0.85f, false);
                 f.transform.SetParent(characterContainer);
             }
+            
+            // Pets in front-row arc, closer to camera
+            float petRadius = 1.6f;
             for (int i = 0; i < PetNames.Length; i++)
             {
-                var pet = MakePet(PetNames[i], new Vector3(-1.5f - i * 1.5f, 0, Random.Range(-0.5f, 0.5f)), PetColors[i]);
+                float angle = (160f + i * 40f) * Mathf.Deg2Rad;
+                float x = Mathf.Sin(angle) * petRadius;
+                float z = Mathf.Cos(angle) * petRadius - 1.2f; // Closer to camera
+                var pet = MakePet(PetNames[i], new Vector3(x, 0, z), PetColors[i]);
                 pet.transform.SetParent(characterContainer);
             }
         }
@@ -1788,8 +1801,42 @@ namespace EmersynBigDay.Core
         }
 
         /// <summary>
-        /// Round 44 (Claude 4.5 Bedrock): Add cartoon sparkle particle effects to characters.
-        /// Floating sparkles/stars around characters for Talking Tom / Sims 4 polish.
+        /// Round 46 (Claude 4.5 Bedrock): Procedural 4-pointed star sparkle texture.
+        /// Creates a diamond/star shape with soft glow falloff - no external assets needed.
+        /// </summary>
+        private Texture2D CreateSparkleTexture(int size = 32)
+        {
+            Texture2D texture = new Texture2D(size, size, TextureFormat.RGBA32, false);
+            Color[] pixels = new Color[size * size];
+            Vector2 center = new Vector2(size * 0.5f, size * 0.5f);
+            float maxDist = size * 0.4f;
+            
+            for (int y = 0; y < size; y++)
+            {
+                for (int x = 0; x < size; x++)
+                {
+                    Vector2 fromCenter = new Vector2(x, y) - center;
+                    float distX = Mathf.Abs(fromCenter.x);
+                    float distY = Mathf.Abs(fromCenter.y);
+                    // 4-pointed star shape
+                    float starShape = Mathf.Max(distX * 0.3f + distY, distY * 0.3f + distX);
+                    float radialDist = fromCenter.magnitude;
+                    float alpha = Mathf.Clamp01(1f - starShape / maxDist) * Mathf.Clamp01(1f - radialDist / maxDist);
+                    alpha = Mathf.Pow(alpha, 2f); // Sharper falloff for sparkle look
+                    pixels[y * size + x] = new Color(1f, 1f, 1f, alpha);
+                }
+            }
+            texture.SetPixels(pixels);
+            texture.Apply();
+            texture.wrapMode = TextureWrapMode.Clamp;
+            texture.filterMode = FilterMode.Bilinear;
+            return texture;
+        }
+
+        /// <summary>
+        /// Round 44+46 (Claude 4.5 Bedrock): Add cartoon sparkle particle effects to characters.
+        /// Floating sparkle stars around characters for Talking Tom / Sims 4 polish.
+        /// R46: Now uses procedural star texture instead of square sprites.
         /// </summary>
         private void AddCartoonSparkles(Transform character, bool isPet)
         {
@@ -1854,9 +1901,11 @@ namespace EmersynBigDay.Core
             rotOverLifetime.enabled = true;
             rotOverLifetime.z = new ParticleSystem.MinMaxCurve(-90f, 90f);
             
-            // Renderer - use default sprite material
+            // Round 46: Procedural star sparkle texture instead of squares
             var renderer = ps.GetComponent<ParticleSystemRenderer>();
-            renderer.material = new Material(Shader.Find("Sprites/Default"));
+            Material sparkleMat = new Material(Shader.Find("Sprites/Default"));
+            sparkleMat.mainTexture = CreateSparkleTexture(32);
+            renderer.material = sparkleMat;
             renderer.sortingOrder = 10; // Render in front
         }
 

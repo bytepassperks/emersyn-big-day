@@ -35,10 +35,10 @@ namespace EmersynBigDay.CameraSystem
         public float OrbitSpeed = 120f;
         public float MinPitch = 10f;
         public float MaxPitch = 80f;
-        // Round 26: 50° pitch for true Sims 4 dollhouse angle — looking DOWN at floor
-        public float DefaultPitch = 50f;
+        // Round 46 (Claude 4.5 Bedrock): Lower pitch to see character FRONTS, not tops of heads
+        public float DefaultPitch = 28f;
         private float currentYaw = 0f;
-        private float currentPitch = 50f;
+        private float currentPitch = 28f;
 
         [Header("Screen Shake")]
         public float ShakeDecay = 5f;
@@ -99,8 +99,8 @@ namespace EmersynBigDay.CameraSystem
             Vector3 desiredPosition = CalculateDesiredPosition();
             transform.position = desiredPosition;
             springVelocity = Vector3.zero;
-            // Round 26: Look at floor center (y=1.0) not room center (y=2.5) to tilt camera down
-            Vector3 lookTarget = Target.position + Vector3.up * 1.0f;
+            // Round 46 (Claude 4.5 Bedrock): Look at character waist level (y=0.7) to see faces
+            Vector3 lookTarget = Target.position + Vector3.up * 0.7f;
             transform.LookAt(lookTarget);
             initialPositionSet = true;
         }
@@ -114,8 +114,8 @@ namespace EmersynBigDay.CameraSystem
             springVelocity += springForce * Time.deltaTime;
             transform.position += springVelocity * Time.deltaTime;
 
-            // Round 26: Look at floor center (y=1.0) to keep camera looking down
-            Vector3 lookTarget = Target.position + Vector3.up * 1.0f;
+            // Round 46 (Claude 4.5 Bedrock): Look at character waist (y=0.7) to see faces
+            Vector3 lookTarget = Target.position + Vector3.up * 0.7f;
             Quaternion targetRotation = Quaternion.LookRotation(lookTarget - transform.position);
             transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, RotationSpeed * Time.deltaTime);
         }
@@ -221,11 +221,11 @@ namespace EmersynBigDay.CameraSystem
         {
             currentYaw = 0f;
             currentPitch = DefaultPitch;
-            // Round 29: 3-tier adaptive zoom on reset based on screen aspect
+            // Round 46: Adaptive zoom on reset
             float resetAspect = (float)Screen.width / Screen.height;
-            if (resetAspect < 0.5f) CurrentZoom = 15f;
-            else if (resetAspect < 0.6f) CurrentZoom = 18f;
-            else CurrentZoom = 16f; // Round 29: Tablets closer
+            if (resetAspect < 0.5f) CurrentZoom = 12f;
+            else if (resetAspect < 0.6f) CurrentZoom = 14f;
+            else CurrentZoom = 13f; // Round 46: Closer for all devices
             frameCount = 0; // Round 25: Reset to force exact position again
             springVelocity = Vector3.zero;
             isTransitioning = false;
