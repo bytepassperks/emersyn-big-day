@@ -450,9 +450,10 @@ namespace EmersynBigDay.Core
                 camObj.AddComponent<AudioListener>();
             }
             mainCamera.clearFlags = CameraClearFlags.SolidColor;
-            mainCamera.backgroundColor = new Color(0.55f, 0.80f, 0.95f);
-            // Round 19 (Claude 4.5 Bedrock): Wider FOV for Sims 4 style room view
-            mainCamera.fieldOfView = 45f;
+            // Round 20 (Claude 4.5 Bedrock): Soft pink background to match room aesthetic, eliminates white void
+            mainCamera.backgroundColor = new Color(0.95f, 0.88f, 0.92f);
+            // Round 20 (Claude 4.5 Bedrock): Tighter FOV for Sims 4 "dollhouse" overhead perspective
+            mainCamera.fieldOfView = 32f;
             mainCamera.nearClipPlane = 0.1f;
             mainCamera.farClipPlane = 100f;
             // Claude Bedrock fix #1: FORCE Forward rendering - Deferred fails silently on Android GPUs
@@ -470,13 +471,14 @@ namespace EmersynBigDay.Core
             if (mainCamera.GetComponent<CameraSystem.CameraController>() == null)
             {
                 var ctrl = mainCamera.gameObject.AddComponent<CameraSystem.CameraController>();
-                // Round 19 (Claude 4.5 Bedrock): Pull camera back for Sims 4 style isometric view
-                ctrl.Offset = new Vector3(0f, 6f, -8f);
-                ctrl.CurrentZoom = 10f;
+                // Round 20 (Claude 4.5 Bedrock): Much higher + further back for "dollhouse" overhead view
+                ctrl.Offset = new Vector3(0f, 12f, -12f);
+                ctrl.CurrentZoom = 14f;
             }
-            // Round 19: Camera position for Sims 4 style — elevated, pulled back to see full room + character
-            mainCamera.transform.position = new Vector3(0f, 8f, -10f);
-            mainCamera.transform.LookAt(new Vector3(0f, 1.5f, 2f));
+            // Round 20 (Claude 4.5 Bedrock): Elevated isometric camera — see ENTIRE room layout
+            // Position higher (12) and further back (-12) for proper Sims 4 style overview
+            mainCamera.transform.position = new Vector3(0f, 12f, -12f);
+            mainCamera.transform.LookAt(new Vector3(0f, 1.0f, 0f));
         }
 
         private void CreateManagers()
@@ -596,9 +598,10 @@ namespace EmersynBigDay.Core
             var ml = lo.AddComponent<Light>();
             ml.type = LightType.Directional;
             ml.color = new Color(1f, 0.96f, 0.88f);
-            ml.intensity = 1.2f;
+            // Round 20 (Claude 4.5 Bedrock): Softer lighting for AAA mobile look
+            ml.intensity = 0.8f;
             ml.shadows = LightShadows.Soft;
-            ml.shadowStrength = 0.6f;
+            ml.shadowStrength = 0.3f; // Very subtle shadows like Sims 4
             lo.transform.rotation = Quaternion.Euler(45f, -30f, 0f);
             ml.cullingMask = ~0;
 
@@ -1762,7 +1765,7 @@ namespace EmersynBigDay.Core
             AndroidLog($"[SceneBuilder] Round 19: Applied {applied} textures to {charName}");
         }
 
-        // === Round 19: Texture Validator — fix magenta artifacts from missing textures ===
+        // === Round 20: Enhanced Texture Validator — fix ALL magenta artifacts including particles ===
         private IEnumerator ValidateAndFixTextures()
         {
             yield return new WaitForSeconds(3f); // Let everything load first
@@ -1786,7 +1789,21 @@ namespace EmersynBigDay.Core
                         {
                             mats[i].SetColor("_Color", Color.white);
                             fixed_count++;
+                            AndroidLog($"[SceneBuilder] Round 20: Fixed magenta color on {renderer.gameObject.name}");
                         }
+                    }
+
+                    // Check for null main texture (common source of magenta squares)
+                    if (mats[i].HasProperty("_MainTex") && mats[i].GetTexture("_MainTex") == null)
+                    {
+                        // Create emergency 2x2 white fallback texture
+                        Texture2D fallback = new Texture2D(2, 2);
+                        Color[] pixels = new Color[4];
+                        for (int p = 0; p < 4; p++) pixels[p] = Color.white;
+                        fallback.SetPixels(pixels);
+                        fallback.Apply();
+                        mats[i].SetTexture("_MainTex", fallback);
+                        fixed_count++;
                     }
 
                     // Ensure _DETAIL_MULX2 is disabled to prevent magenta artifacts
@@ -1796,9 +1813,27 @@ namespace EmersynBigDay.Core
                         mats[i].SetTexture("_DetailAlbedoMap", null);
                         fixed_count++;
                     }
+
+                    // Round 20: Disable specular highlights and glossy reflections on mobile
+                    // These cause artifacts on Mali GPUs (Galaxy Tab S9)
+                    mats[i].SetFloat("_SpecularHighlights", 0f);
+                    mats[i].SetFloat("_GlossyReflections", 0f);
                 }
             }
-            AndroidLog($"[SceneBuilder] Round 19: Texture validator fixed {fixed_count} materials");
+
+            // Round 20 (Claude 4.5 Bedrock): Check and disable broken particle systems
+            var particles = FindObjectsByType<ParticleSystemRenderer>(FindObjectsSortMode.None);
+            foreach (var psr in particles)
+            {
+                if (psr.material == null || psr.material.mainTexture == null)
+                {
+                    psr.gameObject.SetActive(false);
+                    fixed_count++;
+                    AndroidLog($"[SceneBuilder] Round 20: Disabled broken particle system {psr.gameObject.name}");
+                }
+            }
+
+            AndroidLog($"[SceneBuilder] Round 20: Texture validator fixed {fixed_count} materials");
         }
 
         // === PBR Texture Loading for Rooms ===
@@ -1824,8 +1859,8 @@ namespace EmersynBigDay.Core
 
                 if (floorAlbedo != null)
                 {
-                    // Round 19: Floor tiling — slightly less dense for cleaner look
-                    Vector2 floorTiling = new Vector2(12f / 3f, 10f / 3f);
+                    // Round 20: Floor tiling — single elegant repeat for wood plank feel
+                    Vector2 floorTiling = new Vector2(1.5f, 1.5f);
                     Material floorMat = CreatePBRMaterial(floorAlbedo, floorNormal, floorTiling);
                     ApplyMaterialToChild(roomContainer, "Floor", floorMat);
                 }
@@ -1842,19 +1877,24 @@ namespace EmersynBigDay.Core
 
                 if (wallAlbedo != null)
                 {
-                    // Round 19 (Claude 4.5 Bedrock): Reduce tiling factor for less busy pattern
-                    // Use 1 tile per 4 units instead of 2 units — pattern 2x larger, more elegant
-                    Vector2 backWallTiling = new Vector2(12f / 4f, 5f / 4f); // (3, 1.25)
+                    // Round 20 (Claude 4.5 Bedrock): DRAMATICALLY reduce tiling — single pattern across wall
+                    // Back wall is 12 units wide — use ~0.5-0.6 tiling for 1 large elegant pattern
+                    Vector2 backWallTiling = new Vector2(0.6f, 0.6f);
                     Material backWallMat = CreatePBRMaterial(wallAlbedo, wallNormal, backWallTiling);
+                    // Round 20: Soften wall texture by reducing glossiness and adding slight tint
+                    backWallMat.SetFloat("_Glossiness", 0.1f);
                     ApplyMaterialToChild(roomContainer, "BackWall", backWallMat);
 
-                    Vector2 sideWallTiling = new Vector2(10f / 4f, 5f / 4f); // (2.5, 1.25)
+                    Vector2 sideWallTiling = new Vector2(0.5f, 0.6f);
                     Material sideWallMat = CreatePBRMaterial(wallAlbedo, wallNormal, sideWallTiling);
+                    sideWallMat.SetFloat("_Glossiness", 0.1f);
                     ApplyMaterialToChild(roomContainer, "LeftWall", sideWallMat);
                     ApplyMaterialToChild(roomContainer, "RightWall", sideWallMat);
 
-                    Vector2 ceilingTiling = new Vector2(12f / 4f, 10f / 4f); // (3, 2.5)
+                    // Round 20: Ceiling uses even less tiling — subtle pattern overhead
+                    Vector2 ceilingTiling = new Vector2(0.4f, 0.4f);
                     Material ceilingMat = CreatePBRMaterial(wallAlbedo, wallNormal, ceilingTiling);
+                    ceilingMat.SetFloat("_Glossiness", 0.05f);
                     ApplyMaterialToChild(roomContainer, "Ceiling", ceilingMat);
                 }
             }
