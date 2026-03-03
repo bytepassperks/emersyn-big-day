@@ -35,10 +35,10 @@ namespace EmersynBigDay.CameraSystem
         public float OrbitSpeed = 120f;
         public float MinPitch = 10f;
         public float MaxPitch = 80f;
-        // Round 47 (Claude 4.5 Bedrock): Near eye-level pitch to see character FACES clearly
-        public float DefaultPitch = 12f;
+        // Round 48 (Claude 4.5 Bedrock): Face-level pitch for Sims 4-style framing
+        public float DefaultPitch = 8f;
         private float currentYaw = 0f;
-        private float currentPitch = 12f;
+        private float currentPitch = 8f;
 
         [Header("Screen Shake")]
         public float ShakeDecay = 5f;
@@ -221,11 +221,11 @@ namespace EmersynBigDay.CameraSystem
         {
             currentYaw = 0f;
             currentPitch = DefaultPitch;
-            // Round 47: Pull back zoom to see full room + characters
+            // Round 48: Closer zoom for screen-filling framing
             float resetAspect = (float)Screen.width / Screen.height;
-            if (resetAspect < 0.5f) CurrentZoom = 16f;
-            else if (resetAspect < 0.6f) CurrentZoom = 18f;
-            else CurrentZoom = 17f; // Round 47: See room + characters
+            if (resetAspect < 0.5f) CurrentZoom = 10f;
+            else if (resetAspect < 0.6f) CurrentZoom = 11f;
+            else CurrentZoom = 10f; // Round 48: Closer for all devices
             frameCount = 0; // Round 25: Reset to force exact position again
             springVelocity = Vector3.zero;
             isTransitioning = false;
