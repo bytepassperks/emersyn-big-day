@@ -91,6 +91,7 @@ namespace EmersynBigDay.Core
         };
 
         private Material baseMat;
+        private Texture2D whitePixelTex; // 1x1 white texture for Mobile/Diffuse color tinting
         private Dictionary<string, Texture2D> textureCache = new Dictionary<string, Texture2D>();
         private bool glbLoadingComplete = false;
 
@@ -162,6 +163,15 @@ namespace EmersynBigDay.Core
             AndroidLog("[SceneBuilder] Shader warmup complete");
 
             AndroidLog("[SceneBuilder] Starting programmatic scene construction...");
+
+            // Round 8 fix: Create a 1x1 white texture for Mobile/Diffuse color tinting
+            // Mobile/Diffuse uses _Color as a TINT on _MainTex. Without _MainTex, everything renders white.
+            whitePixelTex = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+            Color[] whitePixels = new Color[4];
+            for (int i = 0; i < 4; i++) whitePixels[i] = Color.white;
+            whitePixelTex.SetPixels(whitePixels);
+            whitePixelTex.Apply();
+            AndroidLog("[SceneBuilder] White pixel texture created for color tinting");
 
             // CRITICAL: Each phase is independently try-caught so a failure in one
             // (e.g. a manager system) does NOT prevent room geometry, characters, or UI from rendering.
@@ -373,7 +383,11 @@ namespace EmersynBigDay.Core
         private Material ColorMat(Color c)
         {
             var m = new Material(baseMat);
-            // Claude Bedrock Round 5: Set color via both .color and _Color for all shader types
+            // Round 8 fix: Mobile/Diffuse uses _Color as TINT on _MainTex.
+            // Without _MainTex set, the color tint produces white regardless of _Color value.
+            // Solution: Set a white 1x1 pixel texture as _MainTex so _Color tint works properly.
+            if (whitePixelTex != null && m.HasProperty("_MainTex"))
+                m.SetTexture("_MainTex", whitePixelTex);
             m.color = c;
             if (m.HasProperty("_Color"))
                 m.SetColor("_Color", c);
@@ -1469,21 +1483,29 @@ namespace EmersynBigDay.Core
         private Material CreatePBRMaterial(Texture2D albedo, Texture2D normal)
         {
             Material mat = new Material(baseMat);
+            // Round 8 fix: Only set properties that Mobile/Diffuse actually supports.
+            // Mobile/Diffuse only has _MainTex and _Color. Setting _BumpMap, _Glossiness,
+            // _Metallic corrupts the material on Android, causing magenta/white blob textures.
             mat.SetTexture("_MainTex", albedo);
             mat.color = Color.white; // Don't tint, let texture show through
-            if (normal != null)
+            if (mat.HasProperty("_Color"))
+                mat.SetColor("_Color", Color.white);
+            
+            // Only set normal map if shader supports it (Standard does, Mobile/Diffuse does NOT)
+            if (normal != null && mat.HasProperty("_BumpMap"))
             {
                 mat.SetTexture("_BumpMap", normal);
                 mat.EnableKeyword("_NORMALMAP");
                 mat.SetFloat("_BumpScale", 1.0f);
             }
-            mat.SetFloat("_Glossiness", 0.3f);
-            mat.SetFloat("_Metallic", 0.0f);
+            // Only set PBR properties if shader supports them
+            if (mat.HasProperty("_Glossiness"))
+                mat.SetFloat("_Glossiness", 0.3f);
+            if (mat.HasProperty("_Metallic"))
+                mat.SetFloat("_Metallic", 0.0f);
             mat.enableInstancing = true;
-            // Set texture tiling for room scale
-            mat.SetTextureScale("_MainTex", new Vector2(3f, 3f));
-            if (normal != null)
-                mat.SetTextureScale("_BumpMap", new Vector2(3f, 3f));
+            // Set texture tiling - use 2x2 for walls (3x3 was too aggressive)
+            mat.SetTextureScale("_MainTex", new Vector2(2f, 2f));
             return mat;
         }
 
