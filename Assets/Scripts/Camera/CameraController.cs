@@ -35,10 +35,10 @@ namespace EmersynBigDay.CameraSystem
         public float OrbitSpeed = 120f;
         public float MinPitch = 10f;
         public float MaxPitch = 80f;
-        // Round 59: Adaptive pitch - steeper on phones to show floor
-        public float DefaultPitch = 50f;
+        // Round 60: Adaptive pitch - steeper on phones to show floor
+        public float DefaultPitch = 55f;
         private float currentYaw = 0f;
-        private float currentPitch = 50f;
+        private float currentPitch = 55f;
 
         [Header("Screen Shake")]
         public float ShakeDecay = 5f;
@@ -221,11 +221,11 @@ namespace EmersynBigDay.CameraSystem
         {
             currentYaw = 0f;
             currentPitch = DefaultPitch;
-            // Round 59: Adaptive zoom + pitch for dollhouse view
+            // Round 60: Adaptive zoom + pitch for dollhouse view
             float resetAspect = (float)Screen.width / Screen.height;
-            if (resetAspect < 0.5f) { CurrentZoom = 20f; currentPitch = 55f; }
-            else if (resetAspect < 0.6f) { CurrentZoom = 18f; currentPitch = 50f; }
-            else { CurrentZoom = 16f; currentPitch = 45f; }
+            if (resetAspect < 0.5f) { CurrentZoom = 18f; currentPitch = 60f; }
+            else if (resetAspect < 0.6f) { CurrentZoom = 16f; currentPitch = 55f; }
+            else { CurrentZoom = 14f; currentPitch = 50f; }
             frameCount = 0; // Round 25: Reset to force exact position again
             springVelocity = Vector3.zero;
             isTransitioning = false;
