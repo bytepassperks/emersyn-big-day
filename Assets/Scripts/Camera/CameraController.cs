@@ -29,16 +29,16 @@ namespace EmersynBigDay.CameraSystem
         public float MinZoom = 3f;
         public float MaxZoom = 40f;
         public float ZoomSpeed = 2f;
-        public float CurrentZoom = 18f; // Round 25 (Bedrock): 18 for better room framing
+        public float CurrentZoom = 28f; // Round 26: Pull back to 28 for full dollhouse view
 
         [Header("Orbital Control")]
         public float OrbitSpeed = 120f;
         public float MinPitch = 10f;
         public float MaxPitch = 80f;
-        // Round 25 (Claude 4.5 Bedrock): 35° pitch for proper dollhouse angle showing floor + walls
-        public float DefaultPitch = 35f;
+        // Round 26: 50° pitch for true Sims 4 dollhouse angle — looking DOWN at floor
+        public float DefaultPitch = 50f;
         private float currentYaw = 0f;
-        private float currentPitch = 35f;
+        private float currentPitch = 50f;
 
         [Header("Screen Shake")]
         public float ShakeDecay = 5f;
@@ -99,7 +99,8 @@ namespace EmersynBigDay.CameraSystem
             Vector3 desiredPosition = CalculateDesiredPosition();
             transform.position = desiredPosition;
             springVelocity = Vector3.zero;
-            Vector3 lookTarget = Target.position + Vector3.up * 2.5f;
+            // Round 26: Look at floor center (y=1.0) not room center (y=2.5) to tilt camera down
+            Vector3 lookTarget = Target.position + Vector3.up * 1.0f;
             transform.LookAt(lookTarget);
             initialPositionSet = true;
         }
@@ -113,8 +114,8 @@ namespace EmersynBigDay.CameraSystem
             springVelocity += springForce * Time.deltaTime;
             transform.position += springVelocity * Time.deltaTime;
 
-            // Round 24 (Claude 4.5 Bedrock): Look at room center (y=2.5) not character feet (y=1.5)
-            Vector3 lookTarget = Target.position + Vector3.up * 2.5f;
+            // Round 26: Look at floor center (y=1.0) to keep camera looking down
+            Vector3 lookTarget = Target.position + Vector3.up * 1.0f;
             Quaternion targetRotation = Quaternion.LookRotation(lookTarget - transform.position);
             transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, RotationSpeed * Time.deltaTime);
         }
@@ -220,7 +221,7 @@ namespace EmersynBigDay.CameraSystem
         {
             currentYaw = 0f;
             currentPitch = DefaultPitch;
-            CurrentZoom = 18f; // Round 25: Match default zoom
+            CurrentZoom = 28f; // Round 26: Match default zoom
             frameCount = 0; // Round 25: Reset to force exact position again
             springVelocity = Vector3.zero;
             isTransitioning = false;

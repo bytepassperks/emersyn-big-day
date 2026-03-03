@@ -454,8 +454,8 @@ namespace EmersynBigDay.Core
             mainCamera.clearFlags = CameraClearFlags.SolidColor;
             // Round 20 (Claude 4.5 Bedrock): Soft pink background to match room aesthetic
             mainCamera.backgroundColor = new Color(0.95f, 0.88f, 0.92f);
-            // Round 25 (Claude 4.5 Bedrock): FOV 42 — narrower for better depth and consistent room framing
-            mainCamera.fieldOfView = 42f;
+            // Round 26: FOV 60 — wider to see full room including side walls
+            mainCamera.fieldOfView = 60f;
             mainCamera.nearClipPlane = 0.1f;
             mainCamera.farClipPlane = 100f;
             // Claude Bedrock fix #1: FORCE Forward rendering - Deferred fails silently on Android GPUs
@@ -473,20 +473,20 @@ namespace EmersynBigDay.Core
             if (mainCamera.GetComponent<CameraSystem.CameraController>() == null)
             {
                 var ctrl = mainCamera.gameObject.AddComponent<CameraSystem.CameraController>();
-                // Round 25 (Claude 4.5 Bedrock): Fixed camera snap + high damping for consistent framing
+                // Round 26: Pull camera WAY back and up for true Sims 4 dollhouse view
                 ctrl.MinZoom = 8f;
-                ctrl.MaxZoom = 40f;
-                ctrl.CurrentZoom = 18f; // Round 25: Slightly farther for full room
-                ctrl.DefaultPitch = 35f; // Shallower angle shows floor + back wall
-                ctrl.SpringStiffness = 200f; // Round 25: Very stiff to prevent oscillation
-                ctrl.SpringDamping = 40f; // Round 25: High damping to snap instantly
-                ctrl.Offset = new Vector3(0f, 12f, -15f);
+                ctrl.MaxZoom = 50f;
+                ctrl.CurrentZoom = 28f; // Round 26: Far enough to see entire room
+                ctrl.DefaultPitch = 50f; // Round 26: 50° pitch looks DOWN at floor
+                ctrl.SpringStiffness = 200f;
+                ctrl.SpringDamping = 40f;
+                ctrl.Offset = new Vector3(0f, 18f, -18f);
             }
-            // Round 25 (Claude 4.5 Bedrock): Fixed camera at (0, 12, -15) for consistent Sims 4 view
-            float pitchRad = 35f * Mathf.Deg2Rad;
+            // Round 26: Camera at (0, 21.4, -18) for true Sims 4 dollhouse view
+            float pitchRad = 50f * Mathf.Deg2Rad;
             Vector3 camDir = new Vector3(0f, Mathf.Sin(pitchRad), -Mathf.Cos(pitchRad));
-            mainCamera.transform.position = camDir * 18f;
-            mainCamera.transform.LookAt(new Vector3(0f, 2.5f, 0f)); // Look at room center
+            mainCamera.transform.position = camDir * 28f;
+            mainCamera.transform.LookAt(new Vector3(0f, 1.0f, 0f)); // Look at floor level
         }
 
         private void CreateManagers()
@@ -668,7 +668,7 @@ namespace EmersynBigDay.Core
                 MakeCube("BackWall", new Vector3(0, 2.5f, 5), new Vector3(12, 5, 0.3f), wallColor, roomContainer);
                 MakeCube("LeftWall", new Vector3(-6, 2.5f, 0), new Vector3(0.3f, 5, 10), wallColor, roomContainer);
                 MakeCube("RightWall", new Vector3(6, 2.5f, 0), new Vector3(0.3f, 5, 10), wallColor, roomContainer);
-                MakeCube("Ceiling", new Vector3(0, 5.25f, 0), new Vector3(12, 0.3f, 10), wallColor * 0.95f, roomContainer);
+                // Round 26: Remove ceiling for true Sims 4 dollhouse view (camera looks down into open room)
             }
             else
             {
