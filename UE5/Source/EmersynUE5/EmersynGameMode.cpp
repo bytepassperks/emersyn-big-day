@@ -81,10 +81,10 @@ namespace SC {
     const FLinearColor MetalBlack(0.15f, 0.15f, 0.18f);
     // Walls / floors
     const FLinearColor WallWhite(0.95f, 0.93f, 0.90f);
-    const FLinearColor WallPink(0.95f, 0.85f, 0.88f);
-    const FLinearColor WallBlue(0.82f, 0.88f, 0.95f);
-    const FLinearColor WallGreen(0.82f, 0.92f, 0.85f);
-    const FLinearColor WallYellow(0.98f, 0.95f, 0.82f);
+    const FLinearColor WallPink(0.95f, 0.70f, 0.78f);
+    const FLinearColor WallBlue(0.65f, 0.78f, 0.95f);
+    const FLinearColor WallGreen(0.65f, 0.90f, 0.72f);
+    const FLinearColor WallYellow(0.98f, 0.90f, 0.65f);
     const FLinearColor FloorWood(0.65f, 0.45f, 0.28f);
     const FLinearColor FloorTile(0.88f, 0.88f, 0.85f);
     const FLinearColor FloorGrass(0.35f, 0.65f, 0.30f);
@@ -250,10 +250,19 @@ void AEmersynGameMode::SetupIsometricCamera(FVector RoomCenter, float Distance)
     ACameraActor* Cam = GetWorld()->SpawnActor<ACameraActor>(CamLoc, CamRot);
     if (Cam)
     {
-        Cam->GetCameraComponent()->FieldOfView = 50.0f;
+        Cam->GetCameraComponent()->FieldOfView = 55.0f;
         PC->SetViewTarget(Cam);
-        // Disable player input so fuzz test touches don't rotate camera
+        // Destroy default pawn to eliminate touch joystick controls
+        if (PC->GetPawn())
+        {
+            PC->GetPawn()->Destroy();
+            PC->UnPossess();
+        }
+        // Block all input so fuzz test touches cannot affect camera
         PC->DisableInput(PC);
+        FInputModeGameOnly InputMode;
+        PC->SetInputMode(InputMode);
+        PC->bShowMouseCursor = false;
         SpawnedActors.Add(Cam);
     }
 }
@@ -569,35 +578,35 @@ void AEmersynGameMode::BuildBedroom()
     SpawnMesh(MeshData_BEDROOM_BED::Vertices, MeshData_BEDROOM_BED::Normals,
               MeshData_BEDROOM_BED::UVs, MeshData_BEDROOM_BED::Triangles,
               MeshData_BEDROOM_BED::NumVertices, MeshData_BEDROOM_BED::NumTriangles,
-              FVector(50, -100, 0), FRotator(0, 0, 0), FVector(1.2f, 1.2f, 1.2f),
-              SC::FabricPink, 1.1f);
+              FVector(50, -100, 0), FRotator(0, 0, 0), FVector(4.8f, 4.8f, 4.8f),
+              SC::FabricPink, 1.7f);
 
     // Real 3D dresser
     SpawnMesh(MeshData_BEDROOM_DRESSER::Vertices, MeshData_BEDROOM_DRESSER::Normals,
               MeshData_BEDROOM_DRESSER::UVs, MeshData_BEDROOM_DRESSER::Triangles,
               MeshData_BEDROOM_DRESSER::NumVertices, MeshData_BEDROOM_DRESSER::NumTriangles,
-              FVector(-180, -50, 0), FRotator(0, 90, 0), FVector(1.0f, 1.0f, 1.0f),
-              SC::WoodLight, 1.0f);
+              FVector(-180, -50, 0), FRotator(0, 90, 0), FVector(4.0f, 4.0f, 4.0f),
+              SC::WoodLight, 1.5f);
 
     // Real 3D bookshelf
     SpawnMesh(MeshData_BEDROOM_BOOKSHELF::Vertices, MeshData_BEDROOM_BOOKSHELF::Normals,
               MeshData_BEDROOM_BOOKSHELF::UVs, MeshData_BEDROOM_BOOKSHELF::Triangles,
               MeshData_BEDROOM_BOOKSHELF::NumVertices, MeshData_BEDROOM_BOOKSHELF::NumTriangles,
-              FVector(-180, 100, 0), FRotator(0, 90, 0), FVector(1.0f, 1.0f, 1.0f),
-              SC::WoodMedium, 1.0f);
+              FVector(-180, 100, 0), FRotator(0, 90, 0), FVector(4.0f, 4.0f, 4.0f),
+              SC::WoodMedium, 1.5f);
 
     // Real 3D lamp
     SpawnMesh(MeshData_BEDROOM_LAMP::Vertices, MeshData_BEDROOM_LAMP::Normals,
               MeshData_BEDROOM_LAMP::UVs, MeshData_BEDROOM_LAMP::Triangles,
               MeshData_BEDROOM_LAMP::NumVertices, MeshData_BEDROOM_LAMP::NumTriangles,
-              FVector(150, -150, 50), FRotator(0, 0, 0), FVector(1.0f, 1.0f, 1.0f),
-              SC::FabricYellow, 1.2f);
+              FVector(150, -150, 50), FRotator(0, 0, 0), FVector(4.0f, 4.0f, 4.0f),
+              SC::FabricYellow, 1.8f);
 
     // Real 3D rug
     SpawnMesh(MeshData_BEDROOM_RUG::Vertices, MeshData_BEDROOM_RUG::Normals,
               MeshData_BEDROOM_RUG::UVs, MeshData_BEDROOM_RUG::Triangles,
               MeshData_BEDROOM_RUG::NumVertices, MeshData_BEDROOM_RUG::NumTriangles,
-              FVector(0, 50, 1), FRotator(0, 0, 0), FVector(1.5f, 1.5f, 1.0f),
+              FVector(0, 50, 1), FRotator(0, 0, 0), FVector(6.0f, 6.0f, 4.0f),
               SC::FabricPurple, 0.9f);
 
     // Characters
@@ -623,42 +632,42 @@ void AEmersynGameMode::BuildKitchen()
     SpawnMesh(MeshData_KITCHEN_TABLE::Vertices, MeshData_KITCHEN_TABLE::Normals,
               MeshData_KITCHEN_TABLE::UVs, MeshData_KITCHEN_TABLE::Triangles,
               MeshData_KITCHEN_TABLE::NumVertices, MeshData_KITCHEN_TABLE::NumTriangles,
-              FVector(0, 0, 0), FRotator(0, 0, 0), FVector(1.2f, 1.2f, 1.2f),
-              SC::WoodLight, 1.0f);
+              FVector(0, 0, 0), FRotator(0, 0, 0), FVector(4.8f, 4.8f, 4.8f),
+              SC::WoodLight, 1.5f);
 
     // Chairs around table
     SpawnMesh(MeshData_KITCHEN_CHAIR::Vertices, MeshData_KITCHEN_CHAIR::Normals,
               MeshData_KITCHEN_CHAIR::UVs, MeshData_KITCHEN_CHAIR::Triangles,
               MeshData_KITCHEN_CHAIR::NumVertices, MeshData_KITCHEN_CHAIR::NumTriangles,
-              FVector(60, 0, 0), FRotator(0, -90, 0), FVector(1.0f, 1.0f, 1.0f),
-              SC::WoodMedium, 1.0f);
+              FVector(60, 0, 0), FRotator(0, -90, 0), FVector(4.0f, 4.0f, 4.0f),
+              SC::WoodMedium, 1.5f);
 
     SpawnMesh(MeshData_KITCHEN_CHAIR::Vertices, MeshData_KITCHEN_CHAIR::Normals,
               MeshData_KITCHEN_CHAIR::UVs, MeshData_KITCHEN_CHAIR::Triangles,
               MeshData_KITCHEN_CHAIR::NumVertices, MeshData_KITCHEN_CHAIR::NumTriangles,
-              FVector(-60, 0, 0), FRotator(0, 90, 0), FVector(1.0f, 1.0f, 1.0f),
-              SC::WoodMedium, 1.0f);
+              FVector(-60, 0, 0), FRotator(0, 90, 0), FVector(4.0f, 4.0f, 4.0f),
+              SC::WoodMedium, 1.5f);
 
     // Fridge
     SpawnMesh(MeshData_KITCHEN_FRIDGE::Vertices, MeshData_KITCHEN_FRIDGE::Normals,
               MeshData_KITCHEN_FRIDGE::UVs, MeshData_KITCHEN_FRIDGE::Triangles,
               MeshData_KITCHEN_FRIDGE::NumVertices, MeshData_KITCHEN_FRIDGE::NumTriangles,
-              FVector(-200, -180, 0), FRotator(0, 0, 0), FVector(1.2f, 1.2f, 1.2f),
-              SC::ApplianceWhite, 1.0f);
+              FVector(-200, -180, 0), FRotator(0, 0, 0), FVector(4.8f, 4.8f, 4.8f),
+              SC::ApplianceWhite, 1.5f);
 
     // Stove
     SpawnMesh(MeshData_KITCHEN_STOVE::Vertices, MeshData_KITCHEN_STOVE::Normals,
               MeshData_KITCHEN_STOVE::UVs, MeshData_KITCHEN_STOVE::Triangles,
               MeshData_KITCHEN_STOVE::NumVertices, MeshData_KITCHEN_STOVE::NumTriangles,
-              FVector(-200, -60, 0), FRotator(0, 0, 0), FVector(1.1f, 1.1f, 1.1f),
-              SC::ApplianceSteel, 1.0f);
+              FVector(-200, -60, 0), FRotator(0, 0, 0), FVector(4.4f, 4.4f, 4.4f),
+              SC::ApplianceSteel, 1.5f);
 
     // Counter
     SpawnMesh(MeshData_KITCHEN_COUNTER::Vertices, MeshData_KITCHEN_COUNTER::Normals,
               MeshData_KITCHEN_COUNTER::UVs, MeshData_KITCHEN_COUNTER::Triangles,
               MeshData_KITCHEN_COUNTER::NumVertices, MeshData_KITCHEN_COUNTER::NumTriangles,
-              FVector(-200, 80, 0), FRotator(0, 0, 0), FVector(1.2f, 1.2f, 1.0f),
-              SC::WoodLight, 1.0f);
+              FVector(-200, 80, 0), FRotator(0, 0, 0), FVector(4.8f, 4.8f, 4.0f),
+              SC::WoodLight, 1.5f);
 
     // Character
     SpawnCharacterMesh(TEXT("Mia"), FVector(0, 80, 0), FRotator(0, 180, 0), 0.3f,
@@ -680,26 +689,26 @@ void AEmersynGameMode::BuildBathroom()
     SpawnMesh(MeshData_BATHROOM_TUB::Vertices, MeshData_BATHROOM_TUB::Normals,
               MeshData_BATHROOM_TUB::UVs, MeshData_BATHROOM_TUB::Triangles,
               MeshData_BATHROOM_TUB::NumVertices, MeshData_BATHROOM_TUB::NumTriangles,
-              FVector(50, -100, 0), FRotator(0, 0, 0), FVector(1.5f, 1.5f, 1.5f),
-              SC::TileWhite, 1.0f);
+              FVector(50, -100, 0), FRotator(0, 0, 0), FVector(6.0f, 6.0f, 6.0f),
+              SC::TileWhite, 1.5f);
 
     SpawnMesh(MeshData_BATHROOM_SINK::Vertices, MeshData_BATHROOM_SINK::Normals,
               MeshData_BATHROOM_SINK::UVs, MeshData_BATHROOM_SINK::Triangles,
               MeshData_BATHROOM_SINK::NumVertices, MeshData_BATHROOM_SINK::NumTriangles,
-              FVector(-150, 0, 50), FRotator(0, 90, 0), FVector(1.0f, 1.0f, 1.0f),
-              SC::TileWhite, 1.0f);
+              FVector(-150, 0, 50), FRotator(0, 90, 0), FVector(4.0f, 4.0f, 4.0f),
+              SC::TileWhite, 1.5f);
 
     SpawnMesh(MeshData_BATHROOM_MIRROR::Vertices, MeshData_BATHROOM_MIRROR::Normals,
               MeshData_BATHROOM_MIRROR::UVs, MeshData_BATHROOM_MIRROR::Triangles,
               MeshData_BATHROOM_MIRROR::NumVertices, MeshData_BATHROOM_MIRROR::NumTriangles,
-              FVector(-155, 0, 120), FRotator(0, 90, 0), FVector(0.8f, 0.8f, 0.8f),
-              SC::MetalSilver, 1.1f);
+              FVector(-155, 0, 120), FRotator(0, 90, 0), FVector(3.2f, 3.2f, 3.2f),
+              SC::MetalSilver, 1.7f);
 
     SpawnMesh(MeshData_BATHROOM_TOWELRACK::Vertices, MeshData_BATHROOM_TOWELRACK::Normals,
               MeshData_BATHROOM_TOWELRACK::UVs, MeshData_BATHROOM_TOWELRACK::Triangles,
               MeshData_BATHROOM_TOWELRACK::NumVertices, MeshData_BATHROOM_TOWELRACK::NumTriangles,
-              FVector(150, 50, 80), FRotator(0, -90, 0), FVector(0.8f, 0.8f, 0.8f),
-              SC::MetalSilver, 1.0f);
+              FVector(150, 50, 80), FRotator(0, -90, 0), FVector(3.2f, 3.2f, 3.2f),
+              SC::MetalSilver, 1.5f);
 
     SpawnCharacterMesh(TEXT("Emersyn"), FVector(0, 50, 0), FRotator(0, 0, 0), 0.3f,
                        SC::SkinLight, SC::OutfitBlue);
@@ -720,26 +729,26 @@ void AEmersynGameMode::BuildLivingRoom()
     SpawnMesh(MeshData_LIVINGROOM_SOFA::Vertices, MeshData_LIVINGROOM_SOFA::Normals,
               MeshData_LIVINGROOM_SOFA::UVs, MeshData_LIVINGROOM_SOFA::Triangles,
               MeshData_LIVINGROOM_SOFA::NumVertices, MeshData_LIVINGROOM_SOFA::NumTriangles,
-              FVector(0, -150, 0), FRotator(0, 0, 0), FVector(1.3f, 1.3f, 1.3f),
-              SC::FabricBlue, 1.0f);
+              FVector(0, -150, 0), FRotator(0, 0, 0), FVector(5.2f, 5.2f, 5.2f),
+              SC::FabricBlue, 1.5f);
 
     SpawnMesh(MeshData_LIVINGROOM_COFFEETABLE::Vertices, MeshData_LIVINGROOM_COFFEETABLE::Normals,
               MeshData_LIVINGROOM_COFFEETABLE::UVs, MeshData_LIVINGROOM_COFFEETABLE::Triangles,
               MeshData_LIVINGROOM_COFFEETABLE::NumVertices, MeshData_LIVINGROOM_COFFEETABLE::NumTriangles,
-              FVector(0, -50, 0), FRotator(0, 0, 0), FVector(1.2f, 1.2f, 1.0f),
-              SC::WoodMedium, 1.0f);
+              FVector(0, -50, 0), FRotator(0, 0, 0), FVector(4.8f, 4.8f, 4.0f),
+              SC::WoodMedium, 1.5f);
 
     SpawnMesh(MeshData_LIVINGROOM_TV::Vertices, MeshData_LIVINGROOM_TV::Normals,
               MeshData_LIVINGROOM_TV::UVs, MeshData_LIVINGROOM_TV::Triangles,
               MeshData_LIVINGROOM_TV::NumVertices, MeshData_LIVINGROOM_TV::NumTriangles,
-              FVector(0, 200, 80), FRotator(0, 180, 0), FVector(1.5f, 1.5f, 1.5f),
-              SC::MetalBlack, 1.0f);
+              FVector(0, 200, 80), FRotator(0, 180, 0), FVector(6.0f, 6.0f, 6.0f),
+              SC::MetalBlack, 1.5f);
 
     SpawnMesh(MeshData_LIVINGROOM_PLANT::Vertices, MeshData_LIVINGROOM_PLANT::Normals,
               MeshData_LIVINGROOM_PLANT::UVs, MeshData_LIVINGROOM_PLANT::Triangles,
               MeshData_LIVINGROOM_PLANT::NumVertices, MeshData_LIVINGROOM_PLANT::NumTriangles,
-              FVector(200, -200, 0), FRotator(0, 0, 0), FVector(1.0f, 1.0f, 1.0f),
-              SC::TreeLeaves, 1.0f);
+              FVector(200, -200, 0), FRotator(0, 0, 0), FVector(4.0f, 4.0f, 4.0f),
+              SC::TreeLeaves, 1.5f);
 
     SpawnCharacterMesh(TEXT("Leo"), FVector(-50, 0, 0), FRotator(0, 30, 0), 0.3f,
                        SC::SkinLight, SC::OutfitBlue);
@@ -760,32 +769,32 @@ void AEmersynGameMode::BuildGarden()
     SpawnMesh(MeshData_GARDEN_TREE::Vertices, MeshData_GARDEN_TREE::Normals,
               MeshData_GARDEN_TREE::UVs, MeshData_GARDEN_TREE::Triangles,
               MeshData_GARDEN_TREE::NumVertices, MeshData_GARDEN_TREE::NumTriangles,
-              FVector(-200, -200, 0), FRotator(0, 0, 0), FVector(2.0f, 2.0f, 2.0f),
-              SC::TreeLeaves, 1.0f);
+              FVector(-200, -200, 0), FRotator(0, 0, 0), FVector(8.0f, 8.0f, 8.0f),
+              SC::TreeLeaves, 1.5f);
     SpawnMesh(MeshData_GARDEN_TREE::Vertices, MeshData_GARDEN_TREE::Normals,
               MeshData_GARDEN_TREE::UVs, MeshData_GARDEN_TREE::Triangles,
               MeshData_GARDEN_TREE::NumVertices, MeshData_GARDEN_TREE::NumTriangles,
-              FVector(200, -150, 0), FRotator(0, 60, 0), FVector(1.5f, 1.5f, 1.5f),
+              FVector(200, -150, 0), FRotator(0, 60, 0), FVector(6.0f, 6.0f, 6.0f),
               SC::TreeLeaves, 0.9f);
 
     // Fence
     SpawnMesh(MeshData_GARDEN_FENCE::Vertices, MeshData_GARDEN_FENCE::Normals,
               MeshData_GARDEN_FENCE::UVs, MeshData_GARDEN_FENCE::Triangles,
               MeshData_GARDEN_FENCE::NumVertices, MeshData_GARDEN_FENCE::NumTriangles,
-              FVector(0, -350, 0), FRotator(0, 0, 0), FVector(3.0f, 1.0f, 1.0f),
-              SC::WoodLight, 1.0f);
+              FVector(0, -350, 0), FRotator(0, 0, 0), FVector(12.0f, 4.0f, 4.0f),
+              SC::WoodLight, 1.5f);
 
     // Flowerbeds
     SpawnMesh(MeshData_GARDEN_FLOWERBED::Vertices, MeshData_GARDEN_FLOWERBED::Normals,
               MeshData_GARDEN_FLOWERBED::UVs, MeshData_GARDEN_FLOWERBED::Triangles,
               MeshData_GARDEN_FLOWERBED::NumVertices, MeshData_GARDEN_FLOWERBED::NumTriangles,
-              FVector(-100, 100, 0), FRotator(0, 0, 0), FVector(1.5f, 1.5f, 1.0f),
-              SC::FlowerPink, 1.0f);
+              FVector(-100, 100, 0), FRotator(0, 0, 0), FVector(6.0f, 6.0f, 4.0f),
+              SC::FlowerPink, 1.5f);
     SpawnMesh(MeshData_GARDEN_FLOWERBED::Vertices, MeshData_GARDEN_FLOWERBED::Normals,
               MeshData_GARDEN_FLOWERBED::UVs, MeshData_GARDEN_FLOWERBED::Triangles,
               MeshData_GARDEN_FLOWERBED::NumVertices, MeshData_GARDEN_FLOWERBED::NumTriangles,
-              FVector(100, 100, 0), FRotator(0, 45, 0), FVector(1.5f, 1.5f, 1.0f),
-              SC::FlowerYellow, 1.0f);
+              FVector(100, 100, 0), FRotator(0, 45, 0), FVector(6.0f, 6.0f, 4.0f),
+              SC::FlowerYellow, 1.5f);
 
     // Characters
     SpawnCharacterMesh(TEXT("Emersyn"), FVector(0, 0, 0), FRotator(0, 0, 0), 0.3f,
@@ -812,8 +821,8 @@ void AEmersynGameMode::BuildSchool()
     SpawnMesh(MeshData_SCHOOL_CHALKBOARD::Vertices, MeshData_SCHOOL_CHALKBOARD::Normals,
               MeshData_SCHOOL_CHALKBOARD::UVs, MeshData_SCHOOL_CHALKBOARD::Triangles,
               MeshData_SCHOOL_CHALKBOARD::NumVertices, MeshData_SCHOOL_CHALKBOARD::NumTriangles,
-              FVector(0, -230, 100), FRotator(0, 0, 0), FVector(2.0f, 1.0f, 1.5f),
-              SC::ChalkGreen, 1.0f);
+              FVector(0, -230, 100), FRotator(0, 0, 0), FVector(8.0f, 4.0f, 6.0f),
+              SC::ChalkGreen, 1.5f);
 
     // Desks in rows
     for (int32 Row = 0; Row < 3; Row++)
@@ -824,8 +833,8 @@ void AEmersynGameMode::BuildSchool()
             SpawnMesh(MeshData_SCHOOL_DESK::Vertices, MeshData_SCHOOL_DESK::Normals,
                       MeshData_SCHOOL_DESK::UVs, MeshData_SCHOOL_DESK::Triangles,
                       MeshData_SCHOOL_DESK::NumVertices, MeshData_SCHOOL_DESK::NumTriangles,
-                      Loc, FRotator(0, 0, 0), FVector(0.8f, 0.8f, 0.8f),
-                      SC::WoodLight, 1.0f);
+                      Loc, FRotator(0, 0, 0), FVector(3.2f, 3.2f, 3.2f),
+                      SC::WoodLight, 1.5f);
         }
     }
 
@@ -833,8 +842,8 @@ void AEmersynGameMode::BuildSchool()
     SpawnMesh(MeshData_SCHOOL_BACKPACK::Vertices, MeshData_SCHOOL_BACKPACK::Normals,
               MeshData_SCHOOL_BACKPACK::UVs, MeshData_SCHOOL_BACKPACK::Triangles,
               MeshData_SCHOOL_BACKPACK::NumVertices, MeshData_SCHOOL_BACKPACK::NumTriangles,
-              FVector(-120, -50, 0), FRotator(0, 20, 0), FVector(0.6f, 0.6f, 0.6f),
-              SC::FabricRed, 1.0f);
+              FVector(-120, -50, 0), FRotator(0, 20, 0), FVector(2.4f, 2.4f, 2.4f),
+              SC::FabricRed, 1.5f);
 
     // Characters
     SpawnCharacterMesh(TEXT("Emersyn"), FVector(-100, 50, 0), FRotator(0, 0, 0), 0.3f,
@@ -859,27 +868,27 @@ void AEmersynGameMode::BuildShop()
     SpawnMesh(MeshData_SHOP_SHELF::Vertices, MeshData_SHOP_SHELF::Normals,
               MeshData_SHOP_SHELF::UVs, MeshData_SHOP_SHELF::Triangles,
               MeshData_SHOP_SHELF::NumVertices, MeshData_SHOP_SHELF::NumTriangles,
-              FVector(-200, -100, 0), FRotator(0, 90, 0), FVector(1.0f, 1.0f, 1.2f),
-              SC::WoodLight, 1.0f);
+              FVector(-200, -100, 0), FRotator(0, 90, 0), FVector(4.0f, 4.0f, 4.8f),
+              SC::WoodLight, 1.5f);
     SpawnMesh(MeshData_SHOP_SHELF::Vertices, MeshData_SHOP_SHELF::Normals,
               MeshData_SHOP_SHELF::UVs, MeshData_SHOP_SHELF::Triangles,
               MeshData_SHOP_SHELF::NumVertices, MeshData_SHOP_SHELF::NumTriangles,
-              FVector(-200, 100, 0), FRotator(0, 90, 0), FVector(1.0f, 1.0f, 1.2f),
-              SC::WoodMedium, 1.0f);
+              FVector(-200, 100, 0), FRotator(0, 90, 0), FVector(4.0f, 4.0f, 4.8f),
+              SC::WoodMedium, 1.5f);
 
     // Counter
     SpawnMesh(MeshData_SHOP_COUNTER::Vertices, MeshData_SHOP_COUNTER::Normals,
               MeshData_SHOP_COUNTER::UVs, MeshData_SHOP_COUNTER::Triangles,
               MeshData_SHOP_COUNTER::NumVertices, MeshData_SHOP_COUNTER::NumTriangles,
-              FVector(150, 0, 0), FRotator(0, -90, 0), FVector(1.2f, 1.2f, 1.0f),
-              SC::WoodDark, 1.0f);
+              FVector(150, 0, 0), FRotator(0, -90, 0), FVector(4.8f, 4.8f, 4.0f),
+              SC::WoodDark, 1.5f);
 
     // Register
     SpawnMesh(MeshData_SHOP_REGISTER::Vertices, MeshData_SHOP_REGISTER::Normals,
               MeshData_SHOP_REGISTER::UVs, MeshData_SHOP_REGISTER::Triangles,
               MeshData_SHOP_REGISTER::NumVertices, MeshData_SHOP_REGISTER::NumTriangles,
-              FVector(150, 0, 60), FRotator(0, -90, 0), FVector(0.5f, 0.5f, 0.5f),
-              SC::MetalSilver, 1.1f);
+              FVector(150, 0, 60), FRotator(0, -90, 0), FVector(2.0f, 2.0f, 2.0f),
+              SC::MetalSilver, 1.7f);
 
     SpawnCharacterMesh(TEXT("Emersyn"), FVector(0, 50, 0), FRotator(0, 0, 0), 0.3f,
                        SC::SkinLight, SC::OutfitPink);
@@ -897,19 +906,19 @@ void AEmersynGameMode::BuildPlayground()
     SpawnMesh(MeshData_PLAYGROUND_SLIDE::Vertices, MeshData_PLAYGROUND_SLIDE::Normals,
               MeshData_PLAYGROUND_SLIDE::UVs, MeshData_PLAYGROUND_SLIDE::Triangles,
               MeshData_PLAYGROUND_SLIDE::NumVertices, MeshData_PLAYGROUND_SLIDE::NumTriangles,
-              FVector(-120, -100, 0), FRotator(0, 0, 0), FVector(1.5f, 1.5f, 1.5f),
-              SC::FabricRed, 1.0f);
+              FVector(-120, -100, 0), FRotator(0, 0, 0), FVector(6.0f, 6.0f, 6.0f),
+              SC::FabricRed, 1.5f);
 
     SpawnMesh(MeshData_PLAYGROUND_SWING::Vertices, MeshData_PLAYGROUND_SWING::Normals,
               MeshData_PLAYGROUND_SWING::UVs, MeshData_PLAYGROUND_SWING::Triangles,
               MeshData_PLAYGROUND_SWING::NumVertices, MeshData_PLAYGROUND_SWING::NumTriangles,
-              FVector(120, -100, 0), FRotator(0, 0, 0), FVector(1.5f, 1.5f, 1.5f),
-              SC::MetalSilver, 1.0f);
+              FVector(120, -100, 0), FRotator(0, 0, 0), FVector(6.0f, 6.0f, 6.0f),
+              SC::MetalSilver, 1.5f);
 
     SpawnMesh(MeshData_PLAYGROUND_SANDBOX::Vertices, MeshData_PLAYGROUND_SANDBOX::Normals,
               MeshData_PLAYGROUND_SANDBOX::UVs, MeshData_PLAYGROUND_SANDBOX::Triangles,
               MeshData_PLAYGROUND_SANDBOX::NumVertices, MeshData_PLAYGROUND_SANDBOX::NumTriangles,
-              FVector(0, 100, 0), FRotator(0, 0, 0), FVector(1.2f, 1.2f, 0.8f),
+              FVector(0, 100, 0), FRotator(0, 0, 0), FVector(4.8f, 4.8f, 3.2f),
               SC::FloorSand, 0.9f);
 
     SpawnCharacterMesh(TEXT("Emersyn"), FVector(-50, 0, 0), FRotator(0, 30, 0), 0.3f,
@@ -932,31 +941,31 @@ void AEmersynGameMode::BuildPark()
     SpawnMesh(MeshData_PARK_BENCH::Vertices, MeshData_PARK_BENCH::Normals,
               MeshData_PARK_BENCH::UVs, MeshData_PARK_BENCH::Triangles,
               MeshData_PARK_BENCH::NumVertices, MeshData_PARK_BENCH::NumTriangles,
-              FVector(-100, -50, 0), FRotator(0, 0, 0), FVector(1.0f, 1.0f, 1.0f),
-              SC::WoodMedium, 1.0f);
+              FVector(-100, -50, 0), FRotator(0, 0, 0), FVector(4.0f, 4.0f, 4.0f),
+              SC::WoodMedium, 1.5f);
 
     SpawnMesh(MeshData_PARK_FOUNTAIN::Vertices, MeshData_PARK_FOUNTAIN::Normals,
               MeshData_PARK_FOUNTAIN::UVs, MeshData_PARK_FOUNTAIN::Triangles,
               MeshData_PARK_FOUNTAIN::NumVertices, MeshData_PARK_FOUNTAIN::NumTriangles,
-              FVector(0, 150, 0), FRotator(0, 0, 0), FVector(2.0f, 2.0f, 2.0f),
-              SC::WaterBlue, 1.1f);
+              FVector(0, 150, 0), FRotator(0, 0, 0), FVector(8.0f, 8.0f, 8.0f),
+              SC::WaterBlue, 1.7f);
 
     SpawnMesh(MeshData_PARK_LAMPPOST::Vertices, MeshData_PARK_LAMPPOST::Normals,
               MeshData_PARK_LAMPPOST::UVs, MeshData_PARK_LAMPPOST::Triangles,
               MeshData_PARK_LAMPPOST::NumVertices, MeshData_PARK_LAMPPOST::NumTriangles,
-              FVector(100, -200, 0), FRotator(0, 0, 0), FVector(1.5f, 1.5f, 2.0f),
-              SC::MetalBlack, 1.0f);
+              FVector(100, -200, 0), FRotator(0, 0, 0), FVector(6.0f, 6.0f, 8.0f),
+              SC::MetalBlack, 1.5f);
 
     // Trees
     SpawnMesh(MeshData_GARDEN_TREE::Vertices, MeshData_GARDEN_TREE::Normals,
               MeshData_GARDEN_TREE::UVs, MeshData_GARDEN_TREE::Triangles,
               MeshData_GARDEN_TREE::NumVertices, MeshData_GARDEN_TREE::NumTriangles,
-              FVector(-300, 200, 0), FRotator(0, 0, 0), FVector(2.5f, 2.5f, 2.5f),
-              SC::TreeLeaves, 1.0f);
+              FVector(-300, 200, 0), FRotator(0, 0, 0), FVector(10.0f, 10.0f, 10.0f),
+              SC::TreeLeaves, 1.5f);
     SpawnMesh(MeshData_GARDEN_TREE::Vertices, MeshData_GARDEN_TREE::Normals,
               MeshData_GARDEN_TREE::UVs, MeshData_GARDEN_TREE::Triangles,
               MeshData_GARDEN_TREE::NumVertices, MeshData_GARDEN_TREE::NumTriangles,
-              FVector(300, -150, 0), FRotator(0, 90, 0), FVector(2.0f, 2.0f, 2.0f),
+              FVector(300, -150, 0), FRotator(0, 90, 0), FVector(8.0f, 8.0f, 8.0f),
               SC::TreeLeaves, 0.95f);
 
     SpawnCharacterMesh(TEXT("Emersyn"), FVector(-50, 0, 0), FRotator(0, 0, 0), 0.3f,
@@ -983,26 +992,26 @@ void AEmersynGameMode::BuildMall()
     SpawnMesh(MeshData_MALL_ESCALATOR::Vertices, MeshData_MALL_ESCALATOR::Normals,
               MeshData_MALL_ESCALATOR::UVs, MeshData_MALL_ESCALATOR::Triangles,
               MeshData_MALL_ESCALATOR::NumVertices, MeshData_MALL_ESCALATOR::NumTriangles,
-              FVector(0, -200, 0), FRotator(0, 0, 0), FVector(1.0f, 1.0f, 1.0f),
-              SC::MetalSilver, 1.0f);
+              FVector(0, -200, 0), FRotator(0, 0, 0), FVector(4.0f, 4.0f, 4.0f),
+              SC::MetalSilver, 1.5f);
 
     SpawnMesh(MeshData_MALL_PLANTER::Vertices, MeshData_MALL_PLANTER::Normals,
               MeshData_MALL_PLANTER::UVs, MeshData_MALL_PLANTER::Triangles,
               MeshData_MALL_PLANTER::NumVertices, MeshData_MALL_PLANTER::NumTriangles,
-              FVector(-200, 100, 0), FRotator(0, 0, 0), FVector(1.5f, 1.5f, 1.0f),
-              SC::TreeLeaves, 1.0f);
+              FVector(-200, 100, 0), FRotator(0, 0, 0), FVector(6.0f, 6.0f, 4.0f),
+              SC::TreeLeaves, 1.5f);
     SpawnMesh(MeshData_MALL_PLANTER::Vertices, MeshData_MALL_PLANTER::Normals,
               MeshData_MALL_PLANTER::UVs, MeshData_MALL_PLANTER::Triangles,
               MeshData_MALL_PLANTER::NumVertices, MeshData_MALL_PLANTER::NumTriangles,
-              FVector(200, 100, 0), FRotator(0, 0, 0), FVector(1.5f, 1.5f, 1.0f),
+              FVector(200, 100, 0), FRotator(0, 0, 0), FVector(6.0f, 6.0f, 4.0f),
               SC::TreeLeaves, 0.95f);
 
     // Shop shelves in mall
     SpawnMesh(MeshData_SHOP_SHELF::Vertices, MeshData_SHOP_SHELF::Normals,
               MeshData_SHOP_SHELF::UVs, MeshData_SHOP_SHELF::Triangles,
               MeshData_SHOP_SHELF::NumVertices, MeshData_SHOP_SHELF::NumTriangles,
-              FVector(-300, 0, 0), FRotator(0, 90, 0), FVector(1.0f, 1.0f, 1.0f),
-              SC::WoodLight, 1.0f);
+              FVector(-300, 0, 0), FRotator(0, 90, 0), FVector(4.0f, 4.0f, 4.0f),
+              SC::WoodLight, 1.5f);
 
     SpawnCharacterMesh(TEXT("Emersyn"), FVector(0, 50, 0), FRotator(0, 10, 0), 0.3f,
                        SC::SkinLight, SC::OutfitPink);
@@ -1026,19 +1035,19 @@ void AEmersynGameMode::BuildArcade()
     SpawnMesh(MeshData_ARCADE_CABINET::Vertices, MeshData_ARCADE_CABINET::Normals,
               MeshData_ARCADE_CABINET::UVs, MeshData_ARCADE_CABINET::Triangles,
               MeshData_ARCADE_CABINET::NumVertices, MeshData_ARCADE_CABINET::NumTriangles,
-              FVector(-150, -150, 0), FRotator(0, 30, 0), FVector(1.2f, 1.2f, 1.2f),
-              SC::ArcadePurple, 1.1f);
+              FVector(-150, -150, 0), FRotator(0, 30, 0), FVector(4.8f, 4.8f, 4.8f),
+              SC::ArcadePurple, 1.7f);
     SpawnMesh(MeshData_ARCADE_CABINET::Vertices, MeshData_ARCADE_CABINET::Normals,
               MeshData_ARCADE_CABINET::UVs, MeshData_ARCADE_CABINET::Triangles,
               MeshData_ARCADE_CABINET::NumVertices, MeshData_ARCADE_CABINET::NumTriangles,
-              FVector(150, -150, 0), FRotator(0, -30, 0), FVector(1.2f, 1.2f, 1.2f),
-              SC::ArcadeNeon, 1.1f);
+              FVector(150, -150, 0), FRotator(0, -30, 0), FVector(4.8f, 4.8f, 4.8f),
+              SC::ArcadeNeon, 1.7f);
 
     SpawnMesh(MeshData_ARCADE_CLAW_MACHINE::Vertices, MeshData_ARCADE_CLAW_MACHINE::Normals,
               MeshData_ARCADE_CLAW_MACHINE::UVs, MeshData_ARCADE_CLAW_MACHINE::Triangles,
               MeshData_ARCADE_CLAW_MACHINE::NumVertices, MeshData_ARCADE_CLAW_MACHINE::NumTriangles,
-              FVector(0, 100, 0), FRotator(0, 0, 0), FVector(1.3f, 1.3f, 1.3f),
-              SC::FabricYellow, 1.0f);
+              FVector(0, 100, 0), FRotator(0, 0, 0), FVector(5.2f, 5.2f, 5.2f),
+              SC::FabricYellow, 1.5f);
 
     SpawnCharacterMesh(TEXT("Emersyn"), FVector(-50, -30, 0), FRotator(0, 20, 0), 0.3f,
                        SC::SkinLight, SC::OutfitPink);
@@ -1058,27 +1067,27 @@ void AEmersynGameMode::BuildAmusementPark()
     SpawnMesh(MeshData_AMUSEMENT_CAROUSEL::Vertices, MeshData_AMUSEMENT_CAROUSEL::Normals,
               MeshData_AMUSEMENT_CAROUSEL::UVs, MeshData_AMUSEMENT_CAROUSEL::Triangles,
               MeshData_AMUSEMENT_CAROUSEL::NumVertices, MeshData_AMUSEMENT_CAROUSEL::NumTriangles,
-              FVector(-200, 0, 0), FRotator(0, 0, 0), FVector(1.5f, 1.5f, 1.5f),
-              SC::CarouselRed, 1.0f);
+              FVector(-200, 0, 0), FRotator(0, 0, 0), FVector(6.0f, 6.0f, 6.0f),
+              SC::CarouselRed, 1.5f);
 
     SpawnMesh(MeshData_AMUSEMENT_FERRISWHEEL::Vertices, MeshData_AMUSEMENT_FERRISWHEEL::Normals,
               MeshData_AMUSEMENT_FERRISWHEEL::UVs, MeshData_AMUSEMENT_FERRISWHEEL::Triangles,
               MeshData_AMUSEMENT_FERRISWHEEL::NumVertices, MeshData_AMUSEMENT_FERRISWHEEL::NumTriangles,
-              FVector(200, -100, 0), FRotator(0, 0, 0), FVector(2.0f, 2.0f, 2.0f),
-              SC::MetalSilver, 1.0f);
+              FVector(200, -100, 0), FRotator(0, 0, 0), FVector(8.0f, 8.0f, 8.0f),
+              SC::MetalSilver, 1.5f);
 
     SpawnMesh(MeshData_AMUSEMENT_FOODCART::Vertices, MeshData_AMUSEMENT_FOODCART::Normals,
               MeshData_AMUSEMENT_FOODCART::UVs, MeshData_AMUSEMENT_FOODCART::Triangles,
               MeshData_AMUSEMENT_FOODCART::NumVertices, MeshData_AMUSEMENT_FOODCART::NumTriangles,
-              FVector(0, 200, 0), FRotator(0, -45, 0), FVector(1.2f, 1.2f, 1.2f),
-              SC::FabricOrange, 1.0f);
+              FVector(0, 200, 0), FRotator(0, -45, 0), FVector(4.8f, 4.8f, 4.8f),
+              SC::FabricOrange, 1.5f);
 
     // Lamppost
     SpawnMesh(MeshData_PARK_LAMPPOST::Vertices, MeshData_PARK_LAMPPOST::Normals,
               MeshData_PARK_LAMPPOST::UVs, MeshData_PARK_LAMPPOST::Triangles,
               MeshData_PARK_LAMPPOST::NumVertices, MeshData_PARK_LAMPPOST::NumTriangles,
-              FVector(-50, -250, 0), FRotator(0, 0, 0), FVector(1.5f, 1.5f, 2.0f),
-              SC::MetalBlack, 1.0f);
+              FVector(-50, -250, 0), FRotator(0, 0, 0), FVector(6.0f, 6.0f, 8.0f),
+              SC::MetalBlack, 1.5f);
 
     SpawnCharacterMesh(TEXT("Emersyn"), FVector(0, 0, 0), FRotator(0, 0, 0), 0.3f,
                        SC::SkinLight, SC::OutfitPink);
