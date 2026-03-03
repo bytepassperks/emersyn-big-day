@@ -1320,9 +1320,10 @@ namespace EmersynBigDay.Core
 
             AndroidLog($"[SceneBuilder] GLB instantiated for {charName}");
 
-            // Round 13 (Claude 4.5 Bedrock): GLB files have NO textures, only baseColorFactor.
-            // Extract colors via shader reflection, then convert to Standard for proper lighting.
-            ConvertGLTFMaterialsWithReflection(glbObj);
+            // Round 14 (Claude 4.5 Bedrock): Parse GLB binary to extract baseColorFactor
+            // BEFORE GLTFast converts materials to Standard(Instance) _Color=white.
+            // Then apply the parsed colors to the instantiated Standard materials.
+            ApplyParsedMaterialColors(glbObj, glbData);
 
             // Step 6: Add interaction components
             var col = glbObj.AddComponent<BoxCollider>();
@@ -1398,8 +1399,8 @@ namespace EmersynBigDay.Core
                 yield break;
             }
 
-            // Round 13: Extract baseColorFactor via reflection, convert to Standard
-            ConvertGLTFMaterialsWithReflection(glbObj);
+            // Round 14: Apply parsed material colors from GLB binary
+            ApplyParsedMaterialColors(glbObj, glbData);
             var col = glbObj.AddComponent<BoxCollider>();
             col.center = new Vector3(0, 0.4f, 0);
             col.size = new Vector3(0.6f, 0.8f, 0.8f);
@@ -1410,22 +1411,82 @@ namespace EmersynBigDay.Core
         }
 
         /// <summary>
-        /// Round 13 (Claude 4.5 Bedrock): GLB files have NO texture images — only baseColorFactor
-        /// solid colors. GLTFast's native shader doesn't render properly on Android Built-in RP.
-        /// Solution: Use shader property reflection to extract baseColorFactor from GLTFast materials,
-        /// then convert to Standard shader with proper _Color set from the extracted colors.
+        /// Round 14 (Claude 4.5 Bedrock): Parse GLB binary JSON to extract baseColorFactor values
+        /// BEFORE GLTFast converts them. GLTFast 6.7.1 converts to Standard(Instance) with _Color=white,
+        /// losing all baseColorFactor data. This method parses the raw GLB binary to get the real colors.
         /// </summary>
-        private void ConvertGLTFMaterialsWithReflection(GameObject obj)
+        private System.Collections.Generic.List<Color> ParseBaseColorFactorsFromGLB(byte[] glbData)
         {
-            var renderers = obj.GetComponentsInChildren<Renderer>();
-            if (standardShader == null)
+            var colors = new System.Collections.Generic.List<Color>();
+            try
             {
-                AndroidLog("[SceneBuilder] Standard shader NULL - cannot convert glTF materials");
+                if (glbData == null || glbData.Length < 20) return colors;
+
+                // GLB format: 12-byte header (magic + version + length)
+                uint magic = System.BitConverter.ToUInt32(glbData, 0);
+                if (magic != 0x46546C67) // "glTF" in little-endian
+                {
+                    AndroidLog("[SceneBuilder] Not a valid GLB file");
+                    return colors;
+                }
+
+                // JSON chunk starts at offset 12
+                uint jsonChunkLength = System.BitConverter.ToUInt32(glbData, 12);
+                uint jsonChunkType = System.BitConverter.ToUInt32(glbData, 16);
+                if (jsonChunkType != 0x4E4F534A) // "JSON"
+                {
+                    AndroidLog("[SceneBuilder] GLB JSON chunk not found");
+                    return colors;
+                }
+
+                string json = System.Text.Encoding.UTF8.GetString(glbData, 20, (int)jsonChunkLength);
+
+                // Parse baseColorFactor values using regex
+                var matches = System.Text.RegularExpressions.Regex.Matches(
+                    json, @"""baseColorFactor""\s*:\s*\[\s*([\d.eE+-]+)\s*,\s*([\d.eE+-]+)\s*,\s*([\d.eE+-]+)\s*,\s*([\d.eE+-]+)\s*\]");
+
+                foreach (System.Text.RegularExpressions.Match match in matches)
+                {
+                    float r = float.Parse(match.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture);
+                    float g = float.Parse(match.Groups[2].Value, System.Globalization.CultureInfo.InvariantCulture);
+                    float b = float.Parse(match.Groups[3].Value, System.Globalization.CultureInfo.InvariantCulture);
+                    float a = float.Parse(match.Groups[4].Value, System.Globalization.CultureInfo.InvariantCulture);
+                    colors.Add(new Color(r, g, b, a));
+                }
+
+                // Also parse material names for logging
+                var nameMatches = System.Text.RegularExpressions.Regex.Matches(
+                    json, @"""name""\s*:\s*""([^""]+)""");
+                for (int i = 0; i < colors.Count && i < nameMatches.Count; i++)
+                {
+                    AndroidLog($"[SceneBuilder] GLB parsed mat[{i}] '{nameMatches[i].Groups[1].Value}': baseColorFactor=({colors[i].r:F2},{colors[i].g:F2},{colors[i].b:F2},{colors[i].a:F2})");
+                }
+            }
+            catch (System.Exception ex)
+            {
+                AndroidLog($"[SceneBuilder] GLB parse error: {ex.Message}");
+            }
+            return colors;
+        }
+
+        /// <summary>
+        /// Apply parsed baseColorFactor colors to instantiated GLB materials.
+        /// GLTFast converts all materials to Standard(Instance) with _Color=white.
+        /// We override _Color with the actual colors from the GLB binary.
+        /// </summary>
+        private void ApplyParsedMaterialColors(GameObject obj, byte[] glbData)
+        {
+            var parsedColors = ParseBaseColorFactorsFromGLB(glbData);
+            if (parsedColors.Count == 0)
+            {
+                AndroidLog("[SceneBuilder] No baseColorFactor found in GLB, skipping color fix");
                 return;
             }
 
-            int converted = 0;
-            int colorExtracted = 0;
+            var renderers = obj.GetComponentsInChildren<Renderer>();
+            int colorIndex = 0;
+            int applied = 0;
+
             foreach (var renderer in renderers)
             {
                 renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
@@ -1434,94 +1495,34 @@ namespace EmersynBigDay.Core
                 var materials = renderer.materials;
                 for (int m = 0; m < materials.Length; m++)
                 {
-                    var mat = materials[m];
-                    if (mat == null) continue;
-
-                    // Extract baseColorFactor from GLTFast material using multiple methods
-                    Color baseColor = Color.white;
-                    bool foundColor = false;
-
-                    // Method 1: Try common GLTFast property names
-                    string[] colorPropertyNames = new string[] {
-                        "_BaseColor", "_BaseColorFactor", "_Color",
-                        "baseColorFactor", "baseColor"
-                    };
-                    foreach (var propName in colorPropertyNames)
+                    if (colorIndex < parsedColors.Count)
                     {
-                        if (mat.HasProperty(propName))
+                        var mat = materials[m];
+                        if (mat != null)
                         {
-                            Color c = mat.GetColor(propName);
-                            if (c != Color.clear)
-                            {
-                                baseColor = c;
-                                foundColor = true;
-                                AndroidLog($"[SceneBuilder] Mat '{mat.name}': extracted {propName}=({c.r:F2},{c.g:F2},{c.b:F2},{c.a:F2})");
-                                break;
-                            }
+                            Color c = parsedColors[colorIndex];
+                            mat.SetColor("_Color", c);
+
+                            // Ensure opaque rendering mode
+                            mat.SetFloat("_Mode", 0);
+                            mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.One);
+                            mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.Zero);
+                            mat.SetInt("_ZWrite", 1);
+                            mat.DisableKeyword("_ALPHATEST_ON");
+                            mat.DisableKeyword("_ALPHABLEND_ON");
+                            mat.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+                            mat.renderQueue = -1;
+
+                            materials[m] = mat;
+                            AndroidLog($"[SceneBuilder] Applied color ({c.r:F2},{c.g:F2},{c.b:F2},{c.a:F2}) to material {colorIndex}");
+                            applied++;
                         }
                     }
-
-                    // Method 2: Shader property reflection (nuclear option)
-                    if (!foundColor)
-                    {
-                        var shader = mat.shader;
-                        int propCount = shader.GetPropertyCount();
-                        for (int p = 0; p < propCount; p++)
-                        {
-                            var propType = shader.GetPropertyType(p);
-                            if (propType == UnityEngine.Rendering.ShaderPropertyType.Color)
-                            {
-                                string pName = shader.GetPropertyName(p);
-                                Color c = mat.GetColor(pName);
-                                string lower = pName.ToLowerInvariant();
-                                if (lower.Contains("base") || lower.Contains("color") || 
-                                    lower.Contains("albedo") || lower.Contains("diffuse"))
-                                {
-                                    if (c != Color.white && c != Color.black && c != Color.clear)
-                                    {
-                                        baseColor = c;
-                                        foundColor = true;
-                                        AndroidLog($"[SceneBuilder] Mat '{mat.name}': reflected {pName}=({c.r:F2},{c.g:F2},{c.b:F2},{c.a:F2})");
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    if (foundColor) colorExtracted++;
-
-                    // Extract metallic/roughness before shader switch
-                    float metallic = 0f;
-                    float smoothness = 0.5f;
-                    if (mat.HasProperty("_Metallic")) metallic = mat.GetFloat("_Metallic");
-                    if (mat.HasProperty("_Roughness")) smoothness = 1f - mat.GetFloat("_Roughness");
-                    else if (mat.HasProperty("_Glossiness")) smoothness = mat.GetFloat("_Glossiness");
-                    else if (mat.HasProperty("_Smoothness")) smoothness = mat.GetFloat("_Smoothness");
-
-                    // Convert to Standard shader
-                    mat.shader = standardShader;
-                    mat.color = baseColor;
-                    mat.SetFloat("_Metallic", metallic);
-                    mat.SetFloat("_Glossiness", smoothness);
-
-                    // Ensure opaque rendering mode
-                    mat.SetFloat("_Mode", 0);
-                    mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.One);
-                    mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.Zero);
-                    mat.SetInt("_ZWrite", 1);
-                    mat.DisableKeyword("_ALPHATEST_ON");
-                    mat.DisableKeyword("_ALPHABLEND_ON");
-                    mat.DisableKeyword("_ALPHAPREMULTIPLY_ON");
-                    mat.renderQueue = -1;
-                    mat.enableInstancing = true;
-
-                    materials[m] = mat;
-                    converted++;
+                    colorIndex++;
                 }
                 renderer.materials = materials;
             }
-            AndroidLog($"[SceneBuilder] Round 13: Converted {converted} materials ({colorExtracted} colors extracted) to Standard shader");
+            AndroidLog($"[SceneBuilder] Round 14: Applied {applied} parsed baseColorFactor colors to {renderers.Length} renderers");
         }
 
         // === PBR Texture Loading for Rooms ===
