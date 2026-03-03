@@ -18,25 +18,27 @@ namespace EmersynBigDay.CameraSystem
         public float RotationSpeed = 3f;
 
         [Header("Spring Settings")]
-        // Fix #10: Softer spring for smoother camera (was 50/10 - too jittery)
-        public float SpringStiffness = 30f;
-        public float SpringDamping = 8f;
+        // Round 25 (Claude 4.5 Bedrock): Very high stiffness+damping to snap to position instantly
+        public float SpringStiffness = 200f;
+        public float SpringDamping = 40f;
         private Vector3 springVelocity = Vector3.zero;
+        private bool initialPositionSet = false;
+        private int frameCount = 0;
 
         [Header("Zoom")]
         public float MinZoom = 3f;
-        public float MaxZoom = 40f; // Round 24 (Claude 4.5 Bedrock): Balanced max zoom
+        public float MaxZoom = 40f;
         public float ZoomSpeed = 2f;
-        public float CurrentZoom = 16.5f; // Round 24: Close enough to frame 12-wide room
+        public float CurrentZoom = 18f; // Round 25 (Bedrock): 18 for better room framing
 
         [Header("Orbital Control")]
         public float OrbitSpeed = 120f;
         public float MinPitch = 10f;
         public float MaxPitch = 80f;
-        // Round 24 (Claude 4.5 Bedrock): 35° pitch for proper dollhouse angle showing floor + walls
+        // Round 25 (Claude 4.5 Bedrock): 35° pitch for proper dollhouse angle showing floor + walls
         public float DefaultPitch = 35f;
         private float currentYaw = 0f;
-        private float currentPitch = 35f; // Round 24: Shallower angle to see more room geometry
+        private float currentPitch = 35f;
 
         [Header("Screen Shake")]
         public float ShakeDecay = 5f;
@@ -59,14 +61,24 @@ namespace EmersynBigDay.CameraSystem
             if (Instance != null && Instance != this) { Destroy(gameObject); return; }
             Instance = this;
             cam = GetComponent<Camera>();
-            // Round 21 (Claude 4.5 Bedrock): Use configurable default pitch
             currentPitch = DefaultPitch;
             CurrentZoom = Mathf.Clamp(CurrentZoom, MinZoom, MaxZoom);
+            // Round 25 (Bedrock): Force camera to exact position immediately on Awake
+            initialPositionSet = false;
+            frameCount = 0;
         }
 
         private void LateUpdate()
         {
             if (Target == null) return;
+            frameCount++;
+
+            // Round 25 (Bedrock): Force exact position for first 10 frames to prevent spring oscillation
+            if (frameCount <= 10)
+            {
+                ForceExactPosition();
+                return;
+            }
 
             if (isTransitioning)
             {
@@ -79,6 +91,17 @@ namespace EmersynBigDay.CameraSystem
 
             UpdateScreenShake();
             ClampPosition();
+        }
+
+        // Round 25 (Bedrock): Snap camera to exact calculated position (no spring)
+        private void ForceExactPosition()
+        {
+            Vector3 desiredPosition = CalculateDesiredPosition();
+            transform.position = desiredPosition;
+            springVelocity = Vector3.zero;
+            Vector3 lookTarget = Target.position + Vector3.up * 2.5f;
+            transform.LookAt(lookTarget);
+            initialPositionSet = true;
         }
 
         // --- SPRING FOLLOW ---
@@ -196,8 +219,10 @@ namespace EmersynBigDay.CameraSystem
         public void ResetToDefault()
         {
             currentYaw = 0f;
-            currentPitch = DefaultPitch; // Round 24: Use configurable pitch
-            CurrentZoom = 16.5f; // Round 24: Default to frame 12-wide room
+            currentPitch = DefaultPitch;
+            CurrentZoom = 18f; // Round 25: Match default zoom
+            frameCount = 0; // Round 25: Reset to force exact position again
+            springVelocity = Vector3.zero;
             isTransitioning = false;
         }
 

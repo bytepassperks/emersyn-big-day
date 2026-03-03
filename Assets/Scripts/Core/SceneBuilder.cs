@@ -454,8 +454,8 @@ namespace EmersynBigDay.Core
             mainCamera.clearFlags = CameraClearFlags.SolidColor;
             // Round 20 (Claude 4.5 Bedrock): Soft pink background to match room aesthetic
             mainCamera.backgroundColor = new Color(0.95f, 0.88f, 0.92f);
-            // Round 23 (Claude 4.5 Bedrock): FOV 55 — sweet spot between 50 (too narrow) and 60 (too wide)
-            mainCamera.fieldOfView = 55f;
+            // Round 25 (Claude 4.5 Bedrock): FOV 42 — narrower for better depth and consistent room framing
+            mainCamera.fieldOfView = 42f;
             mainCamera.nearClipPlane = 0.1f;
             mainCamera.farClipPlane = 100f;
             // Claude Bedrock fix #1: FORCE Forward rendering - Deferred fails silently on Android GPUs
@@ -473,20 +473,20 @@ namespace EmersynBigDay.Core
             if (mainCamera.GetComponent<CameraSystem.CameraController>() == null)
             {
                 var ctrl = mainCamera.gameObject.AddComponent<CameraSystem.CameraController>();
-                // Round 24 (Claude 4.5 Bedrock): Zoom=16.5, Pitch=35° — frames 12-wide room perfectly
+                // Round 25 (Claude 4.5 Bedrock): Fixed camera snap + high damping for consistent framing
                 ctrl.MinZoom = 8f;
                 ctrl.MaxZoom = 40f;
-                ctrl.CurrentZoom = 16.5f; // Close enough to see room details + characters
+                ctrl.CurrentZoom = 18f; // Round 25: Slightly farther for full room
                 ctrl.DefaultPitch = 35f; // Shallower angle shows floor + back wall
-                ctrl.SpringStiffness = 120f;
-                ctrl.SpringDamping = 25f;
-                ctrl.Offset = new Vector3(0f, 10f, -14f);
+                ctrl.SpringStiffness = 200f; // Round 25: Very stiff to prevent oscillation
+                ctrl.SpringDamping = 40f; // Round 25: High damping to snap instantly
+                ctrl.Offset = new Vector3(0f, 12f, -15f);
             }
-            // Round 24 (Claude 4.5 Bedrock): Camera at (0, 9.46, -13.53) — frames entire room
+            // Round 25 (Claude 4.5 Bedrock): Fixed camera at (0, 12, -15) for consistent Sims 4 view
             float pitchRad = 35f * Mathf.Deg2Rad;
             Vector3 camDir = new Vector3(0f, Mathf.Sin(pitchRad), -Mathf.Cos(pitchRad));
-            mainCamera.transform.position = camDir * 16.5f;
-            mainCamera.transform.LookAt(new Vector3(0f, 2.5f, 0f)); // Look at room center, not feet
+            mainCamera.transform.position = camDir * 18f;
+            mainCamera.transform.LookAt(new Vector3(0f, 2.5f, 0f)); // Look at room center
         }
 
         private void CreateManagers()
