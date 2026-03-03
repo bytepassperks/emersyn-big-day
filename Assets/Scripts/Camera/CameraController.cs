@@ -25,7 +25,7 @@ namespace EmersynBigDay.CameraSystem
 
         [Header("Zoom")]
         public float MinZoom = 3f;
-        public float MaxZoom = 12f;
+        public float MaxZoom = 25f; // Round 21 (Claude 4.5 Bedrock): Increased from 12 to allow full room view
         public float ZoomSpeed = 2f;
         public float CurrentZoom = 6f;
 
@@ -33,8 +33,10 @@ namespace EmersynBigDay.CameraSystem
         public float OrbitSpeed = 120f;
         public float MinPitch = 10f;
         public float MaxPitch = 80f;
+        // Round 21 (Claude 4.5 Bedrock): Configurable default pitch for Sims 4 overhead view
+        public float DefaultPitch = 45f;
         private float currentYaw = 0f;
-        private float currentPitch = 30f;
+        private float currentPitch = 45f; // Round 21: Default 45 degrees for overhead dollhouse view
 
         [Header("Screen Shake")]
         public float ShakeDecay = 5f;
@@ -57,6 +59,9 @@ namespace EmersynBigDay.CameraSystem
             if (Instance != null && Instance != this) { Destroy(gameObject); return; }
             Instance = this;
             cam = GetComponent<Camera>();
+            // Round 21 (Claude 4.5 Bedrock): Use configurable default pitch
+            currentPitch = DefaultPitch;
+            CurrentZoom = Mathf.Clamp(CurrentZoom, MinZoom, MaxZoom);
         }
 
         private void LateUpdate()
@@ -191,8 +196,8 @@ namespace EmersynBigDay.CameraSystem
         public void ResetToDefault()
         {
             currentYaw = 0f;
-            currentPitch = 30f;
-            CurrentZoom = 6f;
+            currentPitch = DefaultPitch; // Round 21: Use configurable pitch
+            CurrentZoom = 18f; // Round 21: Default to overhead room view
             isTransitioning = false;
         }
 

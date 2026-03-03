@@ -450,10 +450,10 @@ namespace EmersynBigDay.Core
                 camObj.AddComponent<AudioListener>();
             }
             mainCamera.clearFlags = CameraClearFlags.SolidColor;
-            // Round 20 (Claude 4.5 Bedrock): Soft pink background to match room aesthetic, eliminates white void
+            // Round 20 (Claude 4.5 Bedrock): Soft pink background to match room aesthetic
             mainCamera.backgroundColor = new Color(0.95f, 0.88f, 0.92f);
-            // Round 20 (Claude 4.5 Bedrock): Tighter FOV for Sims 4 "dollhouse" overhead perspective
-            mainCamera.fieldOfView = 32f;
+            // Round 21 (Claude 4.5 Bedrock): WIDER FOV for full room visibility — was 32 (too tight)
+            mainCamera.fieldOfView = 60f;
             mainCamera.nearClipPlane = 0.1f;
             mainCamera.farClipPlane = 100f;
             // Claude Bedrock fix #1: FORCE Forward rendering - Deferred fails silently on Android GPUs
@@ -471,14 +471,21 @@ namespace EmersynBigDay.Core
             if (mainCamera.GetComponent<CameraSystem.CameraController>() == null)
             {
                 var ctrl = mainCamera.gameObject.AddComponent<CameraSystem.CameraController>();
-                // Round 20 (Claude 4.5 Bedrock): Much higher + further back for "dollhouse" overhead view
-                ctrl.Offset = new Vector3(0f, 12f, -12f);
-                ctrl.CurrentZoom = 14f;
+                // Round 21 (Claude 4.5 Bedrock): Configure for Sims 4 "dollhouse" overhead view
+                ctrl.MinZoom = 8f;
+                ctrl.MaxZoom = 25f;
+                ctrl.CurrentZoom = 18f; // Far enough to see entire room
+                ctrl.DefaultPitch = 45f; // 45° overhead angle like Sims 4
+                ctrl.SpringStiffness = 100f;
+                ctrl.SpringDamping = 20f;
+                ctrl.Offset = new Vector3(0f, 18f, -15f);
             }
-            // Round 20 (Claude 4.5 Bedrock): Elevated isometric camera — see ENTIRE room layout
-            // Position higher (12) and further back (-12) for proper Sims 4 style overview
-            mainCamera.transform.position = new Vector3(0f, 12f, -12f);
-            mainCamera.transform.LookAt(new Vector3(0f, 1.0f, 0f));
+            // Round 21 (Claude 4.5 Bedrock): Set initial camera position matching CameraController math
+            // With Zoom=18, Pitch=45°: direction=(0, 0.707, -0.707), pos = target + dir*18 = (0, 12.73, -12.73)
+            float pitchRad = 45f * Mathf.Deg2Rad;
+            Vector3 camDir = new Vector3(0f, Mathf.Sin(pitchRad), -Mathf.Cos(pitchRad));
+            mainCamera.transform.position = camDir * 18f;
+            mainCamera.transform.LookAt(new Vector3(0f, 1.5f, 0f));
         }
 
         private void CreateManagers()
@@ -1765,75 +1772,118 @@ namespace EmersynBigDay.Core
             AndroidLog($"[SceneBuilder] Round 19: Applied {applied} textures to {charName}");
         }
 
-        // === Round 20: Enhanced Texture Validator — fix ALL magenta artifacts including particles ===
+        // === Round 21 (Claude 4.5 Bedrock): Multi-pass texture validator — catches late-spawning objects ===
         private IEnumerator ValidateAndFixTextures()
         {
-            yield return new WaitForSeconds(3f); // Let everything load first
+            yield return new WaitForSeconds(0.5f); // Initial short wait
 
-            var allRenderers = FindObjectsByType<Renderer>(FindObjectsSortMode.None);
-            int fixed_count = 0;
+            // Create reusable fallback texture once
+            Texture2D fallbackWhiteTex = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+            fallbackWhiteTex.SetPixels32(new Color32[] {
+                (Color32)Color.white, (Color32)Color.white,
+                (Color32)Color.white, (Color32)Color.white
+            });
+            fallbackWhiteTex.Apply();
+            fallbackWhiteTex.name = "FallbackWhite";
 
-            foreach (var renderer in allRenderers)
+            // Mobile/Diffuse shader for reliable rendering on all Android GPUs
+            Shader mobileDiffuse = Shader.Find("Mobile/Diffuse");
+
+            int validationPasses = 3; // Multiple passes to catch late-spawning objects
+
+            for (int pass = 0; pass < validationPasses; pass++)
             {
-                var mats = renderer.materials;
-                for (int i = 0; i < mats.Length; i++)
-                {
-                    if (mats[i] == null) continue;
+                AndroidLog($"[SceneBuilder] Round 21: Texture validation pass {pass + 1}/{validationPasses}");
 
-                    // Check for magenta (shader error) color
-                    if (mats[i].HasProperty("_Color"))
+                var allRenderers = FindObjectsByType<Renderer>(FindObjectsSortMode.None);
+                int fixedCount = 0;
+
+                foreach (var renderer in allRenderers)
+                {
+                    if (renderer == null) continue;
+
+                    Material[] materials = renderer.sharedMaterials;
+                    bool materialsChanged = false;
+
+                    for (int i = 0; i < materials.Length; i++)
                     {
-                        Color c = mats[i].GetColor("_Color");
-                        // Magenta = (1, 0, 1) indicates shader/texture error
-                        if (c.r > 0.9f && c.g < 0.1f && c.b > 0.9f)
+                        Material mat = materials[i];
+                        if (mat == null) continue;
+
+                        // Check for magenta (shader error) color
+                        if (mat.HasProperty("_Color"))
                         {
-                            mats[i].SetColor("_Color", Color.white);
-                            fixed_count++;
-                            AndroidLog($"[SceneBuilder] Round 20: Fixed magenta color on {renderer.gameObject.name}");
+                            Color c = mat.GetColor("_Color");
+                            if (c.r > 0.9f && c.g < 0.1f && c.b > 0.9f)
+                            {
+                                mat.SetColor("_Color", Color.white);
+                                fixedCount++;
+                                AndroidLog($"[SceneBuilder] Round 21: Fixed magenta color on {renderer.gameObject.name}");
+                            }
                         }
+
+                        // Check for null main texture
+                        if (mat.HasProperty("_MainTex") && mat.GetTexture("_MainTex") == null)
+                        {
+                            mat.SetTexture("_MainTex", fallbackWhiteTex);
+                            fixedCount++;
+                            materialsChanged = true;
+                            AndroidLog($"[SceneBuilder] Round 21: Fixed missing texture on {renderer.gameObject.name} ({renderer.GetType().Name})");
+                        }
+
+                        // Fix incompatible shaders (GLTFast, URP) — force Mobile/Diffuse
+                        if (mobileDiffuse != null && mat.shader != null &&
+                            (mat.shader.name.Contains("glTF") || mat.shader.name.Contains("GLTFast") ||
+                             mat.shader.name.Contains("URP") || mat.shader.name.Contains("Universal")))
+                        {
+                            Color preserveColor = mat.HasProperty("_Color") ? mat.GetColor("_Color") : Color.white;
+                            Texture preserveTex = mat.HasProperty("_MainTex") ? mat.GetTexture("_MainTex") : null;
+                            mat.shader = mobileDiffuse;
+                            if (mat.HasProperty("_Color")) mat.SetColor("_Color", preserveColor);
+                            if (preserveTex != null && mat.HasProperty("_MainTex")) mat.SetTexture("_MainTex", preserveTex);
+                            fixedCount++;
+                            materialsChanged = true;
+                            AndroidLog($"[SceneBuilder] Round 21: Fixed shader on {renderer.gameObject.name}");
+                        }
+
+                        // Disable _DETAIL_MULX2 keyword (magenta artifact source)
+                        if (mat.IsKeywordEnabled("_DETAIL_MULX2"))
+                        {
+                            mat.DisableKeyword("_DETAIL_MULX2");
+                            mat.SetTexture("_DetailAlbedoMap", null);
+                            fixedCount++;
+                        }
+
+                        // Disable specular/glossy on mobile (Mali GPU artifacts)
+                        if (mat.HasProperty("_SpecularHighlights")) mat.SetFloat("_SpecularHighlights", 0f);
+                        if (mat.HasProperty("_GlossyReflections")) mat.SetFloat("_GlossyReflections", 0f);
                     }
 
-                    // Check for null main texture (common source of magenta squares)
-                    if (mats[i].HasProperty("_MainTex") && mats[i].GetTexture("_MainTex") == null)
+                    if (materialsChanged)
                     {
-                        // Create emergency 2x2 white fallback texture
-                        Texture2D fallback = new Texture2D(2, 2);
-                        Color[] pixels = new Color[4];
-                        for (int p = 0; p < 4; p++) pixels[p] = Color.white;
-                        fallback.SetPixels(pixels);
-                        fallback.Apply();
-                        mats[i].SetTexture("_MainTex", fallback);
-                        fixed_count++;
+                        renderer.sharedMaterials = materials;
                     }
-
-                    // Ensure _DETAIL_MULX2 is disabled to prevent magenta artifacts
-                    if (mats[i].IsKeywordEnabled("_DETAIL_MULX2"))
-                    {
-                        mats[i].DisableKeyword("_DETAIL_MULX2");
-                        mats[i].SetTexture("_DetailAlbedoMap", null);
-                        fixed_count++;
-                    }
-
-                    // Round 20: Disable specular highlights and glossy reflections on mobile
-                    // These cause artifacts on Mali GPUs (Galaxy Tab S9)
-                    mats[i].SetFloat("_SpecularHighlights", 0f);
-                    mats[i].SetFloat("_GlossyReflections", 0f);
                 }
-            }
 
-            // Round 20 (Claude 4.5 Bedrock): Check and disable broken particle systems
-            var particles = FindObjectsByType<ParticleSystemRenderer>(FindObjectsSortMode.None);
-            foreach (var psr in particles)
-            {
-                if (psr.material == null || psr.material.mainTexture == null)
+                // Check and disable broken particle systems
+                var particles = FindObjectsByType<ParticleSystemRenderer>(FindObjectsSortMode.None);
+                foreach (var psr in particles)
                 {
-                    psr.gameObject.SetActive(false);
-                    fixed_count++;
-                    AndroidLog($"[SceneBuilder] Round 20: Disabled broken particle system {psr.gameObject.name}");
+                    if (psr == null) continue;
+                    if (psr.sharedMaterial == null || psr.sharedMaterial.mainTexture == null)
+                    {
+                        psr.gameObject.SetActive(false);
+                        fixedCount++;
+                        AndroidLog($"[SceneBuilder] Round 21: Disabled broken particle {psr.gameObject.name}");
+                    }
                 }
+
+                AndroidLog($"[SceneBuilder] Round 21: Pass {pass + 1} fixed {fixedCount} material issues");
+
+                yield return new WaitForSeconds(1.5f); // Wait between passes for late-spawning objects
             }
 
-            AndroidLog($"[SceneBuilder] Round 20: Texture validator fixed {fixed_count} materials");
+            AndroidLog("[SceneBuilder] Round 21: Texture validation complete (3 passes)");
         }
 
         // === PBR Texture Loading for Rooms ===
@@ -2015,41 +2065,57 @@ namespace EmersynBigDay.Core
 
         private Material CreatePBRMaterial(Texture2D albedo, Texture2D normal, Vector2? tiling = null)
         {
-            // Round 18 (Claude 4.5 Bedrock): Clean PBR material with proper tiling and NO detail keywords.
+            // Round 21 (Claude 4.5 Bedrock): Use Mobile/Diffuse as PRIMARY shader for wall/floor materials
+            // Standard shader causes magenta artifacts on Mali GPUs; Mobile/Diffuse is universally reliable
             Material mat;
+
+            // Ensure texture settings are correct for tiling
+            if (albedo != null)
+            {
+                albedo.wrapMode = TextureWrapMode.Repeat;
+                albedo.filterMode = FilterMode.Bilinear;
+                albedo.anisoLevel = 4;
+            }
+
+            Shader mobileDiffuse = Shader.Find("Mobile/Diffuse");
+            if (mobileDiffuse != null)
+            {
+                mat = new Material(mobileDiffuse);
+                mat.mainTexture = albedo;
+                mat.color = Color.white;
+                if (tiling.HasValue)
+                {
+                    mat.mainTextureScale = tiling.Value;
+                    mat.mainTextureOffset = Vector2.zero;
+                }
+                mat.renderQueue = 2000;
+                return mat;
+            }
+
+            // Fallback to Standard if Mobile/Diffuse not available
             if (standardShader != null)
             {
                 mat = new Material(standardShader);
                 mat.SetTexture("_MainTex", albedo);
                 mat.color = Color.white;
-                // Round 18: Apply tiling to fix UV stretching on non-uniform cubes
                 if (tiling.HasValue)
                 {
                     mat.SetTextureScale("_MainTex", tiling.Value);
                 }
-                if (normal != null)
-                {
-                    mat.SetTexture("_BumpMap", normal);
-                    mat.EnableKeyword("_NORMALMAP");
-                    mat.SetFloat("_BumpScale", 1.0f);
-                    if (tiling.HasValue)
-                    {
-                        mat.SetTextureScale("_BumpMap", tiling.Value);
-                    }
-                }
-                mat.SetFloat("_Glossiness", 0.3f);
+                mat.SetFloat("_Glossiness", 0.1f);
                 mat.SetFloat("_Metallic", 0.0f);
-                // Round 17: Disable detail keywords to prevent magenta artifacts
                 mat.DisableKeyword("_DETAIL_MULX2");
                 mat.DisableKeyword("_DETAILMULX2");
                 mat.SetTexture("_DetailAlbedoMap", null);
                 mat.SetTexture("_DetailMask", null);
                 mat.SetTexture("_DetailNormalMap", null);
+                mat.SetFloat("_SpecularHighlights", 0f);
+                mat.SetFloat("_GlossyReflections", 0f);
                 mat.enableInstancing = true;
                 mat.renderQueue = 2000;
                 return mat;
             }
-            // Fallback to Unlit/Texture if Standard not available
+            // Fallback to Unlit/Texture
             if (unlitTextureShader != null)
             {
                 mat = new Material(unlitTextureShader);
