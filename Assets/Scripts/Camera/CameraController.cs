@@ -27,9 +27,9 @@ namespace EmersynBigDay.CameraSystem
 
         [Header("Zoom")]
         public float MinZoom = 3f;
-        public float MaxZoom = 40f;
+        public float MaxZoom = 25f; // Round 28: Reduced from 40 to prevent extreme zoom-out
         public float ZoomSpeed = 2f;
-        public float CurrentZoom = 28f; // Round 26: Pull back to 28 for full dollhouse view
+        public float CurrentZoom = 18f; // Round 28: Default for phones, overridden by SceneBuilder
 
         [Header("Orbital Control")]
         public float OrbitSpeed = 120f;
@@ -221,9 +221,11 @@ namespace EmersynBigDay.CameraSystem
         {
             currentYaw = 0f;
             currentPitch = DefaultPitch;
-            // Round 27: Adaptive zoom on reset based on screen aspect
+            // Round 28: 3-tier adaptive zoom on reset based on screen aspect
             float resetAspect = (float)Screen.width / Screen.height;
-            CurrentZoom = resetAspect < 0.6f ? 18f : 28f;
+            if (resetAspect < 0.5f) CurrentZoom = 15f;
+            else if (resetAspect < 0.6f) CurrentZoom = 18f;
+            else CurrentZoom = 22f;
             frameCount = 0; // Round 25: Reset to force exact position again
             springVelocity = Vector3.zero;
             isTransitioning = false;

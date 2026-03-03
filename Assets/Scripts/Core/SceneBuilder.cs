@@ -454,14 +454,19 @@ namespace EmersynBigDay.Core
             mainCamera.clearFlags = CameraClearFlags.SolidColor;
             // Round 20 (Claude 4.5 Bedrock): Soft pink background to match room aesthetic
             mainCamera.backgroundColor = new Color(0.95f, 0.88f, 0.92f);
-            // Round 27: Adaptive FOV based on screen aspect ratio
-            // Phones (aspect ~0.46) need wider FOV; tablets (aspect ~0.75) use base FOV
+            // Round 28: 3-tier adaptive FOV based on screen aspect ratio
+            // Very narrow phones (aspect < 0.5): FOV=80 (Pixel 9 Pro XL ~0.44)
+            // Normal phones (aspect 0.5-0.6): FOV=70
+            // Tablets (aspect >= 0.6): FOV=60
             float aspect = (float)Screen.width / Screen.height;
-            float adaptiveFOV = aspect < 0.6f ? 75f : 60f; // Wider FOV on narrow phones
+            float adaptiveFOV;
+            if (aspect < 0.5f) adaptiveFOV = 80f;
+            else if (aspect < 0.6f) adaptiveFOV = 70f;
+            else adaptiveFOV = 60f;
             mainCamera.fieldOfView = adaptiveFOV;
             Debug.Log($"[SceneBuilder] Screen {Screen.width}x{Screen.height} aspect={aspect:F2} FOV={adaptiveFOV}");
             mainCamera.nearClipPlane = 0.1f;
-            mainCamera.farClipPlane = 100f;
+            mainCamera.farClipPlane = 500f; // Round 28: Increased from 100 to prevent room culling on any device
             // Claude Bedrock fix #1: FORCE Forward rendering - Deferred fails silently on Android GPUs
             mainCamera.renderingPath = RenderingPath.Forward;
             // Claude Bedrock fix #1b: Disable HDR and MSAA on camera for mobile compatibility
@@ -477,29 +482,32 @@ namespace EmersynBigDay.Core
             if (mainCamera.GetComponent<CameraSystem.CameraController>() == null)
             {
                 var ctrl = mainCamera.gameObject.AddComponent<CameraSystem.CameraController>();
-                // Round 27: Adaptive camera based on screen aspect ratio
-                // Phones (narrow, aspect<0.6) need closer zoom; tablets use full zoom
+                // Round 28: 3-tier adaptive camera based on screen aspect ratio
                 float camAspect = (float)Screen.width / Screen.height;
-                float adaptiveZoom = camAspect < 0.6f ? 18f : 28f; // Closer on phones
-                float adaptivePitch = camAspect < 0.6f ? 45f : 50f; // Slightly less steep on phones
+                float adaptiveZoom, adaptivePitch;
+                if (camAspect < 0.5f) { adaptiveZoom = 15f; adaptivePitch = 42f; } // Very narrow phones (Pixel 9 Pro XL)
+                else if (camAspect < 0.6f) { adaptiveZoom = 18f; adaptivePitch = 45f; } // Normal phones
+                else { adaptiveZoom = 22f; adaptivePitch = 48f; } // Tablets
                 ctrl.MinZoom = 8f;
-                ctrl.MaxZoom = 50f;
+                ctrl.MaxZoom = 25f; // Round 28: Reduced from 50 to prevent fuzz test zooming too far out
                 ctrl.CurrentZoom = adaptiveZoom;
                 ctrl.DefaultPitch = adaptivePitch;
                 ctrl.SpringStiffness = 200f;
                 ctrl.SpringDamping = 40f;
-                ctrl.Offset = new Vector3(0f, 14f, -14f);
-                Debug.Log($"[SceneBuilder] Camera adaptive: aspect={camAspect:F2} zoom={adaptiveZoom} pitch={adaptivePitch}");
+                ctrl.Offset = new Vector3(0f, 10f, -10f); // Round 28: Reduced offset to keep camera closer
+                Debug.Log($"[SceneBuilder] Camera adaptive R28: aspect={camAspect:F2} zoom={adaptiveZoom} pitch={adaptivePitch}");
             }
-            // Round 27: Adaptive initial camera position
+            // Round 28: 3-tier adaptive initial camera position
             float initAspect = (float)Screen.width / Screen.height;
-            float initZoom = initAspect < 0.6f ? 18f : 28f;
-            float initPitch = initAspect < 0.6f ? 45f : 50f;
+            float initZoom, initPitch;
+            if (initAspect < 0.5f) { initZoom = 15f; initPitch = 42f; }
+            else if (initAspect < 0.6f) { initZoom = 18f; initPitch = 45f; }
+            else { initZoom = 22f; initPitch = 48f; }
             float initPitchRad = initPitch * Mathf.Deg2Rad;
             Vector3 camDir = new Vector3(0f, Mathf.Sin(initPitchRad), -Mathf.Cos(initPitchRad));
             mainCamera.transform.position = camDir * initZoom;
             mainCamera.transform.LookAt(new Vector3(0f, 1.0f, 0f)); // Look at floor level
-            Debug.Log($"[SceneBuilder] Initial camera pos={mainCamera.transform.position} zoom={initZoom} pitch={initPitch}");
+            Debug.Log($"[SceneBuilder] Initial camera R28: aspect={initAspect:F2} zoom={initZoom} pitch={initPitch} pos={mainCamera.transform.position}");
         }
 
         private void CreateManagers()
