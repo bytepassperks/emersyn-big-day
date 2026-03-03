@@ -221,11 +221,11 @@ namespace EmersynBigDay.CameraSystem
         {
             currentYaw = 0f;
             currentPitch = DefaultPitch;
-            // Round 57: Closer zoom with 45° pitch for dollhouse view
+            // Round 58: Balanced zoom for dollhouse view
             float resetAspect = (float)Screen.width / Screen.height;
-            if (resetAspect < 0.5f) CurrentZoom = 18f;
-            else if (resetAspect < 0.6f) CurrentZoom = 16f;
-            else CurrentZoom = 14f; // Round 57: Show characters + room floor
+            if (resetAspect < 0.5f) CurrentZoom = 22f;
+            else if (resetAspect < 0.6f) CurrentZoom = 20f;
+            else CurrentZoom = 18f; // Round 58: Show characters + room floor
             frameCount = 0; // Round 25: Reset to force exact position again
             springVelocity = Vector3.zero;
             isTransitioning = false;
