@@ -1624,6 +1624,16 @@ namespace EmersynBigDay.Core
                         mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
                         mr.receiveShadows = true;
 
+                        // Round 44 (Claude 4.5 Bedrock): Add toon outline for AAA cartoon look
+                        try
+                        {
+                            AddToonOutline(meshObj, mesh, mat.color);
+                        }
+                        catch (System.Exception outlineEx)
+                        {
+                            AndroidLog($"[DirectGLB] R44: Outline failed for {partName}: {outlineEx.Message}");
+                        }
+
                         totalVerts += vertices.Length;
                         totalTris += (triangles != null ? triangles.Length / 3 : 0);
                         meshPartCount++;
@@ -1686,13 +1696,17 @@ namespace EmersynBigDay.Core
                 AndroidLog($"[DirectGLB] R42: Replace EXCEPTION for {glbName}: {e.Message}");
             }
 
-            // Step 6: Add interaction components
+            // Step 6: Add interaction components + R44 sparkle effects
             try
             {
                 var col = glbRoot.AddComponent<BoxCollider>();
                 if (isPet) { col.center = new Vector3(0, 0.25f, 0); col.size = new Vector3(0.5f, 0.5f, 0.6f); }
                 else { col.center = new Vector3(0, 0.55f, 0); col.size = new Vector3(0.8f, 1.2f, 0.8f); }
                 glbRoot.AddComponent<CharacterBob>();
+                
+                // Round 44: Add cartoon sparkle particle effects
+                AddCartoonSparkles(glbRoot.transform, isPet);
+                AndroidLog($"[DirectGLB] R44: Sparkle effects added to {displayName}");
             }
             catch (System.Exception e)
             {
@@ -1709,7 +1723,141 @@ namespace EmersynBigDay.Core
                     Gameplay.CharacterCustomization.Instance.ApplyToCharacter(glbRoot);
             }
 
-            AndroidLog($"[DirectGLB] R42: SUCCESS: {displayName} loaded! {meshPartCount} parts, {totalVerts} verts, {totalTris} tris");
+            AndroidLog($"[DirectGLB] R44: SUCCESS: {displayName} loaded! {meshPartCount} parts, {totalVerts} verts, {totalTris} tris (with outlines + sparkles)");
+        }
+
+        /// <summary>
+        /// Round 44 (Claude 4.5 Bedrock): Add toon outline to mesh part for AAA cartoon look.
+        /// Duplicates mesh, expands vertices along normals, renders with front-face culling
+        /// to create a black outline silhouette effect (like Guilty Gear, Ni no Kuni).
+        /// </summary>
+        private void AddToonOutline(GameObject meshObj, Mesh originalMesh, Color baseColor)
+        {
+            if (originalMesh == null || originalMesh.vertexCount == 0) return;
+            
+            // Create outline child object
+            GameObject outlineObj = new GameObject(meshObj.name + "_Outline");
+            outlineObj.transform.SetParent(meshObj.transform, false);
+            outlineObj.transform.localPosition = Vector3.zero;
+            outlineObj.transform.localRotation = Quaternion.identity;
+            outlineObj.transform.localScale = Vector3.one;
+            
+            MeshFilter outlineFilter = outlineObj.AddComponent<MeshFilter>();
+            MeshRenderer outlineRenderer = outlineObj.AddComponent<MeshRenderer>();
+            
+            // Create expanded mesh for outline
+            Mesh outlineMesh = new Mesh();
+            outlineMesh.name = originalMesh.name + "_outline";
+            
+            Vector3[] verts = originalMesh.vertices;
+            Vector3[] norms = originalMesh.normals;
+            int[] tris = originalMesh.triangles;
+            
+            if (norms == null || norms.Length != verts.Length) return;
+            
+            // Expand vertices along normals for outline thickness
+            float outlineWidth = 0.004f; // Thin but visible outline
+            Vector3[] expandedVerts = new Vector3[verts.Length];
+            for (int i = 0; i < verts.Length; i++)
+            {
+                expandedVerts[i] = verts[i] + norms[i] * outlineWidth;
+            }
+            
+            outlineMesh.vertices = expandedVerts;
+            outlineMesh.normals = norms;
+            if (tris != null) outlineMesh.triangles = tris;
+            outlineMesh.RecalculateBounds();
+            
+            outlineFilter.mesh = outlineMesh;
+            
+            // Create outline material - dark version of base color with front-face culling
+            Material outlineMat = new Material(Shader.Find("Standard"));
+            // Darken the base color for outline (not pure black - more like dark version)
+            Color.RGBToHSV(baseColor, out float oh, out float os, out float ov);
+            Color outlineColor = Color.HSVToRGB(oh, Mathf.Min(os * 1.2f, 1f), ov * 0.15f);
+            outlineMat.color = outlineColor;
+            outlineMat.SetFloat("_Metallic", 0f);
+            outlineMat.SetFloat("_Glossiness", 0f);
+            // Front-face culling = render only back faces = outline effect
+            outlineMat.SetInt("_Cull", (int)UnityEngine.Rendering.CullMode.Front);
+            outlineMat.renderQueue = 2000; // Render before main geometry
+            
+            outlineRenderer.material = outlineMat;
+            outlineRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            outlineRenderer.receiveShadows = false;
+        }
+
+        /// <summary>
+        /// Round 44 (Claude 4.5 Bedrock): Add cartoon sparkle particle effects to characters.
+        /// Floating sparkles/stars around characters for Talking Tom / Sims 4 polish.
+        /// </summary>
+        private void AddCartoonSparkles(Transform character, bool isPet)
+        {
+            GameObject sparkleObj = new GameObject("CartoonSparkles");
+            sparkleObj.transform.SetParent(character, false);
+            sparkleObj.transform.localPosition = isPet ? new Vector3(0, 0.3f, 0) : new Vector3(0, 0.5f, 0);
+            
+            ParticleSystem ps = sparkleObj.AddComponent<ParticleSystem>();
+            
+            // Main module
+            var main = ps.main;
+            main.startLifetime = 2.5f;
+            main.startSpeed = 0.3f;
+            main.startSize = new ParticleSystem.MinMaxCurve(0.02f, 0.06f);
+            main.startColor = new ParticleSystem.MinMaxGradient(
+                new Color(1f, 1f, 0.7f, 0.9f),  // Warm yellow sparkle
+                new Color(1f, 0.85f, 1f, 0.9f)   // Soft pink sparkle
+            );
+            main.maxParticles = isPet ? 10 : 15;
+            main.simulationSpace = ParticleSystemSimulationSpace.World;
+            main.gravityModifier = -0.05f; // Float upward slightly
+            
+            // Emission - subtle constant rate
+            var emission = ps.emission;
+            emission.rateOverTime = isPet ? 2f : 3f;
+            
+            // Shape - sphere around character
+            var shape = ps.shape;
+            shape.shapeType = ParticleSystemShapeType.Sphere;
+            shape.radius = isPet ? 0.4f : 0.6f;
+            
+            // Size over lifetime - fade in then out
+            var sizeOverLifetime = ps.sizeOverLifetime;
+            sizeOverLifetime.enabled = true;
+            AnimationCurve sizeCurve = new AnimationCurve();
+            sizeCurve.AddKey(0f, 0f);
+            sizeCurve.AddKey(0.2f, 1f);
+            sizeCurve.AddKey(0.8f, 1f);
+            sizeCurve.AddKey(1f, 0f);
+            sizeOverLifetime.size = new ParticleSystem.MinMaxCurve(1f, sizeCurve);
+            
+            // Color over lifetime - alpha fade
+            var colorOverLifetime = ps.colorOverLifetime;
+            colorOverLifetime.enabled = true;
+            Gradient gradient = new Gradient();
+            gradient.SetKeys(
+                new GradientColorKey[] { 
+                    new GradientColorKey(Color.white, 0f), 
+                    new GradientColorKey(new Color(1f, 0.95f, 0.8f), 1f) 
+                },
+                new GradientAlphaKey[] { 
+                    new GradientAlphaKey(0f, 0f), 
+                    new GradientAlphaKey(0.8f, 0.2f), 
+                    new GradientAlphaKey(0.8f, 0.7f),
+                    new GradientAlphaKey(0f, 1f) 
+                }
+            );
+            colorOverLifetime.color = gradient;
+            
+            // Rotation for visual variety
+            var rotOverLifetime = ps.rotationOverLifetime;
+            rotOverLifetime.enabled = true;
+            rotOverLifetime.z = new ParticleSystem.MinMaxCurve(-90f, 90f);
+            
+            // Renderer - use default sprite material
+            var renderer = ps.GetComponent<ParticleSystemRenderer>();
+            renderer.material = new Material(Shader.Find("Sprites/Default"));
+            renderer.sortingOrder = 10; // Render in front
         }
 
         /// <summary>
