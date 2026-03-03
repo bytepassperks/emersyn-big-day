@@ -1322,34 +1322,28 @@ namespace EmersynBigDay.Core
             AndroidLog($"[GLBRuntime] R41: START loading {glbName} -> {displayName}");
             
             // Step 1: Load GLB bytes from StreamingAssets
+            // NOTE: yield cannot be inside try-catch (CS1626), so no try-catch around web request
+            #if UNITY_ANDROID && !UNITY_EDITOR
+            string uri = Application.streamingAssetsPath + "/Characters/" + glbName + ".glb";
+            #else
+            string uri = "file://" + Path.Combine(Application.streamingAssetsPath, "Characters", glbName + ".glb");
+            #endif
+            AndroidLog($"[GLBRuntime] R41: Step 1 - Loading from URI: {uri}");
+            
+            var webRequest = UnityWebRequest.Get(uri);
+            webRequest.timeout = 30;
+            yield return webRequest.SendWebRequest();
+            
             byte[] glbData = null;
-            try
+            if (webRequest.result != UnityWebRequest.Result.Success)
             {
-                #if UNITY_ANDROID && !UNITY_EDITOR
-                string uri = Application.streamingAssetsPath + "/Characters/" + glbName + ".glb";
-                #else
-                string uri = "file://" + Path.Combine(Application.streamingAssetsPath, "Characters", glbName + ".glb");
-                #endif
-                AndroidLog($"[GLBRuntime] R41: Step 1 - Loading from URI: {uri}");
-                
-                using (var request = UnityWebRequest.Get(uri))
-                {
-                    request.timeout = 30;
-                    yield return request.SendWebRequest();
-                    if (request.result != UnityWebRequest.Result.Success)
-                    {
-                        AndroidLog($"[GLBRuntime] R41: FAILED to load {glbName}: {request.error} code={request.responseCode}");
-                        yield break;
-                    }
-                    glbData = request.downloadHandler.data;
-                    AndroidLog($"[GLBRuntime] R41: Step 1 OK - Loaded {glbData.Length} bytes for {glbName}");
-                }
-            }
-            catch (System.Exception e)
-            {
-                AndroidLog($"[GLBRuntime] R41: Step 1 EXCEPTION loading {glbName}: {e.Message}\n{e.StackTrace}");
+                AndroidLog($"[GLBRuntime] R41: FAILED to load {glbName}: {webRequest.error} code={webRequest.responseCode}");
+                webRequest.Dispose();
                 yield break;
             }
+            glbData = webRequest.downloadHandler.data;
+            AndroidLog($"[GLBRuntime] R41: Step 1 OK - Loaded {glbData.Length} bytes for {glbName}");
+            webRequest.Dispose();
 
             if (glbData == null || glbData.Length < 12)
             {
@@ -1358,31 +1352,43 @@ namespace EmersynBigDay.Core
             }
 
             // Step 2: Parse with GLTFast
+            // NOTE: LoadGltfBinary is async Task, poll IsCompleted outside try-catch
+            AndroidLog($"[GLBRuntime] R41: Step 2 - Creating GltfImport for {glbName}");
             GltfImport gltf = null;
+            Task<bool> loadTask = null;
+            try
+            {
+                gltf = new GltfImport(materialGenerator: new StandardColorMaterialGenerator());
+                loadTask = gltf.LoadGltfBinary(glbData);
+            }
+            catch (System.Exception e)
+            {
+                AndroidLog($"[GLBRuntime] R41: Step 2 EXCEPTION creating GltfImport for {glbName}: {e.Message}\n{e.StackTrace}");
+                yield break;
+            }
+
+            // Poll task completion outside try-catch (yield not allowed in try-catch)
+            while (loadTask != null && !loadTask.IsCompleted)
+            {
+                yield return null;
+            }
+
             bool loadSuccess = false;
             try
             {
-                AndroidLog($"[GLBRuntime] R41: Step 2 - Creating GltfImport for {glbName}");
-                gltf = new GltfImport(materialGenerator: new StandardColorMaterialGenerator());
-                
-                var loadTask = gltf.LoadGltfBinary(glbData);
-                while (!loadTask.IsCompleted)
-                {
-                    yield return null;
-                }
-                
                 if (loadTask.IsFaulted)
                 {
                     AndroidLog($"[GLBRuntime] R41: Step 2 FAULTED for {glbName}: {loadTask.Exception?.Message}");
-                    yield break;
                 }
-                loadSuccess = loadTask.Result;
+                else
+                {
+                    loadSuccess = loadTask.Result;
+                }
                 AndroidLog($"[GLBRuntime] R41: Step 2 result for {glbName}: {loadSuccess}");
             }
             catch (System.Exception e)
             {
-                AndroidLog($"[GLBRuntime] R41: Step 2 EXCEPTION for {glbName}: {e.Message}\n{e.StackTrace}");
-                yield break;
+                AndroidLog($"[GLBRuntime] R41: Step 2 EXCEPTION reading result for {glbName}: {e.Message}");
             }
 
             if (!loadSuccess || gltf == null)
@@ -1392,39 +1398,48 @@ namespace EmersynBigDay.Core
             }
 
             // Step 3: Instantiate the GLTFast scene into a new root GameObject
-            GameObject glbRoot = null;
+            AndroidLog($"[GLBRuntime] R41: Step 3 - Instantiating {glbName} scene");
+            GameObject glbRoot = new GameObject(displayName + "_GLB");
+            Task<bool> instantiateTask = null;
             try
             {
-                AndroidLog($"[GLBRuntime] R41: Step 3 - Instantiating {glbName} scene");
-                glbRoot = new GameObject(displayName + "_GLB");
-                
-                var instantiateTask = gltf.InstantiateMainSceneAsync(glbRoot.transform);
-                while (!instantiateTask.IsCompleted)
-                {
-                    yield return null;
-                }
-                
-                if (instantiateTask.IsFaulted)
-                {
-                    AndroidLog($"[GLBRuntime] R41: Step 3 FAULTED for {glbName}: {instantiateTask.Exception?.Message}");
-                    if (glbRoot != null) Destroy(glbRoot);
-                    yield break;
-                }
-                
-                bool instantiateSuccess = instantiateTask.Result;
-                AndroidLog($"[GLBRuntime] R41: Step 3 instantiate result for {glbName}: {instantiateSuccess}");
-                
-                if (!instantiateSuccess)
-                {
-                    AndroidLog($"[GLBRuntime] R41: InstantiateMainSceneAsync returned false for {glbName}");
-                    if (glbRoot != null) Destroy(glbRoot);
-                    yield break;
-                }
+                instantiateTask = gltf.InstantiateMainSceneAsync(glbRoot.transform);
             }
             catch (System.Exception e)
             {
-                AndroidLog($"[GLBRuntime] R41: Step 3 EXCEPTION for {glbName}: {e.Message}\n{e.StackTrace}");
-                if (glbRoot != null) Destroy(glbRoot);
+                AndroidLog($"[GLBRuntime] R41: Step 3 EXCEPTION starting instantiate for {glbName}: {e.Message}\n{e.StackTrace}");
+                Destroy(glbRoot);
+                yield break;
+            }
+
+            // Poll task completion outside try-catch
+            while (instantiateTask != null && !instantiateTask.IsCompleted)
+            {
+                yield return null;
+            }
+
+            bool instantiateSuccess = false;
+            try
+            {
+                if (instantiateTask.IsFaulted)
+                {
+                    AndroidLog($"[GLBRuntime] R41: Step 3 FAULTED for {glbName}: {instantiateTask.Exception?.Message}");
+                }
+                else
+                {
+                    instantiateSuccess = instantiateTask.Result;
+                }
+                AndroidLog($"[GLBRuntime] R41: Step 3 instantiate result for {glbName}: {instantiateSuccess}");
+            }
+            catch (System.Exception e)
+            {
+                AndroidLog($"[GLBRuntime] R41: Step 3 EXCEPTION reading instantiate result for {glbName}: {e.Message}");
+            }
+
+            if (!instantiateSuccess)
+            {
+                AndroidLog($"[GLBRuntime] R41: InstantiateMainSceneAsync failed for {glbName}");
+                Destroy(glbRoot);
                 yield break;
             }
 
