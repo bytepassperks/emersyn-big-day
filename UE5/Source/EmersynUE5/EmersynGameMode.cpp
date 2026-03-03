@@ -10,6 +10,7 @@
 #include "Camera/CameraActor.h"
 #include "Camera/CameraComponent.h"
 #include "Engine/World.h"
+#include "GameFramework/DefaultPawn.h"
 
 // Include ALL mesh data headers
 #include "MeshData/Mesh_bedroom_bed.h"
@@ -142,6 +143,9 @@ AEmersynGameMode::AEmersynGameMode()
     bInSplash = true;
     CurrentRoom = TEXT("Splash");
 
+    // CRITICAL: Disable default pawn entirely to eliminate touch joysticks
+    DefaultPawnClass = nullptr;
+
     static ConstructorHelpers::FObjectFinder<UMaterialInterface> MatFinder(
         TEXT("/Game/Materials/M_VertexColor"));
     if (MatFinder.Succeeded())
@@ -252,17 +256,19 @@ void AEmersynGameMode::SetupIsometricCamera(FVector RoomCenter, float Distance)
     {
         Cam->GetCameraComponent()->FieldOfView = 55.0f;
         PC->SetViewTarget(Cam);
-        // Destroy default pawn to eliminate touch joystick controls
+        // Destroy any default pawn and remove touch joysticks completely
         if (PC->GetPawn())
         {
             PC->GetPawn()->Destroy();
             PC->UnPossess();
         }
-        // Block all input so fuzz test touches cannot affect camera
+        // Set UI-only input mode to block ALL game/touch input
         PC->DisableInput(PC);
-        FInputModeGameOnly InputMode;
+        FInputModeUIOnly InputMode;
         PC->SetInputMode(InputMode);
         PC->bShowMouseCursor = false;
+        // Remove the virtual joystick touch interface via public API
+        PC->ActivateTouchInterface(nullptr);
         SpawnedActors.Add(Cam);
     }
 }
