@@ -1,0 +1,29 @@
+{
+    "FileVersion": 3,
+    "EngineAssociation": "5.4",
+    "Category": "",
+    "Description": "Emersyn Big Day - Children life simulation game",
+    "Modules": [
+        {
+            "Name": "EmersynUE5",
+            "Type": "Runtime",
+            "LoadingPhase": "Default",
+            "AdditionalDependencies": [
+                "Engine"
+            ]
+        }
+    ],
+    "Plugins": [
+        {
+            "Name": "glTFRuntime",
+            "Enabled": false
+        },
+        {
+            "Name": "Bridge",
+            "Enabled": false
+        }
+    ],
+    "TargetPlatforms": [
+        "Android"
+    ]
+}
