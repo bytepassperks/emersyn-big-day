@@ -1893,11 +1893,15 @@ namespace EmersynBigDay.Core
             s = Mathf.Clamp01(s * satBoost);
             v = Mathf.Clamp01(v * valBoost);
             Color enhanced = Color.HSVToRGB(h, s, v);
-            // Gamma correction for Standard shader in Gamma color space
-            enhanced.r = Mathf.Pow(enhanced.r, 0.8f);
-            enhanced.g = Mathf.Pow(enhanced.g, 0.8f);
-            enhanced.b = Mathf.Pow(enhanced.b, 0.8f);
+            // Round 45 (Claude 4.5 Bedrock): REMOVED gamma pow(0.8) - was making all colors muddy brown!
+            // Only apply linear conversion if actually in Linear color space
+            if (QualitySettings.activeColorSpace == ColorSpace.Linear)
+            {
+                enhanced = enhanced.linear;
+            }
             enhanced.a = baseColor.a;
+            
+            AndroidLog($"[DirectGLB] R45: Material '{matName}' color: raw=({baseColor.r:F2},{baseColor.g:F2},{baseColor.b:F2}) -> enhanced=({enhanced.r:F2},{enhanced.g:F2},{enhanced.b:F2})");
 
             // Use Standard shader (cached)
             Shader shader = standardShader;
@@ -2112,9 +2116,10 @@ namespace EmersynBigDay.Core
                     if (a1 >= 0 && a2 >= 0)
                     {
                         string[] pts = o.Substring(a1 + 1, a2 - a1 - 1).Split(',');
+                        // Round 45 (Claude 4.5 Bedrock): Trim whitespace from JSON values (avoids parse drift)
                         if (pts.Length >= 3)
-                            m.color = new Color(GLBParseFloat(pts[0]), GLBParseFloat(pts[1]), GLBParseFloat(pts[2]),
-                                pts.Length >= 4 ? GLBParseFloat(pts[3]) : 1f);
+                            m.color = new Color(GLBParseFloat(pts[0].Trim()), GLBParseFloat(pts[1].Trim()), GLBParseFloat(pts[2].Trim()),
+                                pts.Length >= 4 ? GLBParseFloat(pts[3].Trim()) : 1f);
                     }
                 }
                 m.metallic = GLBJsonGetFloat(o, "\"metallicFactor\"", 0f);
