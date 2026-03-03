@@ -221,11 +221,11 @@ namespace EmersynBigDay.CameraSystem
         {
             currentYaw = 0f;
             currentPitch = DefaultPitch;
-            // Round 28: 3-tier adaptive zoom on reset based on screen aspect
+            // Round 29: 3-tier adaptive zoom on reset based on screen aspect
             float resetAspect = (float)Screen.width / Screen.height;
             if (resetAspect < 0.5f) CurrentZoom = 15f;
             else if (resetAspect < 0.6f) CurrentZoom = 18f;
-            else CurrentZoom = 22f;
+            else CurrentZoom = 16f; // Round 29: Tablets closer
             frameCount = 0; // Round 25: Reset to force exact position again
             springVelocity = Vector3.zero;
             isTransitioning = false;

@@ -454,15 +454,15 @@ namespace EmersynBigDay.Core
             mainCamera.clearFlags = CameraClearFlags.SolidColor;
             // Round 20 (Claude 4.5 Bedrock): Soft pink background to match room aesthetic
             mainCamera.backgroundColor = new Color(0.95f, 0.88f, 0.92f);
-            // Round 28: 3-tier adaptive FOV based on screen aspect ratio
+            // Round 29: 3-tier adaptive FOV based on screen aspect ratio
             // Very narrow phones (aspect < 0.5): FOV=80 (Pixel 9 Pro XL ~0.44)
             // Normal phones (aspect 0.5-0.6): FOV=70
-            // Tablets (aspect >= 0.6): FOV=60
+            // Tablets (aspect >= 0.6): FOV=75 (wider to see full room on landscape-ish screens)
             float aspect = (float)Screen.width / Screen.height;
             float adaptiveFOV;
             if (aspect < 0.5f) adaptiveFOV = 80f;
             else if (aspect < 0.6f) adaptiveFOV = 70f;
-            else adaptiveFOV = 60f;
+            else adaptiveFOV = 75f; // Round 29: Increased from 60 to show full room on tablets
             mainCamera.fieldOfView = adaptiveFOV;
             Debug.Log($"[SceneBuilder] Screen {Screen.width}x{Screen.height} aspect={aspect:F2} FOV={adaptiveFOV}");
             mainCamera.nearClipPlane = 0.1f;
@@ -482,12 +482,12 @@ namespace EmersynBigDay.Core
             if (mainCamera.GetComponent<CameraSystem.CameraController>() == null)
             {
                 var ctrl = mainCamera.gameObject.AddComponent<CameraSystem.CameraController>();
-                // Round 28: 3-tier adaptive camera based on screen aspect ratio
+                // Round 29: 3-tier adaptive camera based on screen aspect ratio
                 float camAspect = (float)Screen.width / Screen.height;
                 float adaptiveZoom, adaptivePitch;
                 if (camAspect < 0.5f) { adaptiveZoom = 15f; adaptivePitch = 42f; } // Very narrow phones (Pixel 9 Pro XL)
                 else if (camAspect < 0.6f) { adaptiveZoom = 18f; adaptivePitch = 45f; } // Normal phones
-                else { adaptiveZoom = 22f; adaptivePitch = 48f; } // Tablets
+                else { adaptiveZoom = 16f; adaptivePitch = 43f; } // Round 29: Tablets - closer zoom, less steep pitch to see room
                 ctrl.MinZoom = 8f;
                 ctrl.MaxZoom = 25f; // Round 28: Reduced from 50 to prevent fuzz test zooming too far out
                 ctrl.CurrentZoom = adaptiveZoom;
@@ -495,19 +495,19 @@ namespace EmersynBigDay.Core
                 ctrl.SpringStiffness = 200f;
                 ctrl.SpringDamping = 40f;
                 ctrl.Offset = new Vector3(0f, 10f, -10f); // Round 28: Reduced offset to keep camera closer
-                Debug.Log($"[SceneBuilder] Camera adaptive R28: aspect={camAspect:F2} zoom={adaptiveZoom} pitch={adaptivePitch}");
+                Debug.Log($"[SceneBuilder] Camera adaptive R29: aspect={camAspect:F2} zoom={adaptiveZoom} pitch={adaptivePitch}");
             }
-            // Round 28: 3-tier adaptive initial camera position
+            // Round 29: 3-tier adaptive initial camera position
             float initAspect = (float)Screen.width / Screen.height;
             float initZoom, initPitch;
             if (initAspect < 0.5f) { initZoom = 15f; initPitch = 42f; }
             else if (initAspect < 0.6f) { initZoom = 18f; initPitch = 45f; }
-            else { initZoom = 22f; initPitch = 48f; }
+            else { initZoom = 16f; initPitch = 43f; } // Round 29: Tablets closer
             float initPitchRad = initPitch * Mathf.Deg2Rad;
             Vector3 camDir = new Vector3(0f, Mathf.Sin(initPitchRad), -Mathf.Cos(initPitchRad));
             mainCamera.transform.position = camDir * initZoom;
             mainCamera.transform.LookAt(new Vector3(0f, 1.0f, 0f)); // Look at floor level
-            Debug.Log($"[SceneBuilder] Initial camera R28: aspect={initAspect:F2} zoom={initZoom} pitch={initPitch} pos={mainCamera.transform.position}");
+            Debug.Log($"[SceneBuilder] Initial camera R29: aspect={initAspect:F2} zoom={initZoom} pitch={initPitch} pos={mainCamera.transform.position}");
         }
 
         private void CreateManagers()
