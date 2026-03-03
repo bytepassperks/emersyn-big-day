@@ -483,10 +483,10 @@ namespace EmersynBigDay.Core
                 // Round 49 (Claude 4.5 Bedrock): Balanced zoom to show all characters
                 float camAspect = (float)Screen.width / Screen.height;
                 float adaptiveZoom, adaptivePitch;
-                // Round 58: Balanced zoom - characters ~40% of screen, floor visible, room context
-                if (camAspect < 0.5f) { adaptiveZoom = 22f; adaptivePitch = 45f; } // Very narrow phones
-                else if (camAspect < 0.6f) { adaptiveZoom = 20f; adaptivePitch = 45f; } // Normal phones
-                else { adaptiveZoom = 18f; adaptivePitch = 45f; } // Tablets
+                // Round 59: Steeper pitch on phones to show floor, balanced on tablets
+                if (camAspect < 0.5f) { adaptiveZoom = 20f; adaptivePitch = 55f; } // Very narrow phones - steeper to see floor
+                else if (camAspect < 0.6f) { adaptiveZoom = 18f; adaptivePitch = 50f; } // Normal phones
+                else { adaptiveZoom = 16f; adaptivePitch = 45f; } // Tablets
                 ctrl.MinZoom = adaptiveZoom; // Round 57: Lock MinZoom = DefaultZoom
                 ctrl.MaxZoom = 30f; // Round 57: Allow some zoom out range
                 ctrl.CurrentZoom = adaptiveZoom;
@@ -499,10 +499,10 @@ namespace EmersynBigDay.Core
             // Round 49: Balanced camera to show all characters and room
             float initAspect = (float)Screen.width / Screen.height;
             float initZoom, initPitch;
-            // Round 58: Match camera controller zoom values
-            if (initAspect < 0.5f) { initZoom = 22f; initPitch = 45f; }
-            else if (initAspect < 0.6f) { initZoom = 20f; initPitch = 45f; }
-            else { initZoom = 18f; initPitch = 45f; }
+            // Round 59: Match camera controller zoom values - steeper on phones
+            if (initAspect < 0.5f) { initZoom = 20f; initPitch = 55f; }
+            else if (initAspect < 0.6f) { initZoom = 18f; initPitch = 50f; }
+            else { initZoom = 16f; initPitch = 45f; }
             float initPitchRad = initPitch * Mathf.Deg2Rad;
             Vector3 camDir = new Vector3(0f, Mathf.Sin(initPitchRad), -Mathf.Cos(initPitchRad));
             mainCamera.transform.position = camDir * initZoom;
