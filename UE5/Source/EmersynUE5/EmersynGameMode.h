@@ -14,10 +14,8 @@ public:
     virtual void InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage) override;
     virtual void Tick(float DeltaSeconds) override;
 
-    UFUNCTION(BlueprintCallable, Category = "Scene")
+    UFUNCTION(BlueprintCallable)
     void LoadRoom(const FString& RoomName);
-    UFUNCTION(BlueprintCallable, Category = "Scene")
-    void BuildCurrentRoom();
 
 private:
     // Room builders
@@ -36,63 +34,40 @@ private:
     void BuildArcade();
     void BuildAmusementPark();
 
-    // Environment
-    void SpawnSkyBackground(FLinearColor TopColor, FLinearColor BottomColor);
-    void SpawnRoomShell(FVector Size, FLinearColor FloorCol, FLinearColor WallCol, FLinearColor CeilCol);
+    // Spawn real 3D mesh from compiled data
+    AActor* SpawnMesh(const float* Verts, const float* Norms, const float* UVData,
+                      const int32* Tris, int32 NumVerts, int32 NumTris,
+                      FVector Location, FRotator Rotation, FVector Scale,
+                      const FLinearColor& Tint, float Brightness = 1.0f);
 
-    // Primitive spawners (PMC + vertex colors)
-    AActor* SpawnBox(FVector Loc, FVector Scale, FLinearColor Color);
-    AActor* SpawnGradientBox(FVector Loc, FVector Scale, FLinearColor TopCol, FLinearColor BotCol);
-    AActor* SpawnSphere(FVector Loc, float Radius, FLinearColor Color);
-    AActor* SpawnCylinder(FVector Loc, FVector Scale, FLinearColor Color);
+    // Environment helpers
+    void SpawnSky(FLinearColor TopCol, FLinearColor BotCol);
+    void SpawnFloor(FVector Size, FLinearColor Col1, FLinearColor Col2, bool bCheckerboard);
+    void SpawnWalls(FVector RoomSize, float WallHeight, FLinearColor Col);
+    void SpawnRoomLabel(const FString& Label);
 
-    // Detailed furniture
-    void SpawnBed(FVector L, FLinearColor Frame, FLinearColor Sheet, FLinearColor Pillow);
-    void SpawnSofa(FVector L, FLinearColor Fabric, FLinearColor Cushion);
-    void SpawnTable(FVector L, FLinearColor Top, FLinearColor Leg);
-    void SpawnChair(FVector L, FLinearColor Col);
-    void SpawnBookshelf(FVector L, FLinearColor Wood);
-    void SpawnTV(FVector L);
-    void SpawnStove(FVector L);
-    void SpawnFridge(FVector L);
-    void SpawnSink(FVector L);
-    void SpawnBathtub(FVector L);
-    void SpawnToilet(FVector L);
-    void SpawnLamp(FVector L, FLinearColor Shade);
-    void SpawnRug(FVector L, FLinearColor C1, FLinearColor C2, FVector Size);
-    void SpawnPlant(FVector L, float S = 1.0f);
-    void SpawnTree(FVector L, float S = 1.0f);
-    void SpawnSwing(FVector L);
-    void SpawnSlide(FVector L);
-    void SpawnBench(FVector L);
-    void SpawnShopShelf(FVector L, FLinearColor Col);
-    void SpawnArcadeMachine(FVector L, FLinearColor Col);
-    void SpawnDesk(FVector L, FLinearColor Col);
-    void SpawnWindow(FVector L, FLinearColor Frame, FLinearColor Glass);
-    void SpawnPainting(FVector L, FLinearColor Frame, FLinearColor Canvas);
-    void SpawnFountain(FVector L);
-    void SpawnFerrisWheel(FVector L);
-    void SpawnCarousel(FVector L);
-    void SpawnCounter(FVector L, FLinearColor Col);
-    void SpawnCabinet(FVector L, FLinearColor Col);
+    // Primitive spawners (fallback)
+    AActor* SpawnBox(FVector Loc, FVector Scale, FLinearColor Col);
+    AActor* SpawnGradientBox(FVector Loc, FVector Scale, FLinearColor Top, FLinearColor Bot);
 
-    // Characters & pets
-    void SpawnCharacter(FVector Loc, FLinearColor Skin, FLinearColor Hair, FLinearColor Outfit, const FString& Name, float Scale = 1.0f);
-    void SpawnPet(FVector Loc, FLinearColor Body, FLinearColor Accent, const FString& Name, float Scale = 0.6f);
+    // Character spawner using real mesh data
+    AActor* SpawnCharacterMesh(const FString& Name, FVector Location, FRotator Rotation,
+                               float Scale, const FLinearColor& SkinTint,
+                               const FLinearColor& OutfitTint);
 
-    // Lighting actors
+    // Lighting
     void SpawnLight(FVector Loc, float Intensity, FLinearColor Color);
     void SpawnDirectionalLight(FRotator Rot, float Intensity, FLinearColor Color);
 
-    // Mesh generators
+    // Mesh generators for primitives
     void GenerateBoxMesh(UProceduralMeshComponent* PMC, FVector HE, FLinearColor Col);
     void GenerateGradientBoxMesh(UProceduralMeshComponent* PMC, FVector HE, FLinearColor Top, FLinearColor Bot);
-    void GenerateSphereMesh(UProceduralMeshComponent* PMC, float Radius, int32 Seg, FLinearColor Col);
-    void GenerateCylinderMesh(UProceduralMeshComponent* PMC, float Radius, float HH, int32 Seg, FLinearColor Col);
 
-    // Utilities
+    // Camera
+    void SetupIsometricCamera(FVector RoomCenter, float Distance);
+
+    // Room management
     void ClearRoom();
-    void SetupCamera(FVector Loc, FRotator Rot);
 
     UPROPERTY() FString CurrentRoom;
     UPROPERTY() TArray<AActor*> SpawnedActors;
