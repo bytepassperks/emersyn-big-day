@@ -1695,7 +1695,9 @@ namespace EmersynBigDay.Core
 
                 if (floorAlbedo != null)
                 {
-                    Material floorMat = CreatePBRMaterial(floorAlbedo, floorNormal);
+                    // Round 18: Floor scale is (12, 0.5, 10) - tile based on XZ plane
+                    Vector2 floorTiling = new Vector2(12f / 2f, 10f / 2f);
+                    Material floorMat = CreatePBRMaterial(floorAlbedo, floorNormal, floorTiling);
                     ApplyMaterialToChild(roomContainer, "Floor", floorMat);
                 }
             }
@@ -1711,11 +1713,22 @@ namespace EmersynBigDay.Core
 
                 if (wallAlbedo != null)
                 {
-                    Material wallMat = CreatePBRMaterial(wallAlbedo, wallNormal);
-                    ApplyMaterialToChild(roomContainer, "BackWall", wallMat);
-                    ApplyMaterialToChild(roomContainer, "LeftWall", wallMat);
-                    ApplyMaterialToChild(roomContainer, "RightWall", wallMat);
-                    ApplyMaterialToChild(roomContainer, "Ceiling", wallMat);
+                    // Round 18 (Claude 4.5 Bedrock): Calculate proper tiling per wall to fix UV stretching
+                    // BackWall: scale (12, 5, 0.3) -> visible face is 12 wide x 5 tall
+                    Vector2 backWallTiling = CalculateWallTiling(new Vector3(12, 5, 0.3f));
+                    Material backWallMat = CreatePBRMaterial(wallAlbedo, wallNormal, backWallTiling);
+                    ApplyMaterialToChild(roomContainer, "BackWall", backWallMat);
+
+                    // LeftWall: scale (0.3, 5, 10) -> visible face is 10 wide x 5 tall
+                    Vector2 sideWallTiling = CalculateWallTiling(new Vector3(0.3f, 5, 10));
+                    Material sideWallMat = CreatePBRMaterial(wallAlbedo, wallNormal, sideWallTiling);
+                    ApplyMaterialToChild(roomContainer, "LeftWall", sideWallMat);
+                    ApplyMaterialToChild(roomContainer, "RightWall", sideWallMat);
+
+                    // Ceiling: scale (12, 0.3, 10) -> visible face is 12 wide x 10 deep
+                    Vector2 ceilingTiling = new Vector2(12f / 2f, 10f / 2f);
+                    Material ceilingMat = CreatePBRMaterial(wallAlbedo, wallNormal, ceilingTiling);
+                    ApplyMaterialToChild(roomContainer, "Ceiling", ceilingMat);
                 }
             }
 
@@ -1819,25 +1832,47 @@ namespace EmersynBigDay.Core
             }
         }
 
-        private Material CreatePBRMaterial(Texture2D albedo, Texture2D normal)
+        // Round 18 (Claude 4.5 Bedrock): Calculate proper texture tiling based on wall scale.
+        // Unity's default cube UV mapping stretches textures when the cube is non-uniformly scaled.
+        // We calculate tiling so the texture repeats at a natural density instead of stretching.
+        private Vector2 CalculateWallTiling(Vector3 wallScale)
         {
-            // Round 17 (Claude 4.5 Bedrock): Clean PBR material with NO detail keywords.
-            // CRITICAL: _DETAIL_MULX2 keyword without a valid detail texture causes magenta artifacts on Android.
+            // Use the two largest dimensions (the visible face dimensions)
+            float width = Mathf.Max(wallScale.x, wallScale.z);
+            float height = wallScale.y;
+            // 1 tile per 2 units gives good visual density for 512x512 textures
+            float tilingX = width / 2f;
+            float tilingY = height / 2f;
+            return new Vector2(tilingX, tilingY);
+        }
+
+        private Material CreatePBRMaterial(Texture2D albedo, Texture2D normal, Vector2? tiling = null)
+        {
+            // Round 18 (Claude 4.5 Bedrock): Clean PBR material with proper tiling and NO detail keywords.
             Material mat;
             if (standardShader != null)
             {
                 mat = new Material(standardShader);
                 mat.SetTexture("_MainTex", albedo);
                 mat.color = Color.white;
+                // Round 18: Apply tiling to fix UV stretching on non-uniform cubes
+                if (tiling.HasValue)
+                {
+                    mat.SetTextureScale("_MainTex", tiling.Value);
+                }
                 if (normal != null)
                 {
                     mat.SetTexture("_BumpMap", normal);
                     mat.EnableKeyword("_NORMALMAP");
                     mat.SetFloat("_BumpScale", 1.0f);
+                    if (tiling.HasValue)
+                    {
+                        mat.SetTextureScale("_BumpMap", tiling.Value);
+                    }
                 }
                 mat.SetFloat("_Glossiness", 0.3f);
                 mat.SetFloat("_Metallic", 0.0f);
-                // Round 17 (Claude 4.5 Bedrock): Explicitly disable detail keywords to prevent magenta artifacts
+                // Round 17: Disable detail keywords to prevent magenta artifacts
                 mat.DisableKeyword("_DETAIL_MULX2");
                 mat.DisableKeyword("_DETAILMULX2");
                 mat.SetTexture("_DetailAlbedoMap", null);
