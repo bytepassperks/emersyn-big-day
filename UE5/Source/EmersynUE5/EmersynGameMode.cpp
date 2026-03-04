@@ -120,6 +120,22 @@ AEmersynGameMode::AEmersynGameMode()
     IsoCam = nullptr;
     M_VertexColor = nullptr;
     DefaultMID = nullptr;
+    RoomIndex = 0;
+    RoomTimer = 0.f;
+    RoomDuration = 5.f;
+    RoomList.Add(TEXT("Splash"));
+    RoomList.Add(TEXT("Bedroom"));
+    RoomList.Add(TEXT("Kitchen"));
+    RoomList.Add(TEXT("Bathroom"));
+    RoomList.Add(TEXT("LivingRoom"));
+    RoomList.Add(TEXT("Garden"));
+    RoomList.Add(TEXT("School"));
+    RoomList.Add(TEXT("Shop"));
+    RoomList.Add(TEXT("Playground"));
+    RoomList.Add(TEXT("Park"));
+    RoomList.Add(TEXT("Mall"));
+    RoomList.Add(TEXT("Arcade"));
+    RoomList.Add(TEXT("AmusementPark"));
 }
 
 // ========= InitGame =========
@@ -141,7 +157,7 @@ void AEmersynGameMode::BeginPlay()
         APawn* P = PC->GetPawn();
         if (P) { P->SetActorHiddenInGame(true); P->SetActorEnableCollision(false); }
     }
-    LoadRoom(TEXT("Splash"));
+    LoadRoom(RoomList[0]);
 }
 
 // ========= Tick =========
@@ -155,10 +171,12 @@ void AEmersynGameMode::Tick(float DeltaSeconds)
         IsoCam->SetActorRotation(FMath::Lerp(CamStartRot, CamTargetRot, T));
         if (CamMoveAlpha >= 1.f) bCameraMoving = false;
     }
-    if (CurrentRoom == TEXT("Splash")) {
-        static float SplashTimer = 0.f;
-        SplashTimer += DeltaSeconds;
-        if (SplashTimer > 3.f) { SplashTimer = 0.f; LoadRoom(TEXT("Bedroom")); }
+    // v21: Auto-cycle through all rooms every 5 seconds
+    RoomTimer += DeltaSeconds;
+    if (RoomTimer >= RoomDuration) {
+        RoomTimer = 0.f;
+        RoomIndex = (RoomIndex + 1) % RoomList.Num();
+        LoadRoom(RoomList[RoomIndex]);
     }
 }
 
@@ -213,6 +231,37 @@ float AEmersynGameMode::FBMNoise(float X, float Y, int32 Octaves) const
         MaxVal += Amp; Amp *= 0.5f; Freq *= 2.f;
     }
     return Val / MaxVal;
+}
+
+// ========= v21 Normal-Based Directional Shading =========
+FLinearColor AEmersynGameMode::ApplyDirectionalShading(FLinearColor BaseColor, FVector Normal, float AO) const
+{
+    FVector KeyLightDir = FVector(0.5f, -0.3f, -0.7f).GetSafeNormal();
+    FVector FillLightDir = FVector(-0.6f, 0.4f, -0.3f).GetSafeNormal();
+    FVector RimLightDir = FVector(0.0f, 0.8f, -0.2f).GetSafeNormal();
+    float KeyDot = FMath::Max(0.f, FVector::DotProduct(Normal, -KeyLightDir));
+    float FillDot = FMath::Max(0.f, FVector::DotProduct(Normal, -FillLightDir));
+    float RimDot = FMath::Max(0.f, FVector::DotProduct(Normal, -RimLightDir));
+    FLinearColor KeyColor(1.0f, 0.95f, 0.85f);
+    FLinearColor FillColor(0.6f, 0.7f, 0.85f);
+    FLinearColor RimColor(1.0f, 0.98f, 0.95f);
+    FLinearColor Ambient(0.25f, 0.25f, 0.30f);
+    FLinearColor Lit = Ambient;
+    Lit.R += BaseColor.R * KeyDot * 0.65f * KeyColor.R;
+    Lit.G += BaseColor.G * KeyDot * 0.65f * KeyColor.G;
+    Lit.B += BaseColor.B * KeyDot * 0.65f * KeyColor.B;
+    Lit.R += BaseColor.R * FillDot * 0.25f * FillColor.R;
+    Lit.G += BaseColor.G * FillDot * 0.25f * FillColor.G;
+    Lit.B += BaseColor.B * FillDot * 0.25f * FillColor.B;
+    float RimPow = FMath::Pow(RimDot, 2.0f);
+    Lit.R += RimPow * 0.15f * RimColor.R;
+    Lit.G += RimPow * 0.15f * RimColor.G;
+    Lit.B += RimPow * 0.15f * RimColor.B;
+    Lit.R *= AO; Lit.G *= AO; Lit.B *= AO; Lit.A = 1.0f;
+    Lit.R = FMath::Clamp(Lit.R, 0.f, 1.f);
+    Lit.G = FMath::Clamp(Lit.G, 0.f, 1.f);
+    Lit.B = FMath::Clamp(Lit.B, 0.f, 1.f);
+    return Lit;
 }
 
 // ========= Texture Fill Functions =========
@@ -475,13 +524,10 @@ AActor* AEmersynGameMode::SpawnTexturedFloor(FVector Center, FVector Size, EText
             UVs.Add(FVector2D(FracX * UVScale, FracY * UVScale));
             Tangents.Add(FProcMeshTangent(1, 0, 0));
 
-            if (Tex) {
-                float N = FBMNoise(FracX * 4.f * UVScale, FracY * 4.f * UVScale, 3);
-                FLinearColor SampledColor = FMath::Lerp(Base, Accent, N * 0.5f + 0.25f);
-                Colors.Add(SampledColor.ToFColor(true));
-            } else {
-                Colors.Add(Base.ToFColor(true));
-            }
+            float N = FBMNoise(FracX * 6.f * UVScale, FracY * 6.f * UVScale, 4);
+            FLinearColor FloorC = FMath::Lerp(Base, Accent, N * 0.65f + 0.18f);
+            FLinearColor ShadedFloor = ApplyDirectionalShading(FloorC, FVector(0, 0, 1), 1.0f);
+            Colors.Add(ShadedFloor.ToFColor(true));
         }
     }
 
@@ -559,7 +605,8 @@ AActor* AEmersynGameMode::SpawnTexturedWall(FVector Start, FVector End, float He
             } else {
                 C = FMath::Lerp(Base, Accent, N * 0.3f);
             }
-            Colors.Add(C.ToFColor(true));
+            FLinearColor ShadedWall = ApplyDirectionalShading(C, Normal, 1.0f - FY * 0.1f);
+            Colors.Add(ShadedWall.ToFColor(true));
         }
     }
 
@@ -613,9 +660,11 @@ AActor* AEmersynGameMode::SpawnTexturedBox(FVector Loc, FVector Scale, ETextureP
         T.Add(BaseIdx); T.Add(BaseIdx+2); T.Add(BaseIdx+3);
     };
 
-    float NV = SimpleNoise(Loc.X * 0.01f, Loc.Y * 0.01f) * 0.15f;
-    FLinearColor BL = Base; FLinearColor BR = FMath::Lerp(Base, Accent, 0.3f + NV);
-    FLinearColor TL = FMath::Lerp(Base, Accent, 0.15f + NV); FLinearColor TR = Accent;
+    float NV = SimpleNoise(Loc.X * 0.02f, Loc.Y * 0.02f) * 0.2f;
+    FLinearColor BL = ApplyDirectionalShading(Base, FVector(0,-1,0), 0.85f);
+    FLinearColor BR = ApplyDirectionalShading(FMath::Lerp(Base, Accent, 0.35f + NV), FVector(1,0,0), 0.9f);
+    FLinearColor TL = ApplyDirectionalShading(FMath::Lerp(Base, Accent, 0.2f + NV), FVector(-1,0,0), 0.95f);
+    FLinearColor TR = ApplyDirectionalShading(Accent, FVector(0,0,1), 1.0f);
 
     AddFace(FVector(-HE.X,-HE.Y,-HE.Z), FVector(HE.X,-HE.Y,-HE.Z), FVector(HE.X,-HE.Y,HE.Z), FVector(-HE.X,-HE.Y,HE.Z), FVector(0,-1,0), BL, BR, TR, TL);
     AddFace(FVector(HE.X,HE.Y,-HE.Z), FVector(-HE.X,HE.Y,-HE.Z), FVector(-HE.X,HE.Y,HE.Z), FVector(HE.X,HE.Y,HE.Z), FVector(0,1,0), BL, BR, TR, TL);
@@ -717,10 +766,12 @@ AActor* AEmersynGameMode::SpawnMesh(const float* Verts, const float* Norms, cons
         UV.Add(UVCoord);
         Tan.Add(FProcMeshTangent(1, 0, 0));
 
-        float NV = SimpleNoise(Verts[I*3] * 0.05f, Verts[I*3+1] * 0.05f);
+        float NV = SimpleNoise(Verts[I*3] * 0.08f, Verts[I*3+1] * 0.08f);
         float HeightFrac = FMath::Clamp((Verts[I*3+2] + 50.f) / 100.f, 0.f, 1.f);
-        FLinearColor VC = FMath::Lerp(Base, Accent, NV * 0.5f + HeightFrac * 0.2f);
-        VC *= Brightness;
+        FLinearColor BaseVC = FMath::Lerp(Base, Accent, NV * 0.6f + HeightFrac * 0.25f);
+        BaseVC *= Brightness;
+        float AOVal = FMath::Clamp(0.7f + HeightFrac * 0.3f, 0.5f, 1.0f);
+        FLinearColor VC = ApplyDirectionalShading(BaseVC, Norm, AOVal);
         VC.A = 1.f;
         C.Add(VC.ToFColor(true));
     }
@@ -810,10 +861,11 @@ void AEmersynGameMode::SpawnSkyLight(float Intensity)
 
 void AEmersynGameMode::SpawnRoomLighting(FVector RoomCenter, FVector RoomSize)
 {
-    SpawnLight(RoomCenter + FVector(0, 0, RoomSize.Z * 0.9f), 8.f, FLinearColor(1.0f, 0.95f, 0.85f), RoomSize.X * 1.5f);
-    SpawnLight(RoomCenter + FVector(RoomSize.X * 0.3f, -RoomSize.Y * 0.3f, RoomSize.Z * 0.5f), 4.f, FLinearColor(1.0f, 0.85f, 0.65f), RoomSize.X);
-    SpawnLight(RoomCenter + FVector(-RoomSize.X * 0.3f, RoomSize.Y * 0.3f, RoomSize.Z * 0.5f), 3.f, FLinearColor(0.65f, 0.80f, 1.0f), RoomSize.X);
-    SpawnLight(RoomCenter + FVector(0, 0, 10.f), 1.5f, FLinearColor(0.9f, 0.88f, 0.82f), RoomSize.X);
+    SpawnLight(RoomCenter + FVector(0, 0, RoomSize.Z * 0.95f), 12.f, FLinearColor(1.0f, 0.95f, 0.85f), RoomSize.X * 2.0f);
+    SpawnLight(RoomCenter + FVector(RoomSize.X * 0.4f, -RoomSize.Y * 0.4f, RoomSize.Z * 0.7f), 6.f, FLinearColor(1.0f, 0.88f, 0.68f), RoomSize.X * 1.2f);
+    SpawnLight(RoomCenter + FVector(-RoomSize.X * 0.4f, RoomSize.Y * 0.4f, RoomSize.Z * 0.6f), 4.f, FLinearColor(0.65f, 0.78f, 1.0f), RoomSize.X * 1.2f);
+    SpawnLight(RoomCenter + FVector(0, 0, 20.f), 2.5f, FLinearColor(0.92f, 0.90f, 0.85f), RoomSize.X * 1.5f);
+    SpawnLight(RoomCenter + FVector(0, -RoomSize.Y * 0.5f, RoomSize.Z * 0.3f), 3.f, FLinearColor(0.95f, 0.92f, 0.88f), RoomSize.X);
 }
 
 // ========= Post-Processing =========
@@ -823,15 +875,18 @@ void AEmersynGameMode::SetupPostProcessing()
     APostProcessVolume* PPV = GetWorld()->SpawnActor<APostProcessVolume>(APostProcessVolume::StaticClass(), FTransform(FVector::ZeroVector), Params);
     if (!PPV) return;
     PPV->bUnbound = true;
-    PPV->Settings.bOverride_BloomIntensity = true; PPV->Settings.BloomIntensity = 0.55f;
-    PPV->Settings.bOverride_BloomThreshold = true; PPV->Settings.BloomThreshold = 0.8f;
-    PPV->Settings.bOverride_AmbientOcclusionIntensity = true; PPV->Settings.AmbientOcclusionIntensity = 0.7f;
-    PPV->Settings.bOverride_AmbientOcclusionRadius = true; PPV->Settings.AmbientOcclusionRadius = 80.f;
-    PPV->Settings.bOverride_ColorSaturation = true; PPV->Settings.ColorSaturation = FVector4(1.2f, 1.2f, 1.2f, 1.0f);
-    PPV->Settings.bOverride_ColorContrast = true; PPV->Settings.ColorContrast = FVector4(1.1f, 1.1f, 1.1f, 1.0f);
-    PPV->Settings.bOverride_ColorGamma = true; PPV->Settings.ColorGamma = FVector4(0.95f, 0.95f, 0.95f, 1.0f);
-    PPV->Settings.bOverride_VignetteIntensity = true; PPV->Settings.VignetteIntensity = 0.2f;
-    PPV->Settings.bOverride_AutoExposureBias = true; PPV->Settings.AutoExposureBias = 1.2f;
+    PPV->Settings.bOverride_BloomIntensity = true; PPV->Settings.BloomIntensity = 0.4f;
+    PPV->Settings.bOverride_BloomThreshold = true; PPV->Settings.BloomThreshold = 1.0f;
+    PPV->Settings.bOverride_AmbientOcclusionIntensity = true; PPV->Settings.AmbientOcclusionIntensity = 0.8f;
+    PPV->Settings.bOverride_AmbientOcclusionRadius = true; PPV->Settings.AmbientOcclusionRadius = 100.f;
+    PPV->Settings.bOverride_AmbientOcclusionQuality = true; PPV->Settings.AmbientOcclusionQuality = 75.f;
+    PPV->Settings.bOverride_ColorSaturation = true; PPV->Settings.ColorSaturation = FVector4(1.35f, 1.35f, 1.35f, 1.0f);
+    PPV->Settings.bOverride_ColorContrast = true; PPV->Settings.ColorContrast = FVector4(1.15f, 1.15f, 1.15f, 1.0f);
+    PPV->Settings.bOverride_ColorGamma = true; PPV->Settings.ColorGamma = FVector4(0.92f, 0.92f, 0.92f, 1.0f);
+    PPV->Settings.bOverride_VignetteIntensity = true; PPV->Settings.VignetteIntensity = 0.15f;
+    PPV->Settings.bOverride_AutoExposureBias = true; PPV->Settings.AutoExposureBias = 1.5f;
+    PPV->Settings.bOverride_AutoExposureMinBrightness = true; PPV->Settings.AutoExposureMinBrightness = 0.5f;
+    PPV->Settings.bOverride_AutoExposureMaxBrightness = true; PPV->Settings.AutoExposureMaxBrightness = 2.0f;
     RoomActors.Add(PPV);
 }
 
@@ -895,8 +950,8 @@ void AEmersynGameMode::BuildSplashScreen()
 {
     SpawnSky();
     SetupPostProcessing();
-    SpawnSkyLight(3.f);
-    SpawnDirectionalLight(FRotator(-45.f, 90.f, 0.f), 8.f, FLinearColor(1.f, 0.95f, 0.85f));
+    SpawnSkyLight(4.f);
+    SpawnDirectionalLight(FRotator(-40.f, 100.f, 0.f), 12.f, FLinearColor(1.f, 0.96f, 0.88f));
     SpawnTexturedFloor(FVector::ZeroVector, FVector(600, 400, 0), ETexturePattern::Grass, SC::FloorGrass, FLinearColor(0.35f, 0.85f, 0.35f), 3.f);
     SpawnWorldText(TEXT("EMERSYN'S BIG DAY"), FVector(0, 0, 250), 60.f, FLinearColor(1.f, 0.85f, 0.3f));
     SpawnWorldText(TEXT("Loading..."), FVector(0, 0, 150), 25.f, FLinearColor(1.f, 1.f, 1.f));
@@ -914,8 +969,8 @@ void AEmersynGameMode::BuildBedroom()
     FVector RS(400.f, 350.f, 300.f);
     SpawnSky();
     SetupPostProcessing();
-    SpawnSkyLight(2.5f);
-    SpawnDirectionalLight(FRotator(-50.f, 120.f, 0.f), 6.f, FLinearColor(1.f, 0.95f, 0.88f));
+    SpawnSkyLight(3.5f);
+    SpawnDirectionalLight(FRotator(-45.f, 135.f, 0.f), 10.f, FLinearColor(1.f, 0.96f, 0.90f));
 
     SpawnTexturedFloor(FVector::ZeroVector, FVector(RS.X, RS.Y, 0), ETexturePattern::WoodGrain, SC::FloorWood, SC::WoodDark, 2.f);
 
@@ -943,8 +998,8 @@ void AEmersynGameMode::BuildKitchen()
     FVector RS(400.f, 350.f, 300.f);
     SpawnSky();
     SetupPostProcessing();
-    SpawnSkyLight(2.5f);
-    SpawnDirectionalLight(FRotator(-50.f, 120.f, 0.f), 6.f, FLinearColor(1.f, 0.95f, 0.88f));
+    SpawnSkyLight(3.5f);
+    SpawnDirectionalLight(FRotator(-45.f, 135.f, 0.f), 10.f, FLinearColor(1.f, 0.96f, 0.90f));
 
     SpawnTexturedFloor(FVector::ZeroVector, FVector(RS.X, RS.Y, 0), ETexturePattern::TileGrid, SC::TileWhite, SC::FloorConcrete, 2.f);
 
@@ -972,8 +1027,8 @@ void AEmersynGameMode::BuildBathroom()
     FVector RS(300.f, 280.f, 280.f);
     SpawnSky();
     SetupPostProcessing();
-    SpawnSkyLight(2.5f);
-    SpawnDirectionalLight(FRotator(-50.f, 120.f, 0.f), 6.f, FLinearColor(1.f, 0.95f, 0.88f));
+    SpawnSkyLight(3.5f);
+    SpawnDirectionalLight(FRotator(-45.f, 135.f, 0.f), 10.f, FLinearColor(1.f, 0.96f, 0.90f));
 
     SpawnTexturedFloor(FVector::ZeroVector, FVector(RS.X, RS.Y, 0), ETexturePattern::TileGrid, SC::TileWhite, SC::TileBlue, 2.f);
 
@@ -1000,8 +1055,8 @@ void AEmersynGameMode::BuildLivingRoom()
     FVector RS(450.f, 400.f, 300.f);
     SpawnSky();
     SetupPostProcessing();
-    SpawnSkyLight(2.5f);
-    SpawnDirectionalLight(FRotator(-50.f, 120.f, 0.f), 6.f, FLinearColor(1.f, 0.95f, 0.88f));
+    SpawnSkyLight(3.5f);
+    SpawnDirectionalLight(FRotator(-45.f, 135.f, 0.f), 10.f, FLinearColor(1.f, 0.96f, 0.90f));
 
     SpawnTexturedFloor(FVector::ZeroVector, FVector(RS.X, RS.Y, 0), ETexturePattern::WoodGrain, SC::FloorWood, SC::WoodLight, 2.f);
 
@@ -1028,8 +1083,8 @@ void AEmersynGameMode::BuildGarden()
     FVector RS(600.f, 500.f, 100.f);
     SpawnSky();
     SetupPostProcessing();
-    SpawnSkyLight(2.5f);
-    SpawnDirectionalLight(FRotator(-50.f, 120.f, 0.f), 6.f, FLinearColor(1.f, 0.95f, 0.88f));
+    SpawnSkyLight(3.5f);
+    SpawnDirectionalLight(FRotator(-45.f, 135.f, 0.f), 10.f, FLinearColor(1.f, 0.96f, 0.90f));
 
     SpawnTexturedFloor(FVector::ZeroVector, FVector(RS.X, RS.Y, 0), ETexturePattern::Grass, SC::FloorGrass, SC::WallGreen, 2.f);
 
@@ -1056,8 +1111,8 @@ void AEmersynGameMode::BuildSchool()
     FVector RS(450.f, 400.f, 320.f);
     SpawnSky();
     SetupPostProcessing();
-    SpawnSkyLight(2.5f);
-    SpawnDirectionalLight(FRotator(-50.f, 120.f, 0.f), 6.f, FLinearColor(1.f, 0.95f, 0.88f));
+    SpawnSkyLight(3.5f);
+    SpawnDirectionalLight(FRotator(-45.f, 135.f, 0.f), 10.f, FLinearColor(1.f, 0.96f, 0.90f));
 
     SpawnTexturedFloor(FVector::ZeroVector, FVector(RS.X, RS.Y, 0), ETexturePattern::WoodGrain, SC::FloorWood, SC::WoodMedium, 2.f);
 
@@ -1084,8 +1139,8 @@ void AEmersynGameMode::BuildShop()
     FVector RS(400.f, 350.f, 300.f);
     SpawnSky();
     SetupPostProcessing();
-    SpawnSkyLight(2.5f);
-    SpawnDirectionalLight(FRotator(-50.f, 120.f, 0.f), 6.f, FLinearColor(1.f, 0.95f, 0.88f));
+    SpawnSkyLight(3.5f);
+    SpawnDirectionalLight(FRotator(-45.f, 135.f, 0.f), 10.f, FLinearColor(1.f, 0.96f, 0.90f));
 
     SpawnTexturedFloor(FVector::ZeroVector, FVector(RS.X, RS.Y, 0), ETexturePattern::TileGrid, SC::FloorTile, SC::FloorConcrete, 2.f);
 
@@ -1111,8 +1166,8 @@ void AEmersynGameMode::BuildPlayground()
     FVector RS(500.f, 450.f, 100.f);
     SpawnSky();
     SetupPostProcessing();
-    SpawnSkyLight(2.5f);
-    SpawnDirectionalLight(FRotator(-50.f, 120.f, 0.f), 6.f, FLinearColor(1.f, 0.95f, 0.88f));
+    SpawnSkyLight(3.5f);
+    SpawnDirectionalLight(FRotator(-45.f, 135.f, 0.f), 10.f, FLinearColor(1.f, 0.96f, 0.90f));
 
     SpawnTexturedFloor(FVector::ZeroVector, FVector(RS.X, RS.Y, 0), ETexturePattern::Sand, SC::FloorSand, SC::FabricYellow, 2.f);
 
@@ -1138,8 +1193,8 @@ void AEmersynGameMode::BuildPark()
     FVector RS(600.f, 500.f, 100.f);
     SpawnSky();
     SetupPostProcessing();
-    SpawnSkyLight(2.5f);
-    SpawnDirectionalLight(FRotator(-50.f, 120.f, 0.f), 6.f, FLinearColor(1.f, 0.95f, 0.88f));
+    SpawnSkyLight(3.5f);
+    SpawnDirectionalLight(FRotator(-45.f, 135.f, 0.f), 10.f, FLinearColor(1.f, 0.96f, 0.90f));
 
     SpawnTexturedFloor(FVector::ZeroVector, FVector(RS.X, RS.Y, 0), ETexturePattern::Grass, SC::FloorGrass, SC::WallGreen, 2.f);
 
@@ -1166,8 +1221,8 @@ void AEmersynGameMode::BuildMall()
     FVector RS(500.f, 450.f, 350.f);
     SpawnSky();
     SetupPostProcessing();
-    SpawnSkyLight(2.5f);
-    SpawnDirectionalLight(FRotator(-50.f, 120.f, 0.f), 6.f, FLinearColor(1.f, 0.95f, 0.88f));
+    SpawnSkyLight(3.5f);
+    SpawnDirectionalLight(FRotator(-45.f, 135.f, 0.f), 10.f, FLinearColor(1.f, 0.96f, 0.90f));
 
     SpawnTexturedFloor(FVector::ZeroVector, FVector(RS.X, RS.Y, 0), ETexturePattern::Marble, SC::MarbleWhite, SC::MarbleVein, 2.f);
 
@@ -1193,8 +1248,8 @@ void AEmersynGameMode::BuildArcade()
     FVector RS(400.f, 380.f, 300.f);
     SpawnSky();
     SetupPostProcessing();
-    SpawnSkyLight(2.5f);
-    SpawnDirectionalLight(FRotator(-50.f, 120.f, 0.f), 6.f, FLinearColor(1.f, 0.95f, 0.88f));
+    SpawnSkyLight(3.5f);
+    SpawnDirectionalLight(FRotator(-45.f, 135.f, 0.f), 10.f, FLinearColor(1.f, 0.96f, 0.90f));
 
     SpawnTexturedFloor(FVector::ZeroVector, FVector(RS.X, RS.Y, 0), ETexturePattern::Concrete, SC::FloorConcrete, SC::MetalBlack, 2.f);
 
@@ -1220,8 +1275,8 @@ void AEmersynGameMode::BuildAmusementPark()
     FVector RS(700.f, 600.f, 100.f);
     SpawnSky();
     SetupPostProcessing();
-    SpawnSkyLight(2.5f);
-    SpawnDirectionalLight(FRotator(-50.f, 120.f, 0.f), 6.f, FLinearColor(1.f, 0.95f, 0.88f));
+    SpawnSkyLight(3.5f);
+    SpawnDirectionalLight(FRotator(-45.f, 135.f, 0.f), 10.f, FLinearColor(1.f, 0.96f, 0.90f));
 
     SpawnTexturedFloor(FVector::ZeroVector, FVector(RS.X, RS.Y, 0), ETexturePattern::Concrete, SC::FloorConcrete, SC::FloorSand, 2.f);
 
