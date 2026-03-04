@@ -11,6 +11,11 @@
 #include "Camera/CameraComponent.h"
 #include "Engine/World.h"
 #include "GameFramework/DefaultPawn.h"
+#include "Engine/PostProcessVolume.h"
+#include "Engine/SkyLight.h"
+#include "Components/SkyLightComponent.h"
+#include "Components/PostProcessComponent.h"
+#include "Components/TextRenderComponent.h"
 
 // Include ALL mesh data headers
 #include "MeshData/Mesh_bedroom_bed.h"
@@ -142,6 +147,11 @@ AEmersynGameMode::AEmersynGameMode()
     RoomDuration = 8.0f;
     bInSplash = true;
     CurrentRoom = TEXT("Splash");
+    PostProcessActor = nullptr;
+    SkyLightActor = nullptr;
+    PersistentCamera = nullptr;
+    bInterpolatingCamera = false;
+    CameraInterpAlpha = 0.0f;
 
     // CRITICAL: Disable default pawn entirely to eliminate touch joysticks
     DefaultPawnClass = nullptr;
@@ -181,6 +191,10 @@ void AEmersynGameMode::BeginPlay()
     UGameplayStatics::GetAllActorsOfClass(GetWorld(), AStaticMeshActor::StaticClass(), Found);
     for (AActor* A : Found) { if (A) A->Destroy(); }
 
+    // Setup persistent post-processing and skylight (not cleared between rooms)
+    SetupPostProcessing();
+    SpawnSkyLight(2.0f);
+
     BuildSplashScreen();
 }
 
@@ -189,6 +203,19 @@ void AEmersynGameMode::Tick(float DeltaSeconds)
 {
     Super::Tick(DeltaSeconds);
     Timer += DeltaSeconds;
+
+    // Smooth camera interpolation
+    if (bInterpolatingCamera && PersistentCamera)
+    {
+        CameraInterpAlpha += DeltaSeconds * 2.0f; // 0.5 second transition
+        float Alpha = FMath::Clamp(CameraInterpAlpha, 0.0f, 1.0f);
+        Alpha = FMath::InterpEaseInOut(0.0f, 1.0f, Alpha, 2.0f); // Smooth ease
+        FVector NewLoc = FMath::Lerp(PersistentCamera->GetActorLocation(), TargetCamLocation, Alpha);
+        FRotator NewRot = FMath::Lerp(PersistentCamera->GetActorRotation(), TargetCamRotation, Alpha);
+        PersistentCamera->SetActorLocationAndRotation(NewLoc, NewRot);
+        if (CameraInterpAlpha >= 1.0f)
+            bInterpolatingCamera = false;
+    }
 
     if (bInSplash && Timer > SplashDuration)
     {
@@ -252,28 +279,42 @@ void AEmersynGameMode::SetupIsometricCamera(FVector RoomCenter, float Distance)
     // Ensure camera is high enough to see floor but not too high
     CamLoc.Z = FMath::Max(CamLoc.Z, RoomCenter.Z + Distance * 0.6f);
 
-    ACameraActor* Cam = GetWorld()->SpawnActor<ACameraActor>(CamLoc, CamRot);
-    if (Cam)
+    if (PersistentCamera)
     {
-        Cam->GetCameraComponent()->FieldOfView = 55.0f;
-        PC->SetViewTarget(Cam);
-        // Destroy any default pawn and remove touch joysticks completely
-        if (PC->GetPawn())
+        // Smooth transition to new position
+        TargetCamLocation = CamLoc;
+        TargetCamRotation = CamRot;
+        bInterpolatingCamera = true;
+        CameraInterpAlpha = 0.0f;
+        PC->SetViewTarget(PersistentCamera);
+    }
+    else
+    {
+        // First time: create camera
+        ACameraActor* Cam = GetWorld()->SpawnActor<ACameraActor>(CamLoc, CamRot);
+        if (Cam)
         {
-            PC->GetPawn()->Destroy();
-            PC->UnPossess();
+            Cam->GetCameraComponent()->FieldOfView = 55.0f;
+            PersistentCamera = Cam;
+            PC->SetViewTarget(Cam);
+            // Destroy any default pawn and remove touch joysticks completely
+            if (PC->GetPawn())
+            {
+                PC->GetPawn()->Destroy();
+                PC->UnPossess();
+            }
+            // CRITICAL: Lock ALL look/move input to prevent camera rotation from touch
+            PC->SetIgnoreLookInput(true);
+            PC->SetIgnoreMoveInput(true);
+            // Set UI-only input mode to block ALL game/touch input
+            PC->DisableInput(PC);
+            FInputModeUIOnly InputMode;
+            PC->SetInputMode(InputMode);
+            PC->bShowMouseCursor = false;
+            // Remove the virtual joystick touch interface via public API
+            PC->ActivateTouchInterface(nullptr);
+            // Don't add to SpawnedActors - persistent camera survives room changes
         }
-        // CRITICAL: Lock ALL look/move input to prevent camera rotation from touch
-        PC->SetIgnoreLookInput(true);
-        PC->SetIgnoreMoveInput(true);
-        // Set UI-only input mode to block ALL game/touch input
-        PC->DisableInput(PC);
-        FInputModeUIOnly InputMode;
-        PC->SetInputMode(InputMode);
-        PC->bShowMouseCursor = false;
-        // Remove the virtual joystick touch interface via public API
-        PC->ActivateTouchInterface(nullptr);
-        SpawnedActors.Add(Cam);
     }
 }
 
@@ -423,6 +464,84 @@ void AEmersynGameMode::SpawnDirectionalLight(FRotator Rot, float Intensity, FLin
         DL->AttachToComponent(A->GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
         DL->SetIntensity(Intensity);
         DL->SetLightColor(Color);
+        DL->SetCastShadows(true);
+        SpawnedActors.Add(A);
+    }
+}
+
+// ========= SkyLight for ambient illumination =========
+void AEmersynGameMode::SpawnSkyLight(float Intensity)
+{
+    if (SkyLightActor) return; // Only one skylight
+    AActor* A = GetWorld()->SpawnActor<AActor>(FVector(0, 0, 500), FRotator::ZeroRotator);
+    if (A)
+    {
+        USkyLightComponent* SL = NewObject<USkyLightComponent>(A);
+        SL->RegisterComponent();
+        SL->AttachToComponent(A->GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
+        SL->SetIntensity(Intensity);
+        SL->SetLightColor(FLinearColor(0.75f, 0.85f, 1.0f)); // Slight blue ambient
+        SL->RecaptureSky();
+        SkyLightActor = A;
+    }
+}
+
+// ========= Post-Processing Volume =========
+void AEmersynGameMode::SetupPostProcessing()
+{
+    if (PostProcessActor) return; // Only setup once
+    APostProcessVolume* PPV = GetWorld()->SpawnActor<APostProcessVolume>();
+    if (PPV)
+    {
+        PPV->bUnbound = true; // Affect entire scene
+        PPV->Priority = 1.0f;
+
+        // Bloom - soft glow like Sims
+        PPV->Settings.bOverride_BloomIntensity = true;
+        PPV->Settings.BloomIntensity = 0.65f;
+        PPV->Settings.bOverride_BloomThreshold = true;
+        PPV->Settings.BloomThreshold = 0.8f;
+
+        // Ambient Occlusion - adds depth between objects
+        PPV->Settings.bOverride_AmbientOcclusionIntensity = true;
+        PPV->Settings.AmbientOcclusionIntensity = 0.8f;
+        PPV->Settings.bOverride_AmbientOcclusionRadius = true;
+        PPV->Settings.AmbientOcclusionRadius = 100.0f;
+
+        // Color grading - warm, vibrant Sims look
+        PPV->Settings.bOverride_ColorSaturation = true;
+        PPV->Settings.ColorSaturation = FVector4(1.15f, 1.15f, 1.15f, 1.0f);
+        PPV->Settings.bOverride_ColorContrast = true;
+        PPV->Settings.ColorContrast = FVector4(1.08f, 1.08f, 1.08f, 1.0f);
+        PPV->Settings.bOverride_ColorGamma = true;
+        PPV->Settings.ColorGamma = FVector4(0.97f, 0.97f, 0.97f, 1.0f);
+
+        // Slight vignette for cinematic feel
+        PPV->Settings.bOverride_VignetteIntensity = true;
+        PPV->Settings.VignetteIntensity = 0.25f;
+
+        // Auto exposure for consistent brightness
+        PPV->Settings.bOverride_AutoExposureBias = true;
+        PPV->Settings.AutoExposureBias = 1.2f;
+
+        PostProcessActor = PPV;
+    }
+}
+
+// ========= World-space 3D text (room labels, UI) =========
+void AEmersynGameMode::SpawnWorldText(const FString& Text, FVector Location, float Size, FLinearColor Color)
+{
+    AActor* A = GetWorld()->SpawnActor<AActor>(Location, FRotator::ZeroRotator);
+    if (A)
+    {
+        UTextRenderComponent* TRC = NewObject<UTextRenderComponent>(A);
+        TRC->RegisterComponent();
+        TRC->AttachToComponent(A->GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
+        TRC->SetText(FText::FromString(Text));
+        TRC->SetWorldSize(Size);
+        TRC->SetTextRenderColor(Color.ToFColor(true));
+        TRC->SetHorizontalAlignment(EHTA_Center);
+        TRC->SetVerticalAlignment(EVRTA_TextCenter);
         SpawnedActors.Add(A);
     }
 }
@@ -555,6 +674,10 @@ void AEmersynGameMode::BuildSplashScreen()
     // Subtitle bar
     SpawnBox(FVector(0, 0, 120), FVector(250, 30, 3), FLinearColor(1.0f, 0.85f, 0.45f));
 
+    // 3D Title text
+    SpawnWorldText(TEXT("EMERSYN'S BIG DAY"), FVector(0, -150, 220), 40.0f, FLinearColor(1.0f, 1.0f, 1.0f));
+    SpawnWorldText(TEXT("A Day of Adventure!"), FVector(0, -150, 140), 20.0f, FLinearColor(1.0f, 0.9f, 0.5f));
+
     // Emersyn character in center
     SpawnCharacterMesh(TEXT("Emersyn"), FVector(0, 50, 0), FRotator(0, -20, 0), 0.35f,
                        SC::SkinLight, SC::OutfitPink);
@@ -583,6 +706,9 @@ void AEmersynGameMode::BuildBedroom()
     SpawnWalls(RoomSize, 300, SC::WallPink);
     SpawnDirectionalLight(FRotator(-45, 30, 0), 3.0f, FLinearColor(1.0f, 0.95f, 0.85f));
     SpawnLight(FVector(0, 0, 190), 1500.0f, FLinearColor(1.0f, 0.9f, 0.8f));
+
+    // Room label
+    SpawnWorldText(TEXT("Bedroom"), FVector(0, -400, 260), 30.0f, FLinearColor(1.0f, 0.6f, 0.75f));
 
     // Real 3D bed
     SpawnMesh(MeshData_BEDROOM_BED::Vertices, MeshData_BEDROOM_BED::Normals,
@@ -637,6 +763,9 @@ void AEmersynGameMode::BuildKitchen()
     SpawnWalls(RoomSize, 300, SC::WallYellow);
     SpawnDirectionalLight(FRotator(-45, 30, 0), 3.0f, FLinearColor(1.0f, 0.95f, 0.85f));
     SpawnLight(FVector(0, 0, 190), 2000.0f, FLinearColor(1.0f, 0.95f, 0.90f));
+
+    // Room label
+    SpawnWorldText(TEXT("Kitchen"), FVector(0, -200, 260), 30.0f, FLinearColor(1.0f, 0.92f, 0.5f));
 
     // Table
     SpawnMesh(MeshData_KITCHEN_TABLE::Vertices, MeshData_KITCHEN_TABLE::Normals,
@@ -696,6 +825,9 @@ void AEmersynGameMode::BuildBathroom()
     SpawnDirectionalLight(FRotator(-50, 20, 0), 2.5f, FLinearColor(0.95f, 0.95f, 1.0f));
     SpawnLight(FVector(0, 0, 190), 1500.0f, FLinearColor(0.95f, 0.95f, 1.0f));
 
+    // Room label
+    SpawnWorldText(TEXT("Bathroom"), FVector(0, -180, 260), 28.0f, FLinearColor(0.55f, 0.75f, 1.0f));
+
     SpawnMesh(MeshData_BATHROOM_TUB::Vertices, MeshData_BATHROOM_TUB::Normals,
               MeshData_BATHROOM_TUB::UVs, MeshData_BATHROOM_TUB::Triangles,
               MeshData_BATHROOM_TUB::NumVertices, MeshData_BATHROOM_TUB::NumTriangles,
@@ -736,6 +868,9 @@ void AEmersynGameMode::BuildLivingRoom()
     SpawnDirectionalLight(FRotator(-45, 30, 0), 3.0f, FLinearColor(1.0f, 0.95f, 0.85f));
     SpawnLight(FVector(0, 0, 190), 2000.0f, FLinearColor(1.0f, 0.95f, 0.90f));
 
+    // Room label
+    SpawnWorldText(TEXT("Living Room"), FVector(0, -250, 260), 30.0f, FLinearColor(0.98f, 0.96f, 0.93f));
+
     SpawnMesh(MeshData_LIVINGROOM_SOFA::Vertices, MeshData_LIVINGROOM_SOFA::Normals,
               MeshData_LIVINGROOM_SOFA::UVs, MeshData_LIVINGROOM_SOFA::Triangles,
               MeshData_LIVINGROOM_SOFA::NumVertices, MeshData_LIVINGROOM_SOFA::NumTriangles,
@@ -774,6 +909,9 @@ void AEmersynGameMode::BuildGarden()
     SpawnSky(SC::SkyTop, SC::SkyBottom);
     SpawnFloor(FVector(500, 500, 2), SC::FloorGrass, SC::FloorGrass * 0.9f, false);
     SpawnDirectionalLight(FRotator(-40, 45, 0), 4.0f, FLinearColor(1.0f, 0.95f, 0.80f));
+
+    // Room label
+    SpawnWorldText(TEXT("Garden"), FVector(0, -400, 200), 35.0f, FLinearColor(0.15f, 0.70f, 0.18f));
 
     // Trees
     SpawnMesh(MeshData_GARDEN_TREE::Vertices, MeshData_GARDEN_TREE::Normals,
@@ -827,6 +965,9 @@ void AEmersynGameMode::BuildSchool()
     SpawnDirectionalLight(FRotator(-45, 30, 0), 3.0f, FLinearColor(1.0f, 0.95f, 0.85f));
     SpawnLight(FVector(0, 0, 210), 2000.0f, FLinearColor(1.0f, 1.0f, 0.95f));
 
+    // Room label
+    SpawnWorldText(TEXT("School"), FVector(0, -250, 200), 30.0f, FLinearColor(0.50f, 0.95f, 0.65f));
+
     // Chalkboard
     SpawnMesh(MeshData_SCHOOL_CHALKBOARD::Vertices, MeshData_SCHOOL_CHALKBOARD::Normals,
               MeshData_SCHOOL_CHALKBOARD::UVs, MeshData_SCHOOL_CHALKBOARD::Triangles,
@@ -874,6 +1015,9 @@ void AEmersynGameMode::BuildShop()
     SpawnDirectionalLight(FRotator(-45, 30, 0), 3.0f, FLinearColor(1.0f, 0.95f, 0.85f));
     SpawnLight(FVector(0, 0, 210), 2500.0f, FLinearColor(1.0f, 0.98f, 0.95f));
 
+    // Room label
+    SpawnWorldText(TEXT("Shop"), FVector(0, -250, 200), 30.0f, FLinearColor(1.0f, 0.92f, 0.5f));
+
     // Shelves
     SpawnMesh(MeshData_SHOP_SHELF::Vertices, MeshData_SHOP_SHELF::Normals,
               MeshData_SHOP_SHELF::UVs, MeshData_SHOP_SHELF::Triangles,
@@ -913,6 +1057,9 @@ void AEmersynGameMode::BuildPlayground()
     SpawnFloor(FVector(500, 500, 2), SC::FloorSand, SC::FloorSand * 0.95f, false);
     SpawnDirectionalLight(FRotator(-40, 45, 0), 4.0f, FLinearColor(1.0f, 0.95f, 0.80f));
 
+    // Room label
+    SpawnWorldText(TEXT("Playground"), FVector(0, -400, 200), 35.0f, FLinearColor(0.95f, 0.15f, 0.15f));
+
     SpawnMesh(MeshData_PLAYGROUND_SLIDE::Vertices, MeshData_PLAYGROUND_SLIDE::Normals,
               MeshData_PLAYGROUND_SLIDE::UVs, MeshData_PLAYGROUND_SLIDE::Triangles,
               MeshData_PLAYGROUND_SLIDE::NumVertices, MeshData_PLAYGROUND_SLIDE::NumTriangles,
@@ -947,6 +1094,9 @@ void AEmersynGameMode::BuildPark()
     // Path
     SpawnBox(FVector(0, 0, 1), FVector(50, 400, 1), SC::FloorConcrete);
     SpawnDirectionalLight(FRotator(-35, 50, 0), 4.5f, FLinearColor(1.0f, 0.95f, 0.80f));
+
+    // Room label
+    SpawnWorldText(TEXT("Park"), FVector(0, -450, 200), 35.0f, FLinearColor(0.15f, 0.70f, 0.18f));
 
     SpawnMesh(MeshData_PARK_BENCH::Vertices, MeshData_PARK_BENCH::Normals,
               MeshData_PARK_BENCH::UVs, MeshData_PARK_BENCH::Triangles,
@@ -999,6 +1149,9 @@ void AEmersynGameMode::BuildMall()
     SpawnLight(FVector(-150, 0, 240), 2500.0f, FLinearColor(1.0f, 0.98f, 0.95f));
     SpawnLight(FVector(150, 0, 240), 2500.0f, FLinearColor(1.0f, 0.98f, 0.95f));
 
+    // Room label
+    SpawnWorldText(TEXT("Mall"), FVector(0, -350, 220), 32.0f, FLinearColor(0.98f, 0.96f, 0.93f));
+
     SpawnMesh(MeshData_MALL_ESCALATOR::Vertices, MeshData_MALL_ESCALATOR::Normals,
               MeshData_MALL_ESCALATOR::UVs, MeshData_MALL_ESCALATOR::Triangles,
               MeshData_MALL_ESCALATOR::NumVertices, MeshData_MALL_ESCALATOR::NumTriangles,
@@ -1042,6 +1195,9 @@ void AEmersynGameMode::BuildArcade()
     SpawnLight(FVector(-100, 0, 210), 1500.0f, SC::ArcadeNeon);
     SpawnLight(FVector(100, 0, 210), 1500.0f, SC::ArcadePurple);
 
+    // Room label
+    SpawnWorldText(TEXT("Arcade"), FVector(0, -250, 200), 30.0f, FLinearColor(0.20f, 0.95f, 0.50f));
+
     SpawnMesh(MeshData_ARCADE_CABINET::Vertices, MeshData_ARCADE_CABINET::Normals,
               MeshData_ARCADE_CABINET::UVs, MeshData_ARCADE_CABINET::Triangles,
               MeshData_ARCADE_CABINET::NumVertices, MeshData_ARCADE_CABINET::NumTriangles,
@@ -1073,6 +1229,9 @@ void AEmersynGameMode::BuildAmusementPark()
     SpawnSky(SC::SkyTop, SC::SkyBottom);
     SpawnFloor(FVector(600, 600, 2), SC::FloorConcrete, SC::FloorConcrete * 0.9f, false);
     SpawnDirectionalLight(FRotator(-35, 50, 0), 4.5f, FLinearColor(1.0f, 0.95f, 0.80f));
+
+    // Room label
+    SpawnWorldText(TEXT("Amusement Park"), FVector(0, -500, 200), 35.0f, FLinearColor(0.85f, 0.25f, 0.25f));
 
     SpawnMesh(MeshData_AMUSEMENT_CAROUSEL::Vertices, MeshData_AMUSEMENT_CAROUSEL::Normals,
               MeshData_AMUSEMENT_CAROUSEL::UVs, MeshData_AMUSEMENT_CAROUSEL::Triangles,

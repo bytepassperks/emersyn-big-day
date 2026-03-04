@@ -2,6 +2,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
 #include "ProceduralMeshComponent.h"
+#include "Components/TextRenderComponent.h"
 #include "EmersynGameMode.generated.h"
 
 UCLASS()
@@ -58,6 +59,13 @@ private:
     // Lighting
     void SpawnLight(FVector Loc, float Intensity, FLinearColor Color);
     void SpawnDirectionalLight(FRotator Rot, float Intensity, FLinearColor Color);
+    void SpawnSkyLight(float Intensity);
+
+    // Post-processing
+    void SetupPostProcessing();
+
+    // HUD / UI
+    void SpawnWorldText(const FString& Text, FVector Location, float Size, FLinearColor Color);
 
     // Mesh generators for primitives
     void GenerateBoxMesh(UProceduralMeshComponent* PMC, FVector HE, FLinearColor Col);
@@ -72,6 +80,15 @@ private:
     UPROPERTY() FString CurrentRoom;
     UPROPERTY() TArray<AActor*> SpawnedActors;
     UPROPERTY() UMaterialInterface* VertexColorMaterial;
+    UPROPERTY() AActor* PostProcessActor;
+    UPROPERTY() AActor* SkyLightActor;
+
+    // Camera interpolation
+    FVector TargetCamLocation;
+    FRotator TargetCamRotation;
+    bool bInterpolatingCamera;
+    float CameraInterpAlpha;
+    UPROPERTY() ACameraActor* PersistentCamera;
 
     TArray<FString> RoomNames;
     TArray<FString> RoomDisplayNames;
