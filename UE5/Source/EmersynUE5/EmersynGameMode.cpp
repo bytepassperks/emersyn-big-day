@@ -1,4 +1,4 @@
-// v23: Enhanced lighting, post-processing, geometry density, camera
+// v24: Immersive fullscreen + minimal fuzz + faster splash, post-processing, geometry density, camera
 #include "EmersynGameMode.h"
 #include "Engine/StaticMeshActor.h"
 #include "MeshLoader.h"
@@ -123,7 +123,7 @@ AEmersynGameMode::AEmersynGameMode()
     DefaultMID = nullptr;
     RoomIndex = 0;
     RoomTimer = 0.f;
-    RoomDuration = 8.f;
+    RoomDuration = 6.f;
     RoomList.Add(TEXT("Splash"));
     RoomList.Add(TEXT("Bedroom"));
     RoomList.Add(TEXT("Kitchen"));
@@ -158,7 +158,7 @@ void AEmersynGameMode::BeginPlay()
         APawn* P = PC->GetPawn();
         if (P) { P->SetActorHiddenInGame(true); P->SetActorEnableCollision(false); }
     }
-    LoadRoom(RoomList[0]);
+    RoomIndex = 1; LoadRoom(RoomList[1]);
 }
 
 // ========= Tick =========
