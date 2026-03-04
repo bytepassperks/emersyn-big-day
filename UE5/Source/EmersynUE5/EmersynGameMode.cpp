@@ -1,3 +1,4 @@
+// v23: Enhanced lighting, post-processing, geometry density, camera
 #include "EmersynGameMode.h"
 #include "Engine/StaticMeshActor.h"
 #include "MeshLoader.h"
@@ -122,7 +123,7 @@ AEmersynGameMode::AEmersynGameMode()
     DefaultMID = nullptr;
     RoomIndex = 0;
     RoomTimer = 0.f;
-    RoomDuration = 10.f;
+    RoomDuration = 8.f;
     RoomList.Add(TEXT("Splash"));
     RoomList.Add(TEXT("Bedroom"));
     RoomList.Add(TEXT("Kitchen"));
@@ -511,7 +512,7 @@ AActor* AEmersynGameMode::SpawnTexturedFloor(FVector Center, FVector Size, EText
     UTexture2D* Tex = GenerateProceduralTexture(Pattern, Base, Accent, 256);
 
     float HX = Size.X, HY = Size.Y;
-    int32 GridRes = 24;
+    int32 GridRes = 32;
     TArray<FVector> Verts; TArray<int32> Tris; TArray<FColor> Colors;
     TArray<FVector> Normals; TArray<FVector2D> UVs; TArray<FProcMeshTangent> Tangents;
 
@@ -565,7 +566,7 @@ AActor* AEmersynGameMode::SpawnTexturedWall(FVector Start, FVector End, float He
     Dir.Normalize();
     FVector Normal = FVector::CrossProduct(Dir, FVector::UpVector).GetSafeNormal();
 
-    int32 SegX = 18, SegY = 12;
+    int32 SegX = 24, SegY = 16;
     TArray<FVector> Verts; TArray<int32> Tris; TArray<FColor> Colors;
     TArray<FVector> Normals; TArray<FVector2D> UVs; TArray<FProcMeshTangent> Tangents;
 
@@ -694,7 +695,7 @@ void AEmersynGameMode::SpawnSky()
     PMC->SetupAttachment(A->GetRootComponent());
     PMC->RegisterComponent();
 
-    int32 Seg = 24; float Radius = 8000.f;
+    int32 Seg = 32; float Radius = 10000.f;
     TArray<FVector> V; TArray<int32> T; TArray<FColor> C;
     TArray<FVector> N; TArray<FVector2D> UV; TArray<FProcMeshTangent> Tan;
     V.Add(FVector(0, 0, Radius)); N.Add(FVector(0, 0, -1));
@@ -950,7 +951,7 @@ void AEmersynGameMode::BuildSplashScreen()
 {
     SpawnSky();
     SetupPostProcessing();
-    SpawnSkyLight(6.f);
+    SpawnSkyLight(9.f);
     SpawnDirectionalLight(FRotator(-40.f, 100.f, 0.f), 20.f, FLinearColor(1.f, 0.96f, 0.88f));
     SpawnTexturedFloor(FVector::ZeroVector, FVector(600, 400, 0), ETexturePattern::Grass, SC::FloorGrass, FLinearColor(0.35f, 0.85f, 0.35f), 3.f);
     SpawnWorldText(TEXT("EMERSYN'S BIG DAY"), FVector(0, 0, 300), 80.f, FLinearColor(1.f, 0.85f, 0.3f));
@@ -969,8 +970,8 @@ void AEmersynGameMode::BuildBedroom()
     FVector RS(520.f, 455.f, 350.f);
     SpawnSky();
     SetupPostProcessing();
-    SpawnSkyLight(6.f);
-    SpawnDirectionalLight(FRotator(-45.f, 135.f, 0.f), 18.f, FLinearColor(1.f, 0.96f, 0.90f));
+    SpawnSkyLight(9.f);
+    SpawnDirectionalLight(FRotator(-40.f, 135.f, 0.f), 28.f, FLinearColor(1.f, 0.97f, 0.91f));
 
     SpawnTexturedFloor(FVector::ZeroVector, FVector(RS.X, RS.Y, 0), ETexturePattern::WoodGrain, SC::FloorWood, SC::WoodDark, 2.f);
 
@@ -989,8 +990,8 @@ void AEmersynGameMode::BuildBedroom()
     SpawnMesh(MeshData_BEDROOM_LAMP::Vertices, MeshData_BEDROOM_LAMP::Normals, MeshData_BEDROOM_LAMP::UVs, MeshData_BEDROOM_LAMP::Triangles, MeshData_BEDROOM_LAMP::NumVertices, MeshData_BEDROOM_LAMP::NumTriangles, FVector(150, -200, 80), FRotator::ZeroRotator, FVector(2.f), ETexturePattern::Metal, SC::MetalGold, SC::FabricCream);
     SpawnMesh(MeshData_BEDROOM_RUG::Vertices, MeshData_BEDROOM_RUG::Normals, MeshData_BEDROOM_RUG::UVs, MeshData_BEDROOM_RUG::Triangles, MeshData_BEDROOM_RUG::NumVertices, MeshData_BEDROOM_RUG::NumTriangles, FVector(0, 50, 1), FRotator::ZeroRotator, FVector(4.f), ETexturePattern::Carpet, SC::CarpetPurple, SC::FabricPurple);
 
-    SpawnCharacterMesh(TEXT("Emersyn"), FVector(-50, 80, 0), FRotator(0, 45, 0), 2.5f, FLinearColor(0.92f, 0.75f, 0.60f), SC::FabricPink);
-    SetupIsometricCamera(FVector(0, 0, RS.Z * 0.3f), RS.X * 1.6f);
+    SpawnCharacterMesh(TEXT("Emersyn"), FVector(-50, 80, 0), FRotator(0, 45, 0), 3.0f, FLinearColor(0.92f, 0.75f, 0.60f), SC::FabricPink);
+    SetupIsometricCamera(FVector(0, 0, RS.Z * 0.3f), RS.X * 1.35f);
 }
 
 void AEmersynGameMode::BuildKitchen()
@@ -998,8 +999,8 @@ void AEmersynGameMode::BuildKitchen()
     FVector RS(520.f, 455.f, 350.f);
     SpawnSky();
     SetupPostProcessing();
-    SpawnSkyLight(6.f);
-    SpawnDirectionalLight(FRotator(-45.f, 135.f, 0.f), 18.f, FLinearColor(1.f, 0.96f, 0.90f));
+    SpawnSkyLight(9.f);
+    SpawnDirectionalLight(FRotator(-40.f, 135.f, 0.f), 28.f, FLinearColor(1.f, 0.97f, 0.91f));
 
     SpawnTexturedFloor(FVector::ZeroVector, FVector(RS.X, RS.Y, 0), ETexturePattern::TileGrid, SC::TileWhite, SC::FloorConcrete, 2.f);
 
@@ -1018,8 +1019,8 @@ void AEmersynGameMode::BuildKitchen()
     SpawnMesh(MeshData_KITCHEN_STOVE::Vertices, MeshData_KITCHEN_STOVE::Normals, MeshData_KITCHEN_STOVE::UVs, MeshData_KITCHEN_STOVE::Triangles, MeshData_KITCHEN_STOVE::NumVertices, MeshData_KITCHEN_STOVE::NumTriangles, FVector(-250, 0, 0), FRotator::ZeroRotator, FVector(3.5f), ETexturePattern::Metal, SC::MetalBlack, SC::MetalSilver);
     SpawnMesh(MeshData_KITCHEN_COUNTER::Vertices, MeshData_KITCHEN_COUNTER::Normals, MeshData_KITCHEN_COUNTER::UVs, MeshData_KITCHEN_COUNTER::Triangles, MeshData_KITCHEN_COUNTER::NumVertices, MeshData_KITCHEN_COUNTER::NumTriangles, FVector(-250, 200, 0), FRotator::ZeroRotator, FVector(3.5f), ETexturePattern::Marble, SC::MarbleWhite, SC::MarbleVein);
 
-    SpawnCharacterMesh(TEXT("Mia"), FVector(80, 80, 0), FRotator(0, -45, 0), 2.5f, FLinearColor(0.88f, 0.70f, 0.55f), SC::FabricYellow);
-    SetupIsometricCamera(FVector(0, 0, RS.Z * 0.3f), RS.X * 1.6f);
+    SpawnCharacterMesh(TEXT("Mia"), FVector(80, 80, 0), FRotator(0, -45, 0), 3.0f, FLinearColor(0.88f, 0.70f, 0.55f), SC::FabricYellow);
+    SetupIsometricCamera(FVector(0, 0, RS.Z * 0.3f), RS.X * 1.35f);
 }
 
 void AEmersynGameMode::BuildBathroom()
@@ -1027,8 +1028,8 @@ void AEmersynGameMode::BuildBathroom()
     FVector RS(300.f, 280.f, 280.f);
     SpawnSky();
     SetupPostProcessing();
-    SpawnSkyLight(6.f);
-    SpawnDirectionalLight(FRotator(-45.f, 135.f, 0.f), 18.f, FLinearColor(1.f, 0.96f, 0.90f));
+    SpawnSkyLight(9.f);
+    SpawnDirectionalLight(FRotator(-40.f, 135.f, 0.f), 28.f, FLinearColor(1.f, 0.97f, 0.91f));
 
     SpawnTexturedFloor(FVector::ZeroVector, FVector(RS.X, RS.Y, 0), ETexturePattern::TileGrid, SC::TileWhite, SC::TileBlue, 2.f);
 
@@ -1046,8 +1047,8 @@ void AEmersynGameMode::BuildBathroom()
     SpawnMesh(MeshData_BATHROOM_MIRROR::Vertices, MeshData_BATHROOM_MIRROR::Normals, MeshData_BATHROOM_MIRROR::UVs, MeshData_BATHROOM_MIRROR::Triangles, MeshData_BATHROOM_MIRROR::NumVertices, MeshData_BATHROOM_MIRROR::NumTriangles, FVector(100, -180, 140), FRotator::ZeroRotator, FVector(2.5f), ETexturePattern::Metal, SC::MetalSilver, FLinearColor(0.9f, 0.92f, 0.95f));
     SpawnMesh(MeshData_BATHROOM_TOWELRACK::Vertices, MeshData_BATHROOM_TOWELRACK::Normals, MeshData_BATHROOM_TOWELRACK::UVs, MeshData_BATHROOM_TOWELRACK::Triangles, MeshData_BATHROOM_TOWELRACK::NumVertices, MeshData_BATHROOM_TOWELRACK::NumTriangles, FVector(-150, 100, 100), FRotator::ZeroRotator, FVector(2.5f), ETexturePattern::Metal, SC::MetalSilver, SC::FabricBlue);
 
-    SpawnCharacterMesh(TEXT("Emersyn"), FVector(0, 50, 0), FRotator(0, 180, 0), 2.5f, FLinearColor(0.92f, 0.75f, 0.60f), SC::FabricBlue);
-    SetupIsometricCamera(FVector(0, 0, RS.Z * 0.3f), RS.X * 1.6f);
+    SpawnCharacterMesh(TEXT("Emersyn"), FVector(0, 50, 0), FRotator(0, 180, 0), 3.0f, FLinearColor(0.92f, 0.75f, 0.60f), SC::FabricBlue);
+    SetupIsometricCamera(FVector(0, 0, RS.Z * 0.3f), RS.X * 1.35f);
 }
 
 void AEmersynGameMode::BuildLivingRoom()
@@ -1055,8 +1056,8 @@ void AEmersynGameMode::BuildLivingRoom()
     FVector RS(450.f, 400.f, 300.f);
     SpawnSky();
     SetupPostProcessing();
-    SpawnSkyLight(6.f);
-    SpawnDirectionalLight(FRotator(-45.f, 135.f, 0.f), 18.f, FLinearColor(1.f, 0.96f, 0.90f));
+    SpawnSkyLight(9.f);
+    SpawnDirectionalLight(FRotator(-40.f, 135.f, 0.f), 28.f, FLinearColor(1.f, 0.97f, 0.91f));
 
     SpawnTexturedFloor(FVector::ZeroVector, FVector(RS.X, RS.Y, 0), ETexturePattern::WoodGrain, SC::FloorWood, SC::WoodLight, 2.f);
 
@@ -1074,8 +1075,8 @@ void AEmersynGameMode::BuildLivingRoom()
     SpawnMesh(MeshData_LIVINGROOM_TV::Vertices, MeshData_LIVINGROOM_TV::Normals, MeshData_LIVINGROOM_TV::UVs, MeshData_LIVINGROOM_TV::Triangles, MeshData_LIVINGROOM_TV::NumVertices, MeshData_LIVINGROOM_TV::NumTriangles, FVector(0, 200, 60), FRotator::ZeroRotator, FVector(3.5f), ETexturePattern::Metal, SC::MetalBlack, SC::MetalSilver);
     SpawnMesh(MeshData_LIVINGROOM_PLANT::Vertices, MeshData_LIVINGROOM_PLANT::Normals, MeshData_LIVINGROOM_PLANT::UVs, MeshData_LIVINGROOM_PLANT::Triangles, MeshData_LIVINGROOM_PLANT::NumVertices, MeshData_LIVINGROOM_PLANT::NumTriangles, FVector(250, -200, 0), FRotator::ZeroRotator, FVector(3.f), ETexturePattern::Grass, SC::FloorGrass, FLinearColor(0.15f, 0.55f, 0.15f));
 
-    SpawnCharacterMesh(TEXT("Leo"), FVector(-100, -50, 0), FRotator(0, 30, 0), 2.5f, FLinearColor(0.85f, 0.65f, 0.45f), SC::FabricGreen);
-    SetupIsometricCamera(FVector(0, 0, RS.Z * 0.3f), RS.X * 1.6f);
+    SpawnCharacterMesh(TEXT("Leo"), FVector(-100, -50, 0), FRotator(0, 30, 0), 3.0f, FLinearColor(0.85f, 0.65f, 0.45f), SC::FabricGreen);
+    SetupIsometricCamera(FVector(0, 0, RS.Z * 0.3f), RS.X * 1.35f);
 }
 
 void AEmersynGameMode::BuildGarden()
@@ -1083,8 +1084,8 @@ void AEmersynGameMode::BuildGarden()
     FVector RS(600.f, 500.f, 100.f);
     SpawnSky();
     SetupPostProcessing();
-    SpawnSkyLight(6.f);
-    SpawnDirectionalLight(FRotator(-45.f, 135.f, 0.f), 18.f, FLinearColor(1.f, 0.96f, 0.90f));
+    SpawnSkyLight(9.f);
+    SpawnDirectionalLight(FRotator(-40.f, 135.f, 0.f), 28.f, FLinearColor(1.f, 0.97f, 0.91f));
 
     SpawnTexturedFloor(FVector::ZeroVector, FVector(RS.X, RS.Y, 0), ETexturePattern::Grass, SC::FloorGrass, SC::WallGreen, 2.f);
 
@@ -1101,9 +1102,9 @@ void AEmersynGameMode::BuildGarden()
     SpawnMesh(MeshData_GARDEN_FENCE::Vertices, MeshData_GARDEN_FENCE::Normals, MeshData_GARDEN_FENCE::UVs, MeshData_GARDEN_FENCE::Triangles, MeshData_GARDEN_FENCE::NumVertices, MeshData_GARDEN_FENCE::NumTriangles, FVector(0, -300, 0), FRotator::ZeroRotator, FVector(4.f), ETexturePattern::WoodGrain, SC::WoodLight, SC::WoodMedium);
     SpawnMesh(MeshData_GARDEN_FLOWERBED::Vertices, MeshData_GARDEN_FLOWERBED::Normals, MeshData_GARDEN_FLOWERBED::UVs, MeshData_GARDEN_FLOWERBED::Triangles, MeshData_GARDEN_FLOWERBED::NumVertices, MeshData_GARDEN_FLOWERBED::NumTriangles, FVector(150, 100, 0), FRotator::ZeroRotator, FVector(4.f), ETexturePattern::Grass, SC::FloorGrass, SC::FabricPink);
 
-    SpawnCharacterMesh(TEXT("Emersyn"), FVector(0, 0, 0), FRotator(0, 0, 0), 2.5f, FLinearColor(0.92f, 0.75f, 0.60f), SC::FabricGreen);
+    SpawnCharacterMesh(TEXT("Emersyn"), FVector(0, 0, 0), FRotator(0, 0, 0), 3.0f, FLinearColor(0.92f, 0.75f, 0.60f), SC::FabricGreen);
     SpawnCharacterMesh(TEXT("Dog"), FVector(100, 50, 0), FRotator(0, -60, 0), 2.f, FLinearColor(0.75f, 0.55f, 0.35f), FLinearColor(0.75f, 0.55f, 0.35f));
-    SetupIsometricCamera(FVector(0, 0, RS.Z * 0.3f), RS.X * 1.6f);
+    SetupIsometricCamera(FVector(0, 0, RS.Z * 0.3f), RS.X * 1.35f);
 }
 
 void AEmersynGameMode::BuildSchool()
@@ -1111,8 +1112,8 @@ void AEmersynGameMode::BuildSchool()
     FVector RS(450.f, 400.f, 320.f);
     SpawnSky();
     SetupPostProcessing();
-    SpawnSkyLight(6.f);
-    SpawnDirectionalLight(FRotator(-45.f, 135.f, 0.f), 18.f, FLinearColor(1.f, 0.96f, 0.90f));
+    SpawnSkyLight(9.f);
+    SpawnDirectionalLight(FRotator(-40.f, 135.f, 0.f), 28.f, FLinearColor(1.f, 0.97f, 0.91f));
 
     SpawnTexturedFloor(FVector::ZeroVector, FVector(RS.X, RS.Y, 0), ETexturePattern::WoodGrain, SC::FloorWood, SC::WoodMedium, 2.f);
 
@@ -1131,7 +1132,7 @@ void AEmersynGameMode::BuildSchool()
     SpawnMesh(MeshData_SCHOOL_BACKPACK::Vertices, MeshData_SCHOOL_BACKPACK::Normals, MeshData_SCHOOL_BACKPACK::UVs, MeshData_SCHOOL_BACKPACK::Triangles, MeshData_SCHOOL_BACKPACK::NumVertices, MeshData_SCHOOL_BACKPACK::NumTriangles, FVector(-120, -80, 0), FRotator::ZeroRotator, FVector(2.f), ETexturePattern::Fabric, SC::FabricRed, SC::FabricOrange);
 
     SpawnCharacterMesh(TEXT("Ava"), FVector(0, 0, 0), FRotator(0, 0, 0), 2.5f, FLinearColor(0.90f, 0.72f, 0.55f), SC::FabricBlue);
-    SetupIsometricCamera(FVector(0, 0, RS.Z * 0.3f), RS.X * 1.6f);
+    SetupIsometricCamera(FVector(0, 0, RS.Z * 0.3f), RS.X * 1.35f);
 }
 
 void AEmersynGameMode::BuildShop()
@@ -1139,8 +1140,8 @@ void AEmersynGameMode::BuildShop()
     FVector RS(520.f, 455.f, 350.f);
     SpawnSky();
     SetupPostProcessing();
-    SpawnSkyLight(6.f);
-    SpawnDirectionalLight(FRotator(-45.f, 135.f, 0.f), 18.f, FLinearColor(1.f, 0.96f, 0.90f));
+    SpawnSkyLight(9.f);
+    SpawnDirectionalLight(FRotator(-40.f, 135.f, 0.f), 28.f, FLinearColor(1.f, 0.97f, 0.91f));
 
     SpawnTexturedFloor(FVector::ZeroVector, FVector(RS.X, RS.Y, 0), ETexturePattern::TileGrid, SC::FloorTile, SC::FloorConcrete, 2.f);
 
@@ -1157,8 +1158,8 @@ void AEmersynGameMode::BuildShop()
     SpawnMesh(MeshData_SHOP_SHELF::Vertices, MeshData_SHOP_SHELF::Normals, MeshData_SHOP_SHELF::UVs, MeshData_SHOP_SHELF::Triangles, MeshData_SHOP_SHELF::NumVertices, MeshData_SHOP_SHELF::NumTriangles, FVector(-200, 0, 0), FRotator::ZeroRotator, FVector(3.5f), ETexturePattern::Metal, SC::MetalSilver, SC::MetalBlack);
     SpawnMesh(MeshData_SHOP_REGISTER::Vertices, MeshData_SHOP_REGISTER::Normals, MeshData_SHOP_REGISTER::UVs, MeshData_SHOP_REGISTER::Triangles, MeshData_SHOP_REGISTER::NumVertices, MeshData_SHOP_REGISTER::NumTriangles, FVector(0, 180, 60), FRotator::ZeroRotator, FVector(2.5f), ETexturePattern::Metal, SC::MetalBlack, SC::MetalSilver);
 
-    SpawnCharacterMesh(TEXT("Emersyn"), FVector(0, 0, 0), FRotator(0, 180, 0), 2.5f, FLinearColor(0.92f, 0.75f, 0.60f), SC::FabricPurple);
-    SetupIsometricCamera(FVector(0, 0, RS.Z * 0.3f), RS.X * 1.6f);
+    SpawnCharacterMesh(TEXT("Emersyn"), FVector(0, 0, 0), FRotator(0, 180, 0), 3.0f, FLinearColor(0.92f, 0.75f, 0.60f), SC::FabricPurple);
+    SetupIsometricCamera(FVector(0, 0, RS.Z * 0.3f), RS.X * 1.35f);
 }
 
 void AEmersynGameMode::BuildPlayground()
@@ -1166,8 +1167,8 @@ void AEmersynGameMode::BuildPlayground()
     FVector RS(500.f, 450.f, 100.f);
     SpawnSky();
     SetupPostProcessing();
-    SpawnSkyLight(6.f);
-    SpawnDirectionalLight(FRotator(-45.f, 135.f, 0.f), 18.f, FLinearColor(1.f, 0.96f, 0.90f));
+    SpawnSkyLight(9.f);
+    SpawnDirectionalLight(FRotator(-40.f, 135.f, 0.f), 28.f, FLinearColor(1.f, 0.97f, 0.91f));
 
     SpawnTexturedFloor(FVector::ZeroVector, FVector(RS.X, RS.Y, 0), ETexturePattern::Sand, SC::FloorSand, SC::FabricYellow, 2.f);
 
@@ -1184,8 +1185,8 @@ void AEmersynGameMode::BuildPlayground()
     SpawnMesh(MeshData_PLAYGROUND_SWING::Vertices, MeshData_PLAYGROUND_SWING::Normals, MeshData_PLAYGROUND_SWING::UVs, MeshData_PLAYGROUND_SWING::Triangles, MeshData_PLAYGROUND_SWING::NumVertices, MeshData_PLAYGROUND_SWING::NumTriangles, FVector(150, -100, 0), FRotator::ZeroRotator, FVector(4.f), ETexturePattern::Metal, SC::MetalSilver, SC::FabricBlue);
     SpawnMesh(MeshData_PLAYGROUND_SANDBOX::Vertices, MeshData_PLAYGROUND_SANDBOX::Normals, MeshData_PLAYGROUND_SANDBOX::UVs, MeshData_PLAYGROUND_SANDBOX::Triangles, MeshData_PLAYGROUND_SANDBOX::NumVertices, MeshData_PLAYGROUND_SANDBOX::NumTriangles, FVector(0, 150, 0), FRotator::ZeroRotator, FVector(4.f), ETexturePattern::Sand, SC::FloorSand, SC::FabricYellow);
 
-    SpawnCharacterMesh(TEXT("Emersyn"), FVector(0, 0, 0), FRotator(0, 0, 0), 2.5f, FLinearColor(0.92f, 0.75f, 0.60f), SC::FabricOrange);
-    SetupIsometricCamera(FVector(0, 0, RS.Z * 0.3f), RS.X * 1.6f);
+    SpawnCharacterMesh(TEXT("Emersyn"), FVector(0, 0, 0), FRotator(0, 0, 0), 3.0f, FLinearColor(0.92f, 0.75f, 0.60f), SC::FabricOrange);
+    SetupIsometricCamera(FVector(0, 0, RS.Z * 0.3f), RS.X * 1.35f);
 }
 
 void AEmersynGameMode::BuildPark()
@@ -1193,8 +1194,8 @@ void AEmersynGameMode::BuildPark()
     FVector RS(600.f, 500.f, 100.f);
     SpawnSky();
     SetupPostProcessing();
-    SpawnSkyLight(6.f);
-    SpawnDirectionalLight(FRotator(-45.f, 135.f, 0.f), 18.f, FLinearColor(1.f, 0.96f, 0.90f));
+    SpawnSkyLight(9.f);
+    SpawnDirectionalLight(FRotator(-40.f, 135.f, 0.f), 28.f, FLinearColor(1.f, 0.97f, 0.91f));
 
     SpawnTexturedFloor(FVector::ZeroVector, FVector(RS.X, RS.Y, 0), ETexturePattern::Grass, SC::FloorGrass, SC::WallGreen, 2.f);
 
@@ -1211,9 +1212,9 @@ void AEmersynGameMode::BuildPark()
     SpawnMesh(MeshData_PARK_FOUNTAIN::Vertices, MeshData_PARK_FOUNTAIN::Normals, MeshData_PARK_FOUNTAIN::UVs, MeshData_PARK_FOUNTAIN::Triangles, MeshData_PARK_FOUNTAIN::NumVertices, MeshData_PARK_FOUNTAIN::NumTriangles, FVector(0, 0, 0), FRotator::ZeroRotator, FVector(4.f), ETexturePattern::Marble, SC::MarbleWhite, SC::TileBlue);
     SpawnMesh(MeshData_PARK_LAMPPOST::Vertices, MeshData_PARK_LAMPPOST::Normals, MeshData_PARK_LAMPPOST::UVs, MeshData_PARK_LAMPPOST::Triangles, MeshData_PARK_LAMPPOST::NumVertices, MeshData_PARK_LAMPPOST::NumTriangles, FVector(-200, 100, 0), FRotator::ZeroRotator, FVector(4.f), ETexturePattern::Metal, SC::MetalBlack, SC::MetalGold);
 
-    SpawnCharacterMesh(TEXT("Emersyn"), FVector(-50, 50, 0), FRotator(0, 30, 0), 2.5f, FLinearColor(0.92f, 0.75f, 0.60f), SC::FabricGreen);
+    SpawnCharacterMesh(TEXT("Emersyn"), FVector(-50, 50, 0), FRotator(0, 30, 0), 3.0f, FLinearColor(0.92f, 0.75f, 0.60f), SC::FabricGreen);
     SpawnCharacterMesh(TEXT("Cat"), FVector(50, -50, 0), FRotator(0, 120, 0), 1.5f, FLinearColor(0.85f, 0.65f, 0.45f), FLinearColor(0.85f, 0.65f, 0.45f));
-    SetupIsometricCamera(FVector(0, 0, RS.Z * 0.3f), RS.X * 1.6f);
+    SetupIsometricCamera(FVector(0, 0, RS.Z * 0.3f), RS.X * 1.35f);
 }
 
 void AEmersynGameMode::BuildMall()
@@ -1221,8 +1222,8 @@ void AEmersynGameMode::BuildMall()
     FVector RS(500.f, 450.f, 350.f);
     SpawnSky();
     SetupPostProcessing();
-    SpawnSkyLight(6.f);
-    SpawnDirectionalLight(FRotator(-45.f, 135.f, 0.f), 18.f, FLinearColor(1.f, 0.96f, 0.90f));
+    SpawnSkyLight(9.f);
+    SpawnDirectionalLight(FRotator(-40.f, 135.f, 0.f), 28.f, FLinearColor(1.f, 0.97f, 0.91f));
 
     SpawnTexturedFloor(FVector::ZeroVector, FVector(RS.X, RS.Y, 0), ETexturePattern::Marble, SC::MarbleWhite, SC::MarbleVein, 2.f);
 
@@ -1239,8 +1240,8 @@ void AEmersynGameMode::BuildMall()
     SpawnMesh(MeshData_MALL_PLANTER::Vertices, MeshData_MALL_PLANTER::Normals, MeshData_MALL_PLANTER::UVs, MeshData_MALL_PLANTER::Triangles, MeshData_MALL_PLANTER::NumVertices, MeshData_MALL_PLANTER::NumTriangles, FVector(-200, -150, 0), FRotator::ZeroRotator, FVector(3.f), ETexturePattern::Concrete, SC::FloorConcrete, SC::FloorGrass);
     SpawnMesh(MeshData_MALL_PLANTER::Vertices, MeshData_MALL_PLANTER::Normals, MeshData_MALL_PLANTER::UVs, MeshData_MALL_PLANTER::Triangles, MeshData_MALL_PLANTER::NumVertices, MeshData_MALL_PLANTER::NumTriangles, FVector(200, -150, 0), FRotator::ZeroRotator, FVector(3.f), ETexturePattern::Concrete, SC::FloorConcrete, SC::FloorGrass);
 
-    SpawnCharacterMesh(TEXT("Ava"), FVector(100, 100, 0), FRotator(0, -90, 0), 2.5f, FLinearColor(0.88f, 0.70f, 0.52f), SC::FabricPurple);
-    SetupIsometricCamera(FVector(0, 0, RS.Z * 0.3f), RS.X * 1.6f);
+    SpawnCharacterMesh(TEXT("Ava"), FVector(100, 100, 0), FRotator(0, -90, 0), 3.0f, FLinearColor(0.88f, 0.70f, 0.52f), SC::FabricPurple);
+    SetupIsometricCamera(FVector(0, 0, RS.Z * 0.3f), RS.X * 1.35f);
 }
 
 void AEmersynGameMode::BuildArcade()
@@ -1248,8 +1249,8 @@ void AEmersynGameMode::BuildArcade()
     FVector RS(400.f, 380.f, 300.f);
     SpawnSky();
     SetupPostProcessing();
-    SpawnSkyLight(6.f);
-    SpawnDirectionalLight(FRotator(-45.f, 135.f, 0.f), 18.f, FLinearColor(1.f, 0.96f, 0.90f));
+    SpawnSkyLight(9.f);
+    SpawnDirectionalLight(FRotator(-40.f, 135.f, 0.f), 28.f, FLinearColor(1.f, 0.97f, 0.91f));
 
     SpawnTexturedFloor(FVector::ZeroVector, FVector(RS.X, RS.Y, 0), ETexturePattern::Concrete, SC::FloorConcrete, SC::MetalBlack, 2.f);
 
@@ -1266,8 +1267,8 @@ void AEmersynGameMode::BuildArcade()
     SpawnMesh(MeshData_ARCADE_CABINET::Vertices, MeshData_ARCADE_CABINET::Normals, MeshData_ARCADE_CABINET::UVs, MeshData_ARCADE_CABINET::Triangles, MeshData_ARCADE_CABINET::NumVertices, MeshData_ARCADE_CABINET::NumTriangles, FVector(150, -150, 0), FRotator::ZeroRotator, FVector(4.f), ETexturePattern::Metal, SC::MetalBlack, SC::FabricRed);
     SpawnMesh(MeshData_ARCADE_CLAW_MACHINE::Vertices, MeshData_ARCADE_CLAW_MACHINE::Normals, MeshData_ARCADE_CLAW_MACHINE::UVs, MeshData_ARCADE_CLAW_MACHINE::Triangles, MeshData_ARCADE_CLAW_MACHINE::NumVertices, MeshData_ARCADE_CLAW_MACHINE::NumTriangles, FVector(0, 150, 0), FRotator::ZeroRotator, FVector(4.f), ETexturePattern::Metal, SC::FabricYellow, SC::FabricGreen);
 
-    SpawnCharacterMesh(TEXT("Leo"), FVector(0, 0, 0), FRotator(0, 0, 0), 2.5f, FLinearColor(0.85f, 0.65f, 0.45f), SC::FabricRed);
-    SetupIsometricCamera(FVector(0, 0, RS.Z * 0.3f), RS.X * 1.6f);
+    SpawnCharacterMesh(TEXT("Leo"), FVector(0, 0, 0), FRotator(0, 0, 0), 3.0f, FLinearColor(0.85f, 0.65f, 0.45f), SC::FabricRed);
+    SetupIsometricCamera(FVector(0, 0, RS.Z * 0.3f), RS.X * 1.35f);
 }
 
 void AEmersynGameMode::BuildAmusementPark()
@@ -1275,8 +1276,8 @@ void AEmersynGameMode::BuildAmusementPark()
     FVector RS(700.f, 600.f, 100.f);
     SpawnSky();
     SetupPostProcessing();
-    SpawnSkyLight(6.f);
-    SpawnDirectionalLight(FRotator(-45.f, 135.f, 0.f), 18.f, FLinearColor(1.f, 0.96f, 0.90f));
+    SpawnSkyLight(9.f);
+    SpawnDirectionalLight(FRotator(-40.f, 135.f, 0.f), 28.f, FLinearColor(1.f, 0.97f, 0.91f));
 
     SpawnTexturedFloor(FVector::ZeroVector, FVector(RS.X, RS.Y, 0), ETexturePattern::Concrete, SC::FloorConcrete, SC::FloorSand, 2.f);
 
@@ -1293,7 +1294,7 @@ void AEmersynGameMode::BuildAmusementPark()
     SpawnMesh(MeshData_AMUSEMENT_FERRISWHEEL::Vertices, MeshData_AMUSEMENT_FERRISWHEEL::Normals, MeshData_AMUSEMENT_FERRISWHEEL::UVs, MeshData_AMUSEMENT_FERRISWHEEL::Triangles, MeshData_AMUSEMENT_FERRISWHEEL::NumVertices, MeshData_AMUSEMENT_FERRISWHEEL::NumTriangles, FVector(200, 0, 0), FRotator::ZeroRotator, FVector(5.f), ETexturePattern::Metal, SC::FabricBlue, SC::MetalSilver);
     SpawnMesh(MeshData_AMUSEMENT_FOODCART::Vertices, MeshData_AMUSEMENT_FOODCART::Normals, MeshData_AMUSEMENT_FOODCART::UVs, MeshData_AMUSEMENT_FOODCART::Triangles, MeshData_AMUSEMENT_FOODCART::NumVertices, MeshData_AMUSEMENT_FOODCART::NumTriangles, FVector(0, -250, 0), FRotator::ZeroRotator, FVector(3.f), ETexturePattern::WoodGrain, SC::FabricOrange, SC::FabricYellow);
 
-    SpawnCharacterMesh(TEXT("Emersyn"), FVector(0, 100, 0), FRotator(0, 0, 0), 2.5f, FLinearColor(0.92f, 0.75f, 0.60f), SC::FabricPink);
-    SpawnCharacterMesh(TEXT("Mia"), FVector(100, 100, 0), FRotator(0, -45, 0), 2.5f, FLinearColor(0.88f, 0.70f, 0.55f), SC::FabricYellow);
-    SetupIsometricCamera(FVector(0, 0, RS.Z * 0.3f), RS.X * 1.6f);
+    SpawnCharacterMesh(TEXT("Emersyn"), FVector(0, 100, 0), FRotator(0, 0, 0), 3.0f, FLinearColor(0.92f, 0.75f, 0.60f), SC::FabricPink);
+    SpawnCharacterMesh(TEXT("Mia"), FVector(100, 100, 0), FRotator(0, -45, 0), 3.0f, FLinearColor(0.88f, 0.70f, 0.55f), SC::FabricYellow);
+    SetupIsometricCamera(FVector(0, 0, RS.Z * 0.3f), RS.X * 1.35f);
 }
